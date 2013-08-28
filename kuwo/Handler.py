@@ -33,12 +33,8 @@ class Handler:
                 grid_artists.attach(button, 0, i, 2, 1)
                 i += 1
         self.button_artists_old = None
-        self.artist_handler_id = 0
         self.toggle_artists_signal_hanlder(True)
         self.update_artist_logo(Config.ARTIST_LOGO_DEFAULT)
-        self.artists_liststores = {}
-        g = self.cache_artist_liststore_gen()
-        GObject.idle_add(g.__next__)
 
     def run(self):
         self.window.show_all()
@@ -63,7 +59,7 @@ class Handler:
         if len(keyword) == 0:
             return
         artists = self.search_artist_from_list(keyword)
-        self.update_artist_list('search', artists)
+        self.update_artist_list(artists)
 
     def search_artist_from_list(self, keyword):
         artists = []
@@ -82,34 +78,37 @@ class Handler:
         '''
         if self.button_artists_old is not None:
             self.button_artists_old.props.active = False
-        self.update_artist_list(button.get_label())
+        self.update_artist_list(self.artists_list[button.get_label()])
         self.button_artists_old = button
 
-    def cache_artist_liststore_gen(self):
-        for key in self.artists_list['cates']:
-            self.artists_liststores[key] = Gtk.ListStore(str)
-            for artist in self.artists_list[key]:
-                self.artists_liststores[key].append((artist,))
-            yield True
+#    def cache_artist_liststore_gen(self):
+#        for key in self.artists_list['cates']:
+#            self.artists_liststores[key] = Gtk.ListStore(str)
+#            for artist in self.artists_list[key]:
+#                self.artists_liststores[key].append((artist,))
+#            yield True
 
-    def update_artist_list(self, cate, artists=None):
-        if cate != 'search':
-            self.ui('treeview_artists').set_model(
-                    self.artists_liststores[cate])
-            return
-        # block clicked signal.
-        #self.toggle_artists_signal_hanlder(False)
+    def update_artist_list(self, artists):
+        def gen():
+            # block clicked signal.
+            self.toggle_artists_signal_hanlder(False)
 
-        print('refresh')
-        liststore_artists = self.ui('liststore_artists')
-        liststore_artists.clear()
-        # reset scrolledwindow to top.
-        self.ui('scrolledwindow_artists').get_vadjustment().set_value(0)
+            liststore_artists = self.ui('liststore_artists')
+            liststore_artists.clear()
+            # reset scrolledwindow to top.
+            self.ui('scrolledwindow_artists').get_vadjustment().set_value(0)
 
-        for artist in artists:
-            liststore_artists.append((artist,))
-        # reconnect signal handler
-        #self.toggle_artists_signal_hanlder(True)
+            i = 0
+            for artist in artists:
+                liststore_artists.append((artist,))
+                i += 1
+                if i % 200 == 0:
+                    yield True
+            # reconnect signal handler
+            self.toggle_artists_signal_hanlder(True)
+        g = gen()
+        next(g)
+        GObject.idle_add(g.__next__)
 
     def on_treeview_selection_artists_changed(self, treeselection):
         liststore, path = treeselection.get_selected()
@@ -118,14 +117,14 @@ class Handler:
         artist = liststore[path][0]
         self.update_artists_artist(artist)
 
-    def toggle_artists_signal_hanlder(self, on):
+    def toggle_artists_signal_hanlder(self, on, handler_id=[0]):
         tree_sel = self.ui('treeview_selection_artists')
-        if on is True and self.artist_handler_id == 0:
-            self.artist_handler_id = tree_sel.connect('changed', 
+        if on is True and handler_id[0] == 0:
+            handler_id[0] = tree_sel.connect('changed', 
                     self.on_treeview_selection_artists_changed)
-        elif on is False and self.artist_handler_id > 0:
-            tree_sel.disconnect(self.artist_handler_id)
-            self.artist_handler_id = 0
+        elif on is False and handler_id[0] > 0:
+            tree_sel.disconnect(handler_id[0])
+            handler_id[0] = 0
 
     def update_artists_artist(self, artist):
         print('update artists artist: ', artist)
