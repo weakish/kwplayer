@@ -2,29 +2,41 @@
 from gi.repository import GdkPixbuf
 from gi.repository import GObject
 from gi.repository import Gtk
+import time
 
-from kuwo import Net
+from kuwo import Cache
 from kuwo import Config
+from kuwo.Player import Player
 
 
 class Handler:
     def __init__(self, builder):
         self.ui = builder.get_object
 
-        self.window = self.ui('main_window')
-        self.initUI()
+        self.player = Player(self)
 
-    def initUI(self):
-        # init artists tab
+        self.window = self.ui('main_window')
+        self.init_artists()
+
+    def init_artists(self):
+        '''
+        init artists tab
+        '''
         liststore_artists = self.ui('liststore_artists')
         self.artists_list = Config.load_artists_list()
         grid_artists = self.ui('grid_artists')
 
         i = 0
         double = 1
+        prev = None
         for key in self.artists_list['cates']:
-            button = Gtk.ToggleButton(key)
+            button = Gtk.RadioButton()
+            button.set_label(key)
+            button.props.draw_indicator = False
             button.connect('toggled', self.on_button_artists_cate_toggled)
+            if prev is not None:
+                button.join_group(prev)
+            prev = button
             if len(key) == 1:
                 double = (double + 1) % 2
                 grid_artists.attach(button, double, i, 1, 1)
@@ -36,11 +48,18 @@ class Handler:
         self.toggle_artists_signal_hanlder(True)
         self.update_artist_logo(Config.ARTIST_LOGO_DEFAULT)
 
+        self.ui('scrolledwindow_artists_songs').get_vadjustment().connect(
+                'value-changed', 
+                self.on_adjustment_artists_songs_value_changed)
+        # use this flag to prevent downloading two pages of songs at a time.
+        self.artists_append_songs_timestamp = 0
+
     def run(self):
         self.window.show_all()
         Gtk.main()
 
     def on_app_exit(self, widget, event=None):
+        Cache.close()
         Gtk.main_quit()
 
 
@@ -76,17 +95,8 @@ class Handler:
         '''
         Update artist list when artist category changed
         '''
-        if self.button_artists_old is not None:
-            self.button_artists_old.props.active = False
-        self.update_artist_list(self.artists_list[button.get_label()])
-        self.button_artists_old = button
-
-#    def cache_artist_liststore_gen(self):
-#        for key in self.artists_list['cates']:
-#            self.artists_liststores[key] = Gtk.ListStore(str)
-#            for artist in self.artists_list[key]:
-#                self.artists_liststores[key].append((artist,))
-#            yield True
+        if button.get_active():
+            self.update_artist_list(self.artists_list[button.get_label()])
 
     def update_artist_list(self, artists):
         def gen():
@@ -127,17 +137,22 @@ class Handler:
             handler_id[0] = 0
 
     def update_artists_artist(self, artist):
-        print('update artists artist: ', artist)
-        songs = Net.get_songs_by_artist(artist)
-        if songs is None:
-            return
+        '''
+        A new artist is selected.
+        '''
+        self.artist = Cache.Artist(artist)
 
-        artist_info = Net.get_artist_info(artist)
+        # reset scrolledwindow to top.
+        self.ui('scrolledwindow_artists_songs').get_vadjustment().set_value(0)
+
+        self.append_songs_to_list(init=True)
+
+        artist_info = self.artist.get_info()
         if artist_info is None:
             return
         self.update_artist_info(artist_info)
 
-        logo = Net.get_artist_logo(artist_info['pic'])
+        logo = self.artist.get_logo(artist_info['pic'])
         print('logo: ', logo)
         if logo is None:
             self.update_artist_logo(Config.ARTIST_LOGO_DEFAULT)
@@ -146,7 +161,8 @@ class Handler:
 
     def update_artist_info(self, artist_info):
         self.ui('label_artists_name').set_label(artist_info['name'])
-        self.ui('image_artists_logo').set_tooltip_text(artist_info['info'])
+        self.ui('image_artists_logo').set_tooltip_text(
+                artist_info['info'].replace('<br>', '\n'))
 
         box = self.ui('box_artists_similar')
         # remove old buttons and add some new buttons
@@ -165,6 +181,76 @@ class Handler:
     def update_artist_logo(self, image):
         pix = GdkPixbuf.Pixbuf.new_from_file_at_size(image, 120, 120)
         self.ui('image_artists_logo').set_from_pixbuf(pix)
+
+    def on_treeviewcolumn_checkall_clicked(self, column):
+        liststore = self.ui('liststore_artists_songs')
+        checkbtn = self.ui('checkbutton_artists_checkall')
+        status = checkbtn.get_active()
+        print(checkbtn, status)
+        checkbtn.set_active(not status)
+
+    def on_cellrenderertoggle_artists_choose_toggled(self, cell, path):
+       liststore = self.ui('liststore_artists_songs')
+       print(liststore, path, liststore[path][0])
+       liststore[path][0] = not liststore[path][0]
+       print(liststore[path][0])
+
+    def on_treeview_artists_songs_row_activated(self, tree, path, column):
+        liststore = tree.get_model()
+        index = tree.get_columns().index(column)
+        song = liststore[path]
+
+        if index in (1, 4):
+            self.player.play_song(song)
+        elif index == 2:
+            print('will search album')
+        elif index == 5:
+            self.player.add_song(song)
+        elif index == 6:
+            self.player.cache_song(song)
+
+    def on_adjustment_artists_songs_value_changed(self, adj):
+        '''
+        Automatically load more songs when reaches to bottom of the 
+        scrolled-window.
+        '''
+        timestamp = time.time()
+        if adj.get_upper() - adj.get_page_size() - adj.get_value() < 40 and\
+                timestamp - self.artists_append_songs_timestamp > 1.5:
+            self.artists_append_songs_timestamp = timestamp
+            self.append_songs_to_list()
+
+    def append_songs_to_list(self, init=False):
+        liststore = self.ui('liststore_artists_songs')
+        if init:
+            liststore.clear()
+
+        songs = self.artist.get_songs()
+        if songs is None:
+            return
+
+        play_pix = GdkPixbuf.Pixbuf.new_from_file(Config.PLAY_ICON)
+        add_pix = GdkPixbuf.Pixbuf.new_from_file(Config.ADD_ICON)
+        download_pix = GdkPixbuf.Pixbuf.new_from_file(Config.DOWNLOAD_ICON)
+        for song in songs:
+            liststore.append((True, song['SONGNAME'], song['ALBUM'],
+                int(song['SCORE100']), play_pix, add_pix, download_pix))
+
+    def on_checkbutton_artists_songs_selectall_toggled(self, checkbtn):
+        for song in self.ui('liststore_artists_songs'):
+            song[0] = checkbtn.get_active()
+
+    def on_button_artists_songs_play_clicked(self, btn):
+        self.player.play_songs([song for song in self.ui(
+            'liststore_artists_songs') if song[0] is True])
+
+    def on_button_artists_songs_add_clicked(self, btn):
+        self.player.add_songs([song for song in self.ui(
+            'liststore_artists_songs') if song[0] is True])
+
+    def on_button_artists_songs_cache_clicked(self, btn):
+        self.player.cache_songs([song for song in self.ui(
+            'liststore_artists_songs') if song[0] is True])
 
 
     # Search Tab
