@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <!-- interface-requires gtk+ 3.0 -->
-  <object class="GtkListStore" id="liststore_playlist_default"/>
-  <object class="GtkListStore" id="liststore_playlist_lists"/>
   <object class="GtkListStore" id="liststore_artists">
     <columns>
       <!-- column-name artists -->
@@ -31,6 +29,8 @@
   <object class="GtkListStore" id="liststore_categories_songs"/>
   <object class="GtkListStore" id="liststore_download_downloadin"/>
   <object class="GtkListStore" id="liststore_download_downloading"/>
+  <object class="GtkListStore" id="liststore_playlist_default"/>
+  <object class="GtkListStore" id="liststore_playlist_lists"/>
   <object class="GtkListStore" id="liststore_randking_songs"/>
   <object class="GtkListStore" id="liststore_ranking"/>
   <object class="GtkListStore" id="liststore_search"/>
@@ -456,7 +456,7 @@
                         </child>
                         <child>
                           <object class="GtkTreeViewColumn" id="treeviewcolumn1">
-                            <property name="title" translatable="yes">Play</property>
+                            <property name="title" translatable="yes">P</property>
                             <child>
                               <object class="GtkCellRendererPixbuf" id="cellrendererpixbuf1"/>
                               <attributes>
@@ -467,7 +467,7 @@
                         </child>
                         <child>
                           <object class="GtkTreeViewColumn" id="treeviewcolumn2">
-                            <property name="title" translatable="yes">Add</property>
+                            <property name="title" translatable="yes">A</property>
                             <child>
                               <object class="GtkCellRendererPixbuf" id="cellrendererpixbuf2"/>
                               <attributes>
@@ -478,7 +478,7 @@
                         </child>
                         <child>
                           <object class="GtkTreeViewColumn" id="treeviewcolumn3">
-                            <property name="title" translatable="yes">Cache</property>
+                            <property name="title" translatable="yes">D</property>
                             <child>
                               <object class="GtkCellRendererPixbuf" id="cellrendererpixbuf3"/>
                               <attributes>
