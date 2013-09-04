@@ -1,9 +1,8 @@
 
 
 class Player:
-    def __init__(self, handler):
-        self.handler = handler
-
+    def __init__(self, app):
+        self.app = app
 
     def play_song(self, song):
         print(song)

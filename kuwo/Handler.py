@@ -1,27 +1,13 @@
 
-from gi.repository import GdkPixbuf
-from gi.repository import GObject
-from gi.repository import Gtk
-import time
-
-from kuwo import Cache
-from kuwo import Config
-from kuwo.Player import Player
-
-
-class Handler:
-    def __init__(self, builder):
-        self.ui = builder.get_object
-
-        self.player = Player(self)
-
-        self.window = self.ui('main_window')
-        self.init_artists()
+    # scrolledwindow_main
+    def init_scrolled_main(self):
+        self.ui('treeview_selection_nodes').select_path(0)
 
     def init_artists(self):
         '''
         init artists tab
         '''
+        return
         liststore_artists = self.ui('liststore_artists')
         self.artists_list = Config.load_artists_list()
         grid_artists = self.ui('grid_artists')
@@ -53,15 +39,6 @@ class Handler:
                 self.on_adjustment_artists_songs_value_changed)
         # use this flag to prevent downloading two pages of songs at a time.
         self.artists_append_songs_timestamp = 0
-
-    def run(self):
-        self.window.show_all()
-        Gtk.main()
-
-    def on_app_exit(self, widget, event=None):
-        Cache.close()
-        Gtk.main_quit()
-
 
     # Notebooks
     def on_notebook_main_switch_page(self, notebook, child, page_num):

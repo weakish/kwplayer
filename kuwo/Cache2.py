@@ -19,10 +19,6 @@ CHUNK_TO_PLAY = 1024 * 1024
 
 conf = Config.load_conf()
 
-# used as memory cache
-_requests = {
-        }
-
 def get_image(url):
     '''
     Return local image path if exists,
@@ -121,9 +117,6 @@ class Artist:
             parse.quote(self.artist),
             ])
         print('url-info:', url)
-        if url in _requests:
-            return _requests[url]
-        _requests[url] = None
         req = request.urlopen(url)
         if req.status != 200:
             return None
@@ -132,7 +125,6 @@ class Artist:
         except Error as e:
             print(e)
             return None
-        _requests[url] = info
         return info
 
     def get_songs(self):
@@ -152,9 +144,6 @@ class Artist:
             str(self.page),
             ])
         print('url-songs:', url)
-        if url in _requests:
-            return _requests[url]
-        _requests[url] = None
         req = request.urlopen(url)
         if req.status != 200:
             return None
@@ -167,8 +156,7 @@ class Artist:
         self.page += 1
         if self.total_songs == 0:
             self.total_songs = int(songs['TOTAL'])
-        _requests[url] = songs['abslist']
-        return _requests[url]
+        return songs['abslist']
 
     def get_logo(self, logo_id):
         # set logo size to 120x120
@@ -178,53 +166,67 @@ class Artist:
         return get_image(url)
 
 
-def get_index_nodes(nid):
+class Node:
     '''
     Get content of nodes from nid=2 to nid=15
     '''
-    url = ''.join([
-        QUKU,
-        'op=query&fmt=json&src=mbox&cont=ninfo&rn=500&node=',
-        str(nid),
-        '&pn=0',
-        ])
-    print('_parse_node url:', url)
-    if url in _requests:
-        return _requests[url]
-    _requests[url] = None
-    req = request.urlopen(url)
-    if req.status != 200:
-        return None
-    try:
-        nodes = json.loads(req.read().decode())
-    except Error as e:
-        print(e)
-        return None
-    _requests[url] = nodes['child']
-    return _requests[url]
+    def __init__(self, nid):
+        self.nid = nid
+        self.total_nodes = 0
+        self.page = 0
 
-def get_toplist_songs(nid):
+    def get_nodes(self):
+        '''
+        Get 50 nodes of this nid
+        '''
+        if self.total_nodes > 0 and self.page * 50 > self.total_nodes:
+            return None
+
+        url = ''.join([
+            QUKU,
+            'op=query&fmt=json&src=mbox&cont=ninfo&rn=50&node=',
+            str(self.nid),
+            '&pn=',
+            str(self.page),
+            ])
+        print('_parse_node url:', url)
+        req = request.urlopen(url)
+        if req.status != 200:
+            return None
+        try:
+            nodes = json.loads(req.read().decode())
+        except Error as e:
+            print(e)
+            return None
+        self.page += 1
+        if self.total_nodes == 0:
+            self.total_nodes = int(nodes['total'])
+        return nodes['child']
+
+
+class TopList:
     '''
-    Get 50 songs of this top list.
+    Get the info of Top List songs.
     '''
-    url = ''.join([
-        TOPLIST,
-        'from=pc&fmt=json&type=bang&data=content&rn=200&id=',
-        str(nid),
-        ])
-    print('url-songs:', url)
-    if url in _requests:
-        return _requests[url]
-    req = request.urlopen(url)
-    if req.status != 200:
-        return None
-    try:
-        songs = json.loads(req.read().decode())
-    except Error as e:
-        print(e)
-        return None
-    _requests[url] = songs['musiclist']
-    return _request[url]
+    def get_songs(self):
+        '''
+        Get 50 songs of this top list.
+        '''
+        url = ''.join([
+            TOPLIST,
+            'from=pc&fmt=json&type=bang&data=content&rn=200&id=',
+            str(self.nid),
+            ])
+        print('url-songs:', url)
+        req = request.urlopen(url)
+        if req.status != 200:
+            return None
+        try:
+            songs = json.loads(req.read().decode())
+        except Error as e:
+            print(e)
+            return None
+        return songs['musiclist']
 
 
 #class Song(GObject.GObject):
