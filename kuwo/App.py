@@ -1,8 +1,10 @@
 
+from gi.repository import GdkPixbuf
 from gi.repository import Gio
 from gi.repository import GObject
 from gi.repository import Gst
 from gi.repository import Gtk
+import html
 import sys
 
 from kuwo import Config
@@ -51,11 +53,12 @@ class App:
         self.add_simple_action('quit', self.on_action_quit_activate)
 
     def on_app_activate(self, app):
-        self.player = None
+        self.player = Player()
         Gst.init_check(sys.argv)
 
         self.song = Cache.Song(self)
-        self.song.connect('downloaded', self.on_song_downloaded)
+        #self.song.connect('downloaded', self.on_song_downloaded)
+        self.song.connect('can-play', self.on_song_downloaded)
 
         self.init_player()
         self.init_nodes()
@@ -64,6 +67,8 @@ class App:
 
         self.window.show_all()
         self.ui('toolbutton_pause').hide()
+        self.ui('buttonbox_toplist').hide()
+        self.ui('scrolledwindow_toplist_songs').hide()
 
     def on_app_shutdown(self, app):
         Config.dump_conf(self.conf)
@@ -111,29 +116,51 @@ class App:
     def on_action_player_next_activate(self, action):
         pass
     def on_action_player_play_activate(self, action):
+        print('action player play')
         self.ui('toolbutton_play').hide()
         self.ui('toolbutton_pause').show_all()
         self.player.play()
 
     def on_action_player_pause_activate(self, widget):
+        print('action player pause')
         self.ui('toolbutton_pause').hide()
         self.ui('toolbutton_play').show_all()
         self.player.pause()
 
     def on_action_player_repeat_activate(self, action):
-        pass
+        print('player repeat')
+
     def on_action_player_repeat_one_activate(self, action):
-        pass
+        print('player repeat one')
+
     def on_action_player_shuffle_activate(self, action):
-        pass
+        print('player shutffle')
 
     def on_song_downloaded(self, song_obj, song_info):
-        if isinstance(self.player, Player):
-            self.on_action_player_pause_activate(None)
-        uri = 'file://' + conf['song-dir'] + song_info[filename])
-        print('will play uri:', uri)
-        self.player = Player(uri)
+        print('will play song with filepath:', song_info['filepath'])
+        self.player.load(song_info['filepath'])
         self.on_action_player_play_activate(None)
+    # TODO: change UI when player finished.
+
+    def update_player_info(self, song):
+        def _update_player_logo(info, error=None):
+            if info is None:
+                return
+            self.ui('image_player_logo').set_tooltip_text(
+                    info['info'].replace('<br>', '\n'))
+            if info['logo'] is not None:
+                pix = GdkPixbuf.Pixbuf.new_from_file_at_size(
+                        info['logo'], 120, 120)
+                self.ui('image_player_logo').set_from_pixbuf(pix)
+            
+        label = ''.join([
+            '<b>', html.escape(song['name']), '</b> ',
+            '<i><small>by ', html.escape(song['artist']), ' from ',
+            html.escape(song['album']), '</small></i>'])
+        self.ui('label_player_name').set_label(label)
+
+        Cache.get_artist_info(_update_player_logo, artistid=song['artistid'])
+
 
     # side nodes
     def init_nodes(self):
@@ -199,9 +226,13 @@ class App:
                 'albumid': liststore[path][9],
                 }
 
+        print('treeview index:', index)
         if index in (1, 4):
             # level 1
-            self.player.pause()
+            # FIXME:whether the player should be pause?
+
+            # update song info in control panel
+            self.update_player_info(song)
             self.song.play_song(song)
         elif index == 2:
             print('will search artist')
@@ -226,6 +257,7 @@ class App:
         #print(nodes)
 
         liststore = self.ui('liststore_toplist_nodes')
+        liststore.clear()
         i = 0
         for node in nodes:
             liststore.append([self.theme['anonymous'], 
@@ -256,6 +288,7 @@ class App:
         #print('songs:', songs)
 
         liststore = self.ui('liststore_toplist_songs')
+        liststore.clear()
         for song in songs:
             liststore.append([True, song['name'], song['artist'], 
                 song['album'], self.theme['play'], self.theme['add'],

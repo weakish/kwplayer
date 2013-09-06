@@ -1,4 +1,5 @@
 
+import copy
 from gi.repository import Gdk
 from gi.repository import GdkPixbuf
 from gi.repository import GObject
@@ -46,10 +47,6 @@ def async_call(func, func_done, *args):
     thread = threading.Thread(target=do_call, args=args)
     thread.start()
 
-def get_filepath_from_url(url):
-    filename = os.path.split(url)[1]
-    return os.path.join(conf['img-dir'], filename)
-
 def get_image(url):
     '''
     Return local image path if exists,
@@ -67,7 +64,8 @@ def get_image(url):
         with open(filepath, 'wb') as fh:
             fh.write(image)
 
-    filepath = get_filepath_from_url(url)
+    filename = os.path.split(url)[1]
+    filepath = os.path.join(conf['img-dir'], filename)
     image = _parse_image(url)
     if image is not None:
         _dump_image(image, filepath)
@@ -87,7 +85,8 @@ def update_liststore_image(liststore, path, col, url):
         #Gdk.threads_leave()
     
     # image image is cached locally, just load them.
-    filepath = get_filepath_from_url(url)
+    filename = os.path.split(url)[1]
+    filepath = os.path.join(conf['img-dir'], filename)
     if os.path.exists(filepath):
         _update_image(filepath, None)
         return
@@ -149,9 +148,11 @@ def search(keyword, _type, page=0):
     return json.loads(txt)
 
 
-class Artist:
+class ArtistSong:
     '''
-    artist operations like get songs, artist info.
+    artist operations like get songs
+    Create this class because we need to store some private information to
+    simplify the design of program.
     '''
     def __init__(self, artist):
         self.artist = artist
@@ -162,64 +163,14 @@ class Artist:
 
     def init_tables(self):
         sql = '''
-        CREATE TABLE IF NOT EXISTS `artistinfo` (
-        artist CHAR,
-        info TEXT,
-        timestamp INT
-        )
-        '''
-        self.cursor.execute(sql)
-
-        sql = '''
         CREATE TABLE IF NOT EXISTS `artistmusic` (
+        id INTEGER PRIMARY KYE AUTOINCREMENT,
         artist CHAR,
         pn INT,
-        songs TEXT,
-        timestamp INT
+        songs TEXT
         )
         '''
         cursor.execute(sql)
-        conn.commit()
-
-    def get_info(self):
-        info = self._read_info()
-        if info is not None:
-            return info
-
-        info = self._parse_info()
-        if info is not None:
-            self._dump_info(info)
-        return info
-
-    def _read_info(self):
-        sql = 'SELECT info FROM `artistinfo` WHERE artist=? LIMIT 1'
-        req = cursor.execute(sql, (self.artist,))
-        info = req.fetchone()
-        if info is not None:
-            return json.loads(info[0])
-        return None
-
-    def _parse_info(self):
-        url = ''.join([
-            SEARCH,
-            'stype=artistinfo&artist=',
-            parse.quote(self.artist),
-            ])
-        print('url-info:', url)
-        req = request.urlopen(url)
-        if req.status != 200:
-            return None
-        try:
-            info = json.loads(req.read().decode().replace("'", '"'))
-        except Error as e:
-            print(e)
-            return None
-        return info
-
-    def _dump_info(self, info):
-        sql = 'INSERT INTO `artistinfo` VALUES(?, ?, ?)'
-        cursor.execute(sql, (self.artist, json.dumps(info),
-            int(time.time())))
         conn.commit()
 
     def get_songs(self):
@@ -275,12 +226,85 @@ class Artist:
             json.dumps(songs), int(time.time())))
         conn.commit()
 
-    def get_logo(self, logo_id):
+
+def get_artist_info(callback, artist=None, artistid=None):
+    '''
+    Get artist info, if cached, just return it.
+    At least one of these parameters is specified, and artistid is prefered.
+
+    This function uses async_call(), and the callback function is called 
+    when the artist info is retrieved.
+
+    Artist logo is also retrieved and saved to info['logo']
+    '''
+    def _init_table():
+        sql = '''
+        CREATE TABLE IF NOT EXISTS `artistinfo` (
+        artist CHAR,
+        artistid INTEGER,
+        info TEXT
+        )
+        '''
+        cursor.execute(sql)
+        conn.commit()
+
+    def _read_info():
+        if artist is not None:
+            sql = 'SELECT info FROM `artistinfo` WHERE artist=? LIMIT 1'
+            req = cursor.execute(sql, (artist, ))
+        else:
+            sql = 'SELECT info FROM `artistinfo` WHERE artistid=? LIMIT 1'
+            req = cursor.execute(sql, (artistid, ))
+        info = req.fetchone()
+        if info is not None:
+            return json.loads(info[0])
+        return None
+
+    def _write_info(info):
+        sql = 'INSERT INTO `artistinfo`(artist, artistid, info) VALUES(?, ?, ?)'
+        cursor.execute(sql, (info['name'], int(info['id']), json.dumps(info)))
+        conn.commit()
+
+    def _parse_info():
+        if artist is not None:
+            url = ''.join([SEARCH, 'stype=artistinfo&artist=',
+                parse.quote(artist), ])
+        else:
+            url = ''.join([SEARCH, 'stype=artistinfo&artistid=', artistid])
+        print('artist-info:', url)
+        req = request.urlopen(url)
+        if req.status != 200:
+            return None
+        try:
+            info = json.loads(req.read().decode().replace("'", '"'))
+        except Error as e:
+            print(e)
+            return None
+
         # set logo size to 120x120
+        logo_id = info['pic']
         if logo_id[:3] in ('55/', '90/', '100'):
             logo_id = '120/' + logo_id[3:]
         url = ARTIST_LOGO + logo_id
-        return get_image(url)
+        info['logo'] = get_image(url)
+        return info
+
+    def _update_info(info, error):
+        if info is None:
+            return
+        _write_info(info)
+        callback(info, error)
+
+    if artist is None and artistid is None:
+        print('Error, at least one of atist and artistid is needed')
+        return None
+    _init_table()
+
+    info = _read_info()
+    if info is not None:
+        callback(info, None)
+
+    async_call(_parse_info, _update_info)
 
 
 class Node:
@@ -428,12 +452,12 @@ class Song(GObject.GObject):
     '''
     __gsignals__ = {
             'can-play': (GObject.SIGNAL_RUN_LAST, 
-                GObject.TYPE_NONE, (GObject.TYPE_GSTRING, )),
+                GObject.TYPE_NONE, (object, )),
             'chunk-received': (GObject.SIGNAL_RUN_LAST,
                 GObject.TYPE_NONE, 
                 (GObject.TYPE_UINT, GObject.TYPE_UINT)),
             'downloaded': (GObject.SIGNAL_RUN_LAST, 
-                GObject.TYPE_NONE, (GObject.TYPE_GSTRING, ))
+                GObject.TYPE_NONE, (object, ))
             }
     def __init__(self, app):
         super().__init__()
@@ -448,16 +472,18 @@ class Song(GObject.GObject):
         self.conn.close()
 
     def init_table(self):
+        self.cols = ['id', 'name', 'artist', 'album', 'rid', 'artistid',
+                'albumid', 'filepath']
         sql = '''
         CREATE TABLE IF NOT EXISTS `song` (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name CHAR,
         artist CHAR,
         album CHAR,
-        rid CHAR,
-        artistid CHAR,
-        albumid CHAR,
-        filename CHAR
+        rid INTEGER,
+        artistid INTEGER,
+        albumid INTEGER,
+        filepath CHAR
         )
         '''
         self.cursor.execute(sql)
@@ -472,21 +498,23 @@ class Song(GObject.GObject):
         '''
         song_info = self._read_song_info(song['rid'])
         if song_info is not None:
-            filepath = os.path.join(conf['song-dir'], song_info['filename'])
             #emit can-play and downloaded signals.
-            self.emit('can-play', filepath)
-            self.emit('downloaded', filepath)
+            self.emit('can-play', song_info)
+            self.emit('downloaded', song_info)
             return 
 
+        # TODO: use async call:
         song_link = self._parse_song_link(song['rid'])
         print('song link:', song_link)
 
         if song_link is None:
             return None
-        filename = os.path.split(song_link)[1]
-        filepath = os.path.join(conf['song-dir'], filename)
-        self._download_song(song_link, filepath)
-        self._write_song_info(filename, song)
+
+        song_info = copy.copy(song)
+        song_info['filepath'] = os.path.join(conf['song-dir'], 
+                os.path.split(song_link)[1])
+        self._write_song_info(song_info)
+        self._download_song(song_link, song_info)
         return
 
     def append_playlist(self, song_info):
@@ -500,29 +528,29 @@ class Song(GObject.GObject):
     def _read_song_info(self, rid):
         sql = 'SELECT * FROM `song` WHERE rid=? LIMIT 1'
         req = self.cursor.execute(sql, (rid, ))
-        song_info = req.fetchone()
-        if song_info is not None:
+        song = req.fetchone()
+        if song is not None:
             print('local song cache HIT!')
-            print(song_info)
-            if os.path.exists(os.path.join(conf['song-dir'], song_info[6])):
+            song_info = dict(zip(self.cols , song))
+            if os.path.exists(song_info['filepath']):
                 return song_info
             else:
-                self._delte_song_info(song_info)
+                self._delete_song_info(song_info)
                 return None
         return None
 
-    def _write_song_info(self, filename, song):
+    def _write_song_info(self, song_info):
         sql = '''INSERT INTO `song` (
-                name, artist, album, rid, artistid, albumid, filename
+                name, artist, album, rid, artistid, albumid, filepath
                 ) VALUES(? , ?, ?, ?, ?, ?, ?)'''
-        self.cursor.execute(sql, [song['name'], song['artist'], 
-            song['album'], song['rid'], song['artistid'], song['albumid'], 
-            filename, ])
+        self.cursor.execute(sql, [song_info['name'], song_info['artist'], 
+            song_info['album'], song_info['rid'], song_info['artistid'], 
+            song_info['albumid'], song_info['filepath']])
         self.conn.commit()
 
     def _delete_song_info(self, song_info):
         sql = 'DELETE FROM `song` WHERE id=? LIMIT 1'
-        self.cursor.execute(sql, (song_info[0], ))
+        self.cursor.execute(sql, (song_info['id'], ))
         self.conn.commit()
 
     def _parse_song_link(self, rid):
@@ -543,17 +571,17 @@ class Song(GObject.GObject):
             return None
         return req.read().decode()
 
-    def _download_song(self, song_link, filepath):
-        if os.path.exists(filepath): 
+    def _download_song(self, song_link, song_info):
+        if os.path.exists(song_info['filepath']): 
             print('local song cache HIT!')
-            self.emit('can-play', filepath)
-            self.emit('downloaded', filepath)
+            self.emit('can-play', song_info)
+            self.emit('downloaded', song_info)
             return
         req = request.urlopen(song_link)
         retrieved_size = 0
         can_play_emited = False
         content_length = req.headers.get('Content-Length')
-        with open(filepath, 'wb') as fh:
+        with open(song_info['filepath'], 'wb') as fh:
             while True:
                 chunk = req.read(CHUNK)
                 retrieved_size += len(chunk)
@@ -564,13 +592,13 @@ class Song(GObject.GObject):
                 # this signal only emit once.
                 if retrieved_size > CHUNK_TO_PLAY and not can_play_emited:
                     can_play_emited = True
-                    self.emit('can-play', filepath)
+                    self.emit('can-play', song_info)
                     print('song can be played now')
                 if not chunk:
                     break
                 fh.write(chunk)
             #emit downloaded signal.
-            self.emit('downloaded', filepath)
+            self.emit('downloaded', song_info)
             print('download finished')
 
 # register Song to GObject

@@ -31,6 +31,7 @@
         <property name="label" translatable="yes">Play</property>
         <property name="tooltip" translatable="yes">Start playback</property>
         <property name="icon_name">media-playback-start-symbolic</property>
+        <signal name="activate" handler="on_action_player_play_activate" swapped="no"/>
       </object>
     </child>
     <child>
