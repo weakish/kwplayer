@@ -1,23 +1,15 @@
 
+from kuwo import Cache
+from gi.repository import Gst
 
 class Player:
-    def __init__(self, app):
+    def __init__(self, uri):
         self.app = app
+        self._player = Gst.ElementFactory.make('playbin', 'player')
+        self._player.set_property('uri', uri)
 
-    def play_song(self, song):
-        print(song)
+    def pause(self):
+        self._player.set_state(Gst.State.PAUSE)
 
-    def play_songs(self, songs):
-        print(songs)
-
-    def add_song(self, song):
-        print(song)
-
-    def add_songs(self, songs):
-        print(songs)
-
-    def cache_song(self, song):
-        print(song)
-
-    def cache_songs(self, songs):
-        print(song)
+    def play(self):
+        self._player.set_state(Gst.State.PLAYING)

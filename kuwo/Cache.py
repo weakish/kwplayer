@@ -1,7 +1,12 @@
 
+from gi.repository import Gdk
+from gi.repository import GdkPixbuf
+from gi.repository import GObject
 import json
 import os
 import sqlite3
+import threading
+import time
 from urllib import parse
 from urllib import request
 
@@ -25,6 +30,26 @@ def close():
     conn.close()
     print('db closed')
 
+# calls f on another thread
+def async_call(func, func_done, *args):
+    def do_call(*args):
+        result = None
+        error = None
+
+        try:
+            result = func(*args)
+        except Exception as e:
+            error = e
+
+        GObject.idle_add(lambda: func_done(result, error))
+
+    thread = threading.Thread(target=do_call, args=args)
+    thread.start()
+
+def get_filepath_from_url(url):
+    filename = os.path.split(url)[1]
+    return os.path.join(conf['img-dir'], filename)
+
 def get_image(url):
     '''
     Return local image path if exists,
@@ -42,16 +67,33 @@ def get_image(url):
         with open(filepath, 'wb') as fh:
             fh.write(image)
 
-    filename = os.path.split(url)[1]
-    filepath = os.path.join(conf['img-dir'], filename)
-    if os.path.exists(filepath):
-        return filepath
-
+    filepath = get_filepath_from_url(url)
     image = _parse_image(url)
     if image is not None:
         _dump_image(image, filepath)
         return filepath
     return None
+
+def update_liststore_image(liststore, path, col, url):
+    '''
+    Update images in IconView(liststore).
+    '''
+    def _update_image(filepath, error):
+        if filepath is None:
+            return
+        #Gdk.threads_enter()
+        pix = GdkPixbuf.Pixbuf.new_from_file(filepath)
+        liststore[path][col] = pix
+        #Gdk.threads_leave()
+    
+    # image image is cached locally, just load them.
+    filepath = get_filepath_from_url(url)
+    if os.path.exists(filepath):
+        _update_image(filepath, None)
+        return
+
+    print('update_liststore_image:', url)
+    async_call(get_image, _update_image, url)
 
 def get_lrc(rid):
     '''
@@ -193,7 +235,6 @@ class Artist:
         self.page += 1
         if self.total_songs == 0:
             self.total_songs = int(songs['TOTAL'])
-        print('page:', self.page, 'total songs:', self.total_songs)
         return songs['abslist']
 
     def _read_songs(self):
@@ -201,7 +242,7 @@ class Artist:
         req = cursor.execute(sql, (self.artist, self.page))
         songs = req.fetchone()
         if songs is not None:
-            print('local cache HIT!')
+            print('local song cache HIT!')
             return json.loads(songs[0])
         return None
 
@@ -248,8 +289,6 @@ class Node:
     '''
     def __init__(self, nid):
         self.nid = nid
-        self.total_nodes = 0
-        self.page = 0
 
         self.init_tables()
 
@@ -257,7 +296,6 @@ class Node:
         sql = '''
         CREATE TABLE IF NOT EXISTS `nodes` (
         nid INT,
-        pn INT,
         info TEXT,
         timestamp INT
         )
@@ -266,22 +304,16 @@ class Node:
         conn.commit()
 
     def get_nodes(self):
-        if self.total_nodes > 0 and self.page * 50 > self.total_nodes:
-            return None
-
         nodes = self._read_nodes()
         if nodes is None:
             nodes = self._parse_nodes()
             if nodes is not None:
                 self._dump_nodes(nodes)
-        self.page += 1
-        if self.total_nodes == 0:
-            self.total_nodes = int(nodes['total'])
         return nodes['child']
 
     def _read_nodes(self):
-        sql = 'SELECT info FROM `nodes` WHERE nid=? AND pn=? LIMIT 1'
-        req = cursor.execute(sql, (self.nid, self.page))
+        sql = 'SELECT info FROM `nodes` WHERE nid=? LIMIT 1'
+        req = cursor.execute(sql, (self.nid,))
         nodes = req.fetchone()
         if nodes is not None:
             print('local cache HIT!')
@@ -294,10 +326,9 @@ class Node:
         '''
         url = ''.join([
             QUKU,
-            'op=query&fmt=json&src=mbox&cont=ninfo&rn=50&node=',
+            'op=query&fmt=json&src=mbox&cont=ninfo&rn=200&node=',
             str(self.nid),
-            '&pn=',
-            str(self.page),
+            '&pn=0',
             ])
         print('_parse_node url:', url)
         req = request.urlopen(url)
@@ -311,8 +342,8 @@ class Node:
         return nodes
 
     def _dump_nodes(self, nodes):
-        sql = 'INSERT INTO `nodes` VALUES(?, ?, ?, ?)'
-        cursor.execute(sql, (self.nid, self.page, json.dumps(nodes),
+        sql = 'INSERT INTO `nodes` VALUES(?, ?, ?)'
+        cursor.execute(sql, (self.nid, json.dumps(nodes),
             int(time.time())))
         conn.commit()
 
@@ -392,6 +423,8 @@ class Song(GObject.GObject):
     downloading process.
     `downloaded` signal may be used to popup a message to notify 
     user that a new song is downloaded.
+
+    Remember to call Song.close() method when exit the process.
     '''
     __gsignals__ = {
             'can-play': (GObject.SIGNAL_RUN_LAST, 
@@ -402,57 +435,97 @@ class Song(GObject.GObject):
             'downloaded': (GObject.SIGNAL_RUN_LAST, 
                 GObject.TYPE_NONE, (GObject.TYPE_GSTRING, ))
             }
-    def __init__(self):
+    def __init__(self, app):
         super().__init__()
+        self.app = app
+
+        self.conn = sqlite3.connect(conf['song-db'])
+        self.cursor = self.conn.cursor()
         self.init_table()
+
+    def close(self):
+        self.conn.commit()
+        self.conn.close()
 
     def init_table(self):
         sql = '''
         CREATE TABLE IF NOT EXISTS `song` (
-        rid CHAR,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         name CHAR,
         artist CHAR,
-        song_ext CHAR
+        album CHAR,
+        rid CHAR,
+        artistid CHAR,
+        albumid CHAR,
+        filename CHAR
         )
         '''
-        cursor.execute(sql)
-        conn.commit()
+        self.cursor.execute(sql)
+        self.conn.commit()
 
-    def get_song(self, rid):
+    def play_song(self, song):
         '''
         Get the actual link of music file.
         If higher quality of that music unavailable, a lower one is used.
         like this:
         response=url&type=convert_url&format=ape|mp3&rid=MUSIC_3312608
         '''
-        song_ext = self._read_song(rid)
-        song_ext = '.ape'
-        if song_ext is not None:
-            filename = os.path.join(conf['song-dir'], rid + song_ext)
+        song_info = self._read_song_info(song['rid'])
+        if song_info is not None:
+            filepath = os.path.join(conf['song-dir'], song_info['filename'])
             #emit can-play and downloaded signals.
-        self.emit('can-play', filename)
-        self.emit('downloaded', filename)
-        return 
+            self.emit('can-play', filepath)
+            self.emit('downloaded', filepath)
+            return 
 
-        song_link = self._parse_song_link()
+        song_link = self._parse_song_link(song['rid'])
         print('song link:', song_link)
 
         if song_link is None:
             return None
-        song_ext = os.path.splitext(song_link)[1]
-        filename = os.path.join(conf['song-dir'], rid + song_ext)
-        self._download_song(song_link, filename)
-        return filename
+        filename = os.path.split(song_link)[1]
+        filepath = os.path.join(conf['song-dir'], filename)
+        self._download_song(song_link, filepath)
+        self._write_song_info(filename, song)
+        return
 
-    def _read_song(self, rid):
-        sql = 'SELECT song_ext FROM `song` WHERE rid=? LIMIT 1'
-        req = cursor.execute(sql, (rid, ))
-        song = req.fetchone()
-        if song is not None:
-            return song[0]
+    def append_playlist(self, song_info):
+        print('append playlist')
+        return
+
+    def cache_song(self, song_info):
+        print('cache song')
+        return
+
+    def _read_song_info(self, rid):
+        sql = 'SELECT * FROM `song` WHERE rid=? LIMIT 1'
+        req = self.cursor.execute(sql, (rid, ))
+        song_info = req.fetchone()
+        if song_info is not None:
+            print('local song cache HIT!')
+            print(song_info)
+            if os.path.exists(os.path.join(conf['song-dir'], song_info[6])):
+                return song_info
+            else:
+                self._delte_song_info(song_info)
+                return None
         return None
 
-    def _parse_song_link(self):
+    def _write_song_info(self, filename, song):
+        sql = '''INSERT INTO `song` (
+                name, artist, album, rid, artistid, albumid, filename
+                ) VALUES(? , ?, ?, ?, ?, ?, ?)'''
+        self.cursor.execute(sql, [song['name'], song['artist'], 
+            song['album'], song['rid'], song['artistid'], song['albumid'], 
+            filename, ])
+        self.conn.commit()
+
+    def _delete_song_info(self, song_info):
+        sql = 'DELETE FROM `song` WHERE id=? LIMIT 1'
+        self.cursor.execute(sql, (song_info[0], ))
+        self.conn.commit()
+
+    def _parse_song_link(self, rid):
         if conf['use-ape']:
             _format = 'ape|mp3'
         else:
@@ -460,7 +533,7 @@ class Song(GObject.GObject):
         url = ''.join([
             SONG,
             'response=url&type=convert_url&format=',
-            ext_format,
+            _format,
             '&rid=MUSIC_',
             rid,
             ])
@@ -470,11 +543,17 @@ class Song(GObject.GObject):
             return None
         return req.read().decode()
 
-    def _download_song(self, song_link, filename):
+    def _download_song(self, song_link, filepath):
+        if os.path.exists(filepath): 
+            print('local song cache HIT!')
+            self.emit('can-play', filepath)
+            self.emit('downloaded', filepath)
+            return
         req = request.urlopen(song_link)
         retrieved_size = 0
+        can_play_emited = False
         content_length = req.headers.get('Content-Length')
-        with open(filename, 'wb') as fh:
+        with open(filepath, 'wb') as fh:
             while True:
                 chunk = req.read(CHUNK)
                 retrieved_size += len(chunk)
@@ -482,12 +561,17 @@ class Song(GObject.GObject):
                 # contains content_length and retrieved_size
 
                 # check retrieved_size, and emit can-play signal.
-                if retrieved_size > CHUNK_TO_PLAY:
-                    print('song can be played noew')
+                # this signal only emit once.
+                if retrieved_size > CHUNK_TO_PLAY and not can_play_emited:
+                    can_play_emited = True
+                    self.emit('can-play', filepath)
+                    print('song can be played now')
                 if not chunk:
                     break
                 fh.write(chunk)
             #emit downloaded signal.
+            self.emit('downloaded', filepath)
             print('download finished')
+
 # register Song to GObject
 GObject.type_register(Song)

@@ -10,7 +10,7 @@ if __file__.startswith('/usr/'):
 else:
     PREF = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'share', 'kuwo')
 
-_ui_files = ('main.ui', 'menus.ui')
+_ui_files = ('main.ui', 'menus.ui', 'toplist.ui')
 UI_FILES = [os.path.join(PREF, 'ui', ui) for ui in _ui_files]
 
 

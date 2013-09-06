@@ -99,7 +99,7 @@
                 <property name="show_arrow">False</property>
                 <property name="icon_size">5</property>
                 <child>
-                  <object class="GtkToolButton" id="toolbutton1">
+                  <object class="GtkToolButton" id="toolbutton_prev">
                     <property name="related_action">action_player_previous</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
@@ -113,7 +113,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkToolButton" id="toolbutton2">
+                  <object class="GtkToolButton" id="toolbutton_play">
                     <property name="related_action">action_player_play</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
@@ -131,7 +131,25 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkToolButton" id="toolbutton3">
+                  <object class="GtkToolButton" id="toolbutton_pause">
+                    <property name="related_action">action_player_pause</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="has_focus">True</property>
+                    <property name="is_focus">True</property>
+                    <property name="can_default">True</property>
+                    <property name="has_default">True</property>
+                    <property name="label" translatable="yes">toolbutton2</property>
+                    <property name="use_underline">True</property>
+                    <property name="icon_name">media-playback-pause-symbolic</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="homogeneous">True</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkToolButton" id="toolbutton_next">
                     <property name="related_action">action_player_next</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
@@ -145,7 +163,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkSeparatorToolItem" id="toolbutton4">
+                  <object class="GtkSeparatorToolItem" id="toolbutton_repeat">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                   </object>
@@ -169,7 +187,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkToggleToolButton" id="toolbutton6">
+                  <object class="GtkToggleToolButton" id="toolbutton_shuffle">
                     <property name="related_action">action_player_shuffle</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
@@ -194,10 +212,10 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="margin_left">10</property>
+                <property name="margin_top">5</property>
                 <property name="xalign">0</property>
                 <property name="label" translatable="yes">&lt;b&gt;None&lt;/b&gt; &lt;small&gt;&lt;i&gt;by None&lt;/i&gt;&lt;/small&gt;</property>
                 <property name="use_markup">True</property>
-                <property name="selectable">True</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -287,14 +305,15 @@ audio-volume-medium</property>
       </packing>
     </child>
     <child>
-      <object class="GtkPaned" id="paned_main">
+      <object class="GtkBox" id="box1">
         <property name="visible">True</property>
-        <property name="can_focus">True</property>
+        <property name="can_focus">False</property>
         <child>
           <object class="GtkTreeView" id="treeview_nodes">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="model">liststore_nodes</property>
+            <property name="headers_visible">False</property>
             <child internal-child="selection">
               <object class="GtkTreeSelection" id="treeview_selection_nodes">
                 <signal name="changed" handler="on_treeview_selection_nodes_changed" swapped="no"/>
@@ -313,28 +332,21 @@ audio-volume-medium</property>
             </child>
           </object>
           <packing>
-            <property name="resize">False</property>
-            <property name="shrink">True</property>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
           </packing>
         </child>
         <child>
-          <object class="GtkScrolledWindow" id="scrolledwindow_main">
+          <object class="GtkNotebook" id="notebook_main">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
-            <property name="shadow_type">in</property>
-            <child>
-              <object class="GtkViewport" id="viewport_main">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <child>
-                  <placeholder/>
-                </child>
-              </object>
-            </child>
+            <property name="show_tabs">False</property>
           </object>
           <packing>
-            <property name="resize">True</property>
-            <property name="shrink">True</property>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
           </packing>
         </child>
       </object>

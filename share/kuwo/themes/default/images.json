@@ -1,6 +1,7 @@
 {
-  "player-play": "player-play.svg",
-  "player-add": "player-add.svg",
+  "play": "play.svg",
+  "add": "add.svg",
+  "download": "download.svg",
   "anonymous": "anonymous.png",
   "app-logo": "app-logo.svg"
 }

@@ -1,46 +1,58 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <!-- interface-requires gtk+ 3.0 -->
-  <object class="GtkListStore" id="liststore_toplist_icons">
+  <object class="GtkListStore" id="liststore_toplist_nodes">
     <columns>
       <!-- column-name icon -->
       <column type="GdkPixbuf"/>
       <!-- column-name name -->
       <column type="gchararray"/>
-      <!-- column-name id -->
-      <column type="guint"/>
+      <!-- column-name nid -->
+      <column type="gchararray"/>
     </columns>
   </object>
-  <object class="GtkListStore" id="liststore_toplist_side">
+  <object class="GtkListStore" id="liststore_toplist_songs">
     <columns>
+      <!-- column-name checked -->
+      <column type="gboolean"/>
       <!-- column-name name -->
       <column type="gchararray"/>
-      <!-- column-name id -->
-      <column type="guint"/>
+      <!-- column-name artist -->
+      <column type="gchararray"/>
+      <!-- column-name album -->
+      <column type="gchararray"/>
+      <!-- column-name play -->
+      <column type="GdkPixbuf"/>
+      <!-- column-name add -->
+      <column type="GdkPixbuf"/>
+      <!-- column-name download -->
+      <column type="GdkPixbuf"/>
+      <!-- column-name songid -->
+      <column type="gchararray"/>
+      <!-- column-name artistid -->
+      <column type="gchararray"/>
+      <!-- column-name albumid -->
+      <column type="gchararray"/>
     </columns>
   </object>
-  <object class="GtkListStore" id="liststore_toplist_songs"/>
-  <object class="GtkWindow" id="window_toplist">
+  <object class="GtkBox" id="box_toplist">
+    <property name="visible">True</property>
     <property name="can_focus">False</property>
+    <property name="border_width">5</property>
+    <property name="orientation">vertical</property>
     <child>
-      <object class="GtkBox" id="box_toplist">
+      <object class="GtkButtonBox" id="buttonbox_toplist">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
+        <property name="layout_style">start</property>
         <child>
-          <object class="GtkScrolledWindow" id="scrolledwindow_toplist_side">
+          <object class="GtkButton" id="button_toplist">
+            <property name="label" translatable="yes">Top List</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
-            <property name="shadow_type">in</property>
-            <child>
-              <object class="GtkTreeView" id="treeview_toplist_side">
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="model">liststore_toplist_side</property>
-                <child internal-child="selection">
-                  <object class="GtkTreeSelection" id="treeview-selection"/>
-                </child>
-              </object>
-            </child>
+            <property name="receives_default">True</property>
+            <property name="relief">none</property>
+            <signal name="clicked" handler="on_button_toplist_clicked" swapped="no"/>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -49,71 +61,179 @@
           </packing>
         </child>
         <child>
-          <object class="GtkBox" id="box_toplist_main">
+          <object class="GtkLabel" id="label_toplist">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="orientation">vertical</property>
-            <child>
-              <object class="GtkScrolledWindow" id="scrolledwindow_toplist_icons">
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="shadow_type">in</property>
-                <child>
-                  <object class="GtkIconView" id="iconview_toplist_icons">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="model">liststore_toplist_icons</property>
-                    <child>
-                      <object class="GtkCellRendererPixbuf" id="cellrenderertext1"/>
-                      <attributes>
-                        <attribute name="pixbuf">0</attribute>
-                      </attributes>
-                    </child>
-                    <child>
-                      <object class="GtkCellRendererText" id="cellrenderertext2"/>
-                      <attributes>
-                        <attribute name="text">1</attribute>
-                      </attributes>
-                    </child>
-                  </object>
-                </child>
-              </object>
-              <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkScrolledWindow" id="scrolledwindow_toplist_songs">
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="shadow_type">in</property>
-                <child>
-                  <object class="GtkTreeView" id="treeview_toplist_songs">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="model">liststore_toplist_songs</property>
-                    <child internal-child="selection">
-                      <object class="GtkTreeSelection" id="treeview-selection1"/>
-                    </child>
-                  </object>
-                </child>
-              </object>
-              <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
-                <property name="position">1</property>
-              </packing>
-            </child>
+            <property name="label" translatable="yes">label</property>
           </object>
           <packing>
-            <property name="expand">True</property>
+            <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">1</property>
+            <property name="position">2</property>
           </packing>
         </child>
       </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">0</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkScrolledWindow" id="scrolledwindow_toplist_nodes">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="shadow_type">in</property>
+        <child>
+          <object class="GtkIconView" id="iconview_toplist_nodes">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="model">liststore_toplist_nodes</property>
+            <signal name="item-activated" handler="on_iconview_toplist_nodes_item_activated" swapped="no"/>
+            <child>
+              <object class="GtkCellRendererPixbuf" id="cellrenderertext_toplist_node"/>
+              <attributes>
+                <attribute name="pixbuf">0</attribute>
+              </attributes>
+            </child>
+            <child>
+              <object class="GtkCellRendererText" id="cellrenderertext_toplist_nod"/>
+              <attributes>
+                <attribute name="text">1</attribute>
+              </attributes>
+            </child>
+          </object>
+        </child>
+      </object>
+      <packing>
+        <property name="expand">True</property>
+        <property name="fill">True</property>
+        <property name="position">1</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkScrolledWindow" id="scrolledwindow_toplist_songs">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="hscrollbar_policy">never</property>
+        <property name="shadow_type">in</property>
+        <child>
+          <object class="GtkTreeView" id="treeview_toplist_songs">
+            <property name="can_focus">True</property>
+            <property name="margin_left">3</property>
+            <property name="margin_right">3</property>
+            <property name="model">liststore_toplist_songs</property>
+            <property name="headers_visible">False</property>
+            <property name="search_column">0</property>
+            <signal name="row-activated" handler="on_treeview_songs_row_activated" swapped="no"/>
+            <child internal-child="selection">
+              <object class="GtkTreeSelection" id="treeview_selection_toplist_songs"/>
+            </child>
+            <child>
+              <object class="GtkTreeViewColumn" id="treeviewcolumn1">
+                <property name="title" translatable="yes">column</property>
+                <child>
+                  <object class="GtkCellRendererToggle" id="cellrenderertoggle1">
+                    <signal name="toggled" handler="on_cellrenderer_toggled" object="liststore_toplist_songs" swapped="yes"/>
+                  </object>
+                  <attributes>
+                    <attribute name="active">0</attribute>
+                  </attributes>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkTreeViewColumn" id="treeviewcolumn2">
+                <property name="sizing">autosize</property>
+                <property name="min_width">80</property>
+                <property name="max_width">190</property>
+                <property name="title" translatable="yes">column</property>
+                <property name="expand">True</property>
+                <child>
+                  <object class="GtkCellRendererText" id="cellrenderertext1"/>
+                  <attributes>
+                    <attribute name="text">1</attribute>
+                  </attributes>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkTreeViewColumn" id="treeviewcolumn3">
+                <property name="sizing">autosize</property>
+                <property name="min_width">80</property>
+                <property name="max_width">130</property>
+                <property name="title" translatable="yes">column</property>
+                <property name="expand">True</property>
+                <child>
+                  <object class="GtkCellRendererText" id="cellrenderertext2"/>
+                  <attributes>
+                    <attribute name="text">2</attribute>
+                  </attributes>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkTreeViewColumn" id="treeviewcolumn4">
+                <property name="sizing">autosize</property>
+                <property name="min_width">80</property>
+                <property name="max_width">180</property>
+                <property name="title" translatable="yes">column</property>
+                <property name="expand">True</property>
+                <child>
+                  <object class="GtkCellRendererText" id="cellrenderertext3"/>
+                  <attributes>
+                    <attribute name="text">3</attribute>
+                  </attributes>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkTreeViewColumn" id="treeviewcolumn5">
+                <property name="sizing">fixed</property>
+                <property name="fixed_width">20</property>
+                <property name="title" translatable="yes">column</property>
+                <child>
+                  <object class="GtkCellRendererPixbuf" id="cellrendererpixbuf1"/>
+                  <attributes>
+                    <attribute name="pixbuf">4</attribute>
+                  </attributes>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkTreeViewColumn" id="treeviewcolumn6">
+                <property name="sizing">fixed</property>
+                <property name="fixed_width">20</property>
+                <property name="title" translatable="yes">column</property>
+                <child>
+                  <object class="GtkCellRendererPixbuf" id="cellrendererpixbuf2"/>
+                  <attributes>
+                    <attribute name="pixbuf">5</attribute>
+                  </attributes>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkTreeViewColumn" id="treeviewcolumn7">
+                <property name="sizing">fixed</property>
+                <property name="fixed_width">20</property>
+                <property name="title" translatable="yes">column</property>
+                <child>
+                  <object class="GtkCellRendererPixbuf" id="cellrendererpixbuf3"/>
+                  <attributes>
+                    <attribute name="pixbuf">6</attribute>
+                  </attributes>
+                </child>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+      <packing>
+        <property name="expand">True</property>
+        <property name="fill">True</property>
+        <property name="position">3</property>
+      </packing>
     </child>
   </object>
 </interface>
