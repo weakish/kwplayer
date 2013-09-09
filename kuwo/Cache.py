@@ -20,6 +20,7 @@ TOPLIST = 'http://kbangserver.kuwo.cn/ksong.s?'
 LRC = 'http://newlyric.kuwo.cn/newlyric.lrc?'
 ARTIST_LOGO = 'http://img4.kwcdn.kuwo.cn/star/starheads/'
 SONG = 'http://antiserver.kuwo.cn/anti.s?'
+ARTISTLIST = 'http://artistlistinfo.kuwo.cn/mb.slist?'
 CHUNK = 16 * 1024
 CHUNK_TO_PLAY = 1024 * 1024
 
@@ -55,6 +56,8 @@ def get_image(url):
     '''
     def _parse_image(url): 
         print('url-image:', url)
+        if not url.startswith('http:'):
+            url = ARTIST_LOGO + url
         req = request.urlopen(url)
         if req.status != 200:
             return None
@@ -144,8 +147,7 @@ def search(keyword, _type, page=0):
     req = request.urlopen(url)
     if req.status != 200:
         return None
-    txt = req.read().decode('gbk').replace("'", '"')
-    return json.loads(txt)
+    return Utils.json_loads_single(req.read().decode('gbk'))
 
 
 class ArtistSong:
@@ -164,7 +166,7 @@ class ArtistSong:
     def init_tables(self):
         sql = '''
         CREATE TABLE IF NOT EXISTS `artistmusic` (
-        id INTEGER PRIMARY KYE AUTOINCREMENT,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         artist CHAR,
         pn INT,
         songs TEXT
@@ -214,16 +216,15 @@ class ArtistSong:
         if req.status != 200:
             return None
         try:
-            songs = json.loads(req.read().decode().replace("'", '"'))
-        except Error as e:
+            songs = Utils.json_loads_single(req.read().decode())
+        except Exception as e:
             print(e)
             return None
         return songs
 
     def _dump_songs(self, songs):
-        sql = 'INSERT INTO `artistmusic` VALUES(?, ?, ?, ?)'
-        cursor.execute(sql, (self.artist, self.page, 
-            json.dumps(songs), int(time.time())))
+        sql = 'INSERT INTO `artistmusic`(artist, pn, songs) VALUES(?, ?, ?)'
+        cursor.execute(sql, (self.artist, self.page, json.dumps(songs))) 
         conn.commit()
 
 
@@ -276,8 +277,8 @@ def get_artist_info(callback, artist=None, artistid=None):
         if req.status != 200:
             return None
         try:
-            info = json.loads(req.read().decode().replace("'", '"'))
-        except Error as e:
+            info = Utils.json_loads_single(req.read().decode())
+        except Exception as e:
             print(e)
             return None
 
@@ -291,6 +292,7 @@ def get_artist_info(callback, artist=None, artistid=None):
 
     def _update_info(info, error):
         if info is None:
+            print('update info failed:', info ,error)
             return
         _write_info(info)
         callback(info, error)
@@ -302,6 +304,7 @@ def get_artist_info(callback, artist=None, artistid=None):
 
     info = _read_info()
     if info is not None:
+        print('info is not None:', info)
         callback(info, None)
 
     async_call(_parse_info, _update_info)
@@ -360,7 +363,7 @@ class Node:
             return None
         try:
             nodes = json.loads(req.read().decode())
-        except Error as e:
+        except Exception as e:
             print(e)
             return None
         return nodes
@@ -406,7 +409,6 @@ class TopList:
         req = cursor.execute(sql, (self.nid, ))
         songs = req.fetchone()
         if songs is not None:
-            print('local cache HIT!')
             return json.loads(songs[0])
         return None
 
@@ -425,7 +427,7 @@ class TopList:
             return None
         try:
             songs = json.loads(req.read().decode())
-        except Error as e:
+        except Exception as e:
             print(e)
             return None
         return songs
@@ -435,6 +437,33 @@ class TopList:
         cursor.execute(sql, (self.nid, json.dumps(songs), 
             int(time.time())))
         conn.commit()
+
+
+class Artists:
+    def __init__(self):
+        pass
+
+    def get_artists(self, category, page):
+        #TODO: memorize page number
+        artists = self._parse_list(category, page)
+        return artists['artistlist']
+
+    def _parse_list(self, category, page):
+        url = ''.join([
+            ARTISTLIST,
+            'stype=artistlist&order=hot&rn=50&category=',
+            str(category),
+            '&pn=',
+            str(page)
+            ])
+        print('artist url:', url)
+        
+        req = request.urlopen(url)
+        if req.status != 200:
+            return None
+        artists = Utils.json_loads_single(req.read().decode())
+        return artists
+
 
 
 class Song(GObject.GObject):
@@ -518,11 +547,9 @@ class Song(GObject.GObject):
         return
 
     def append_playlist(self, song_info):
-        print('append playlist')
         return
 
     def cache_song(self, song_info):
-        print('cache song')
         return
 
     def _read_song_info(self, rid):
@@ -530,7 +557,6 @@ class Song(GObject.GObject):
         req = self.cursor.execute(sql, (rid, ))
         song = req.fetchone()
         if song is not None:
-            print('local song cache HIT!')
             song_info = dict(zip(self.cols , song))
             if os.path.exists(song_info['filepath']):
                 return song_info
@@ -573,7 +599,6 @@ class Song(GObject.GObject):
 
     def _download_song(self, song_link, song_info):
         if os.path.exists(song_info['filepath']): 
-            print('local song cache HIT!')
             self.emit('can-play', song_info)
             self.emit('downloaded', song_info)
             return

@@ -5,6 +5,7 @@ from gi.repository import GObject
 from gi.repository import Gst
 from gi.repository import Gtk
 import html
+import string
 import sys
 
 from kuwo import Config
@@ -116,13 +117,11 @@ class App:
     def on_action_player_next_activate(self, action):
         pass
     def on_action_player_play_activate(self, action):
-        print('action player play')
         self.ui('toolbutton_play').hide()
         self.ui('toolbutton_pause').show_all()
         self.player.play()
 
     def on_action_player_pause_activate(self, widget):
-        print('action player pause')
         self.ui('toolbutton_pause').hide()
         self.ui('toolbutton_play').show_all()
         self.player.pause()
@@ -144,19 +143,25 @@ class App:
 
     def update_player_info(self, song):
         def _update_player_logo(info, error=None):
+            print('update player logo:', info)
             if info is None:
                 return
             self.ui('image_player_logo').set_tooltip_text(
                     info['info'].replace('<br>', '\n'))
             if info['logo'] is not None:
-                pix = GdkPixbuf.Pixbuf.new_from_file_at_size(
-                        info['logo'], 120, 120)
-                self.ui('image_player_logo').set_from_pixbuf(pix)
+                pix = GdkPixbuf.Pixbuf.new_from_file_at_size(info['logo'], 
+                        120, 120)
+            else:
+                print('will use default logo')
+                pix = self.theme['anonymous']
+            self.ui('image_player_logo').set_from_pixbuf(pix)
+
             
         label = ''.join([
             '<b>', html.escape(song['name']), '</b> ',
             '<i><small>by ', html.escape(song['artist']), ' from ',
             html.escape(song['album']), '</small></i>'])
+        print('label text:', label)
         self.ui('label_player_name').set_label(label)
 
         Cache.get_artist_info(_update_player_logo, artistid=song['artistid'])
@@ -171,13 +176,11 @@ class App:
 
     def on_treeview_selection_nodes_changed(self, selection, 
             inited=[]):
-        print(selection.get_selected())
 
         model, tree_iter = selection.get_selected()
         path = model.get_path(tree_iter)
         nid = model[path][1]
         index = path.get_indices()[0]
-        #print(model, tree_iter, path, type(path), index)
         methods = [
                 self.init_toplist,
                 self.init_mv,
@@ -197,13 +200,21 @@ class App:
         if index not in inited:
             inited.append(index)
             methods[index](nid)
+        # switch to specific tab
+        self.ui('notebook_main').set_current_page(index)
 
     # notebook_main
     def init_notebook_main(self):
         note = self.ui('notebook_main')
-        #page_toplist = Node.TopList(self)
-        label = Gtk.Label('hello')
+        label = Gtk.Label('')
         note.append_page(self.ui('box_toplist'), label)
+
+        label = Gtk.Label('')
+        note.append_page(self.ui('box_mv'), label)
+
+        label = Gtk.Label('')
+        note.append_page(self.ui('box_artists'), label)
+
 
 
 
@@ -226,7 +237,6 @@ class App:
                 'albumid': liststore[path][9],
                 }
 
-        print('treeview index:', index)
         if index in (1, 4):
             # level 1
             # FIXME:whether the player should be pause?
@@ -254,7 +264,6 @@ class App:
         self.ui('buttonbox_toplist').hide()
 
         nodes = Cache.Node(nid).get_nodes()
-        #print(nodes)
 
         liststore = self.ui('liststore_toplist_nodes')
         liststore.clear()
@@ -274,7 +283,6 @@ class App:
         self.ui('buttonbox_toplist').hide()
     
     def on_iconview_toplist_nodes_item_activated(self, iconview, path):
-        print('iconview:', iconview)
         model = iconview.get_model()
         self.ui('buttonbox_toplist').show_all()
         self.ui('label_toplist').set_label(model[path][1])
@@ -285,7 +293,6 @@ class App:
         self.ui('scrolledwindow_toplist_songs').show_all()
         toplist = Cache.TopList(nid)
         songs = toplist.get_songs()
-        #print('songs:', songs)
 
         liststore = self.ui('liststore_toplist_songs')
         liststore.clear()
@@ -296,65 +303,114 @@ class App:
                 song['albumid']])
 
     # mv
-    def init_mv(self):
+    def init_mv(self, nid):
         pass
 
 
     # artists
-    def init_artists(self):
-        pass
+    def init_artists(self, nid):
+        liststore_prefix = self.ui('liststore_artists_prefix')
+        liststore_prefix.append(('All', ''))
+        for ch in string.ascii_uppercase:
+            liststore_prefix.append((ch, ch.lower()))
+        liststore_prefix.append(('#', '%23'))
+        self.ui('combobox_artists_prefix').set_active(0)
+        
+        liststore_country = self.ui('liststore_artists_country')
+        for country in Config.ARTISTS_COUNTRY:
+            liststore_country.append(country)
+        self.ui('combobox_artists_country').set_active(0)
 
+        self.ui('scrolledwindow_artists_songs').hide()
+
+        artists = Cache.Artists().get_artists(0, 0)
+        liststore = self.ui('liststore_artists')
+        i = 0
+        for artist in artists:
+            print('artist:', artist)
+            print('artist:', artist)
+            liststore.append([self.theme['anonymous'], artist['name'],
+                int(artist['id'])])
+            Cache.update_liststore_image(liststore, i, 0, artist['pic'])
+            i += 1
+
+
+    def on_button_artists_clicked(self, btn):
+        self.ui('scrolledwindow_artists_songs').hide()
+        self.ui('scrolledwindow_artists').show_all()
+        self.ui('buttonbox_artists').hide()
+
+    def on_iconview_artists_item_activated(self, iconview, path):
+        model = iconview.get_model()
+        self.ui('buttonbox_artists').show_all()
+        self.ui('label_artists').set_label(model[path][1])
+        self.show_artists_songs(model[path][1])
+
+    def show_artists_songs(self, artist):
+        self.ui('scrolledwindow_artists').hide()
+        self.ui('scrolledwindow_artists_songs').show_all()
+        self.artist = Cache.ArtistSong(artist)
+        songs = self.artist.get_songs()
+
+
+        liststore = self.ui('liststore_artists_songs')
+        liststore.clear()
+        for song in songs:
+            liststore.append([True, song['NAME'], song['ALBUM'],
+                int(song['MUSICRID'][6:]), int(song['ALBUMID']), 
+                self.theme['play'], self.theme['add'],
+                self.theme['download']])
 
     # hot categories
-    def init_hot_categories(self):
+    def init_hot_categories(self, nid):
         pass
 
 
     # broadcasting
-    def init_broadcasting(self):
+    def init_broadcasting(self, nid):
         pass
 
 
     # language
-    def init_language(self):
+    def init_language(self, nid):
         pass
 
 
     # people
-    def init_people(self):
+    def init_people(self, nid):
         pass
 
 
     # festival
-    def init_festival(self):
+    def init_festival(self, nid):
         pass
 
 
     # temper
-    def init_temper(self):
+    def init_temper(self, nid):
         pass
 
 
     # scene
-    def init_scene(self):
+    def init_scene(self, nid):
         pass
 
 
     # genre
-    def init_genre(self):
+    def init_genre(self, nid):
         pass
 
 
     # playlist
-    def init_playlist(self):
+    def init_playlist(self, nid):
         pass
 
 
     # search
-    def init_search(self):
+    def init_search(self, nid):
         pass
 
 
     # download
-    def init_download(self):
+    def init_download(self, nid):
         pass

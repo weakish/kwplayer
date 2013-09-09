@@ -1,6 +1,7 @@
 
-import zlib
 import base64
+import json
+import zlib
 
 
 def decode_lrc_content(lrc, is_lrcx=False):
@@ -58,3 +59,9 @@ def decode_lrc_url(url):
     output = xor_bytes(str_bytes)
     #print(output.decode('gb2312'))
     return output.decode('gb2312')
+
+def json_loads_single(_str):
+    '''
+    Actually this is not a good idea.
+    '''
+    return json.loads(_str.replace('"', '''\\"''').replace("'", '"'))

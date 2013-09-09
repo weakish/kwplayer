@@ -10,7 +10,7 @@ if __file__.startswith('/usr/'):
 else:
     PREF = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'share', 'kuwo')
 
-_ui_files = ('main.ui', 'menus.ui', 'toplist.ui')
+_ui_files = ('main.ui', 'menus.ui', 'toplist.ui', 'mv.ui', 'artists.ui')
 UI_FILES = [os.path.join(PREF, 'ui', ui) for ui in _ui_files]
 
 
@@ -34,6 +34,20 @@ NODES = (
        ('Playlist', 0),
        ('Search', 0),
        ('Download', 0),
+        )
+
+ARTISTS_COUNTRY = (
+        ('热门歌手', 0),
+        ('华语男', 1),
+        ('华语女', 2),
+        ('华语组合', 3),
+        ('日韩男', 4),
+        ('日韩女', 5),
+        ('日韩组合', 6),
+        ('欧美男', 7),
+        ('欧美女', 8),
+        ('欧美组合', 9),
+        ('其它', 10),
         )
 
 _default_conf = {
