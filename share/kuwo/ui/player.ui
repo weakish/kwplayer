@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <!-- interface-requires gtk+ 3.0 -->
+  <object class="GtkActionGroup" id="actiongroup1">
+    <child>
+      <object class="GtkAction" id="action_previous">
+        <property name="label" translatable="yes">Previous</property>
+        <property name="tooltip" translatable="yes">Play previous song</property>
+        <property name="stock_id">gtk-media-previous</property>
+        <signal name="activate" handler="on_action_previous_activate" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkAction" id="action_next">
+        <property name="label" translatable="yes">Next</property>
+        <property name="tooltip" translatable="yes">Play next song</property>
+        <property name="stock_id">gtk-media-next</property>
+        <signal name="activate" handler="on_action_next_activate" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkAction" id="action_play">
+        <property name="label" translatable="yes">Play</property>
+        <property name="tooltip" translatable="yes">Play song</property>
+        <property name="stock_id">gtk-media-play</property>
+        <signal name="activate" handler="on_action_play_activate" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkAction" id="action_pause">
+        <property name="label" translatable="yes">Pause</property>
+        <property name="tooltip" translatable="yes">Pause</property>
+        <property name="stock_id">gtk-media-pause</property>
+        <signal name="activate" handler="on_action_pause_activate" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkAction" id="action_shutffle">
+        <property name="label" translatable="yes">Shuffle</property>
+        <property name="tooltip" translatable="yes">Play songs at a random order</property>
+        <property name="icon_name">media-playlist-shuffle</property>
+        <signal name="activate" handler="on_action_shutffle_activate" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkAction" id="action_repeat">
+        <property name="label" translatable="yes">Loop</property>
+        <property name="tooltip" translatable="yes">Repeat songs in this playlist</property>
+        <property name="icon_name">media-playlist-repeat-symbolic</property>
+        <signal name="activate" handler="on_action_repeat_activate" swapped="no"/>
+      </object>
+    </child>
+  </object>
+  <object class="GtkBox" id="box_player">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <child>
+      <object class="GtkImage" id="image_logo">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="pixbuf">logo-128.png</property>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">0</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkBox" id="box1">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkToolbar" id="toolbar1">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="toolbar_style">icons</property>
+            <property name="icon_size">5</property>
+            <child>
+              <object class="GtkToolButton" id="toolbutton1">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">toolbutton1</property>
+                <property name="use_underline">True</property>
+                <property name="icon_name">media-playback-start</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <placeholder/>
+        </child>
+      </object>
+      <packing>
+        <property name="expand">True</property>
+        <property name="fill">True</property>
+        <property name="position">1</property>
+      </packing>
+    </child>
+  </object>
+  <object class="GtkVolumeButton" id="volumebutton1">
+    <property name="visible">True</property>
+    <property name="can_focus">True</property>
+    <property name="receives_default">True</property>
+    <property name="has_tooltip">True</property>
+    <property name="relief">none</property>
+    <property name="focus_on_click">False</property>
+    <property name="orientation">vertical</property>
+    <property name="icons">audio-volume-muted
+audio-volume-high
+audio-volume-low
+audio-volume-medium</property>
+  </object>
+</interface>

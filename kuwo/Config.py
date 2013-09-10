@@ -10,14 +10,13 @@ if __file__.startswith('/usr/'):
 else:
     PREF = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'share', 'kuwo')
 
-_ui_files = ('main.ui', 'menus.ui', 'toplist.ui', 'mv.ui', 'artists.ui')
-UI_FILES = [os.path.join(PREF, 'ui', ui) for ui in _ui_files]
-
 
 HOME_DIR = os.path.expanduser('~')
 CACHE_DIR = os.path.join(HOME_DIR, '.cache', 'kuwo')
 CONF_DIR = os.path.join(HOME_DIR, '.config', 'kuwo')
 _conf_file = os.path.join(CONF_DIR, 'kuwo', 'conf.json')
+
+MENUS = os.path.join(PREF, 'ui', 'menus.ui')
 
 NODES = (
        ('Top List', 2), # 排行榜
@@ -51,7 +50,7 @@ ARTISTS_COUNTRY = (
         )
 
 _default_conf = {
-        'window-size': (800, 480),
+        'window-size': (900, 580),
         'use-ape': False,
         'use-mkv': False,
         'song-dir': os.path.join(CACHE_DIR, 'song'),
@@ -60,6 +59,7 @@ _default_conf = {
         'mv-dir': os.path.join(CACHE_DIR, 'mv'),
         'cache-dir': os.path.join(CACHE_DIR, 'cache'),
         'cache-db': os.path.join(CACHE_DIR, 'cache.sqlite'),
+        'playlists': os.path.join(CACHE_DIR, 'pls.json'),
         'song-db': os.path.join(CACHE_DIR, 'music.sqlite'),
         'mv-db': os.path.join(CACHE_DIR, 'music.sqlite'),
         'theme': os.path.join(PREF, 'themes', 'default', 'images.json')

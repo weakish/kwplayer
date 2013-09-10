@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <!-- interface-requires gtk+ 3.0 -->
-  <object class="GtkListStore" id="liststore_toplist_nodes">
+  <object class="GtkListStore" id="liststore_nodes">
     <columns>
       <!-- column-name icon -->
       <column type="GdkPixbuf"/>
@@ -11,7 +11,7 @@
       <column type="gchararray"/>
     </columns>
   </object>
-  <object class="GtkListStore" id="liststore_toplist_songs">
+  <object class="GtkListStore" id="liststore_songs">
     <columns>
       <!-- column-name checked -->
       <column type="gboolean"/>
@@ -41,7 +41,7 @@
     <property name="border_width">5</property>
     <property name="orientation">vertical</property>
     <child>
-      <object class="GtkButtonBox" id="buttonbox_toplist">
+      <object class="GtkButtonBox" id="buttonbox">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="layout_style">start</property>
@@ -80,15 +80,15 @@
       </packing>
     </child>
     <child>
-      <object class="GtkScrolledWindow" id="scrolledwindow_toplist_nodes">
+      <object class="GtkScrolledWindow" id="scrolled_nodes">
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="shadow_type">in</property>
         <child>
-          <object class="GtkIconView" id="iconview_toplist_nodes">
+          <object class="GtkIconView" id="iconview_nodes">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
-            <property name="model">liststore_toplist_nodes</property>
+            <property name="model">liststore_nodes</property>
             <signal name="item-activated" handler="on_iconview_toplist_nodes_item_activated" swapped="no"/>
             <child>
               <object class="GtkCellRendererPixbuf" id="cellrenderertext_toplist_node"/>
@@ -112,22 +112,22 @@
       </packing>
     </child>
     <child>
-      <object class="GtkScrolledWindow" id="scrolledwindow_toplist_songs">
+      <object class="GtkScrolledWindow" id="scrolled_songs">
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="hscrollbar_policy">never</property>
         <property name="shadow_type">in</property>
         <child>
-          <object class="GtkTreeView" id="treeview_toplist_songs">
+          <object class="GtkTreeView" id="treeview_songs">
             <property name="can_focus">True</property>
             <property name="margin_left">3</property>
             <property name="margin_right">3</property>
-            <property name="model">liststore_toplist_songs</property>
+            <property name="model">liststore_songs</property>
             <property name="headers_visible">False</property>
             <property name="search_column">0</property>
             <signal name="row-activated" handler="on_treeview_songs_row_activated" swapped="no"/>
             <child internal-child="selection">
-              <object class="GtkTreeSelection" id="treeview_selection_toplist_songs"/>
+              <object class="GtkTreeSelection" id="treeview_selection_songs"/>
             </child>
             <child>
               <object class="GtkTreeViewColumn" id="treeviewcolumn1">
