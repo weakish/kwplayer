@@ -12,16 +12,33 @@ class TopList(Gtk.Box):
         self.set_orientation(Gtk.Orientation.VERTICAL)
         self.app = app
 
-        self.buttonbox = Gtk.Box()
+        self.buttonbox = Gtk.Box(spacing=8)
         self.pack_start(self.buttonbox, False, False, 0)
 
-        home_btn = Gtk.Button('热播榜')
-        home_btn.connect('clicked', self.on_home_btn_clicked)
-        home_btn.props.relief = Gtk.ReliefStyle.NONE
-        self.buttonbox.pack_start(home_btn, False, False, 0)
+        button_home = Gtk.Button('TopList')
+        button_home.connect('clicked', self.on_button_home_clicked)
+        #button_home.props.relief = Gtk.ReliefStyle.NONE
+        self.buttonbox.pack_start(button_home, False, False, 0)
 
         self.label = Gtk.Label('')
         self.buttonbox.pack_start(self.label, False, False, 20)
+
+        #TODO: reset these button to local variable.
+        button_cache = Gtk.Button('Cache')
+        button_cache.connect('clicked', self.on_button_cache_clicked)
+        self.buttonbox.pack_end(button_cache, False, False, 0)
+
+        self.button_add = Gtk.Button('Add to playlist')
+        self.buttonbox.pack_end(self.button_add, False, False, 0)
+
+        self.button_play = Gtk.Button('Play')
+        self.buttonbox.pack_end(self.button_play, False, False, 0)
+
+        self.button_selectall = Gtk.ToggleButton('Select All')
+        self.button_selectall.set_active(True)
+        self.button_selectall.connect('toggled', self.on_button_selectall_toggled)
+        self.buttonbox.pack_end(self.button_selectall, False, False, 0)
+
 
         self.scrolled_nodes = Gtk.ScrolledWindow()
         self.pack_start(self.scrolled_nodes, True, True, 0)
@@ -43,7 +60,7 @@ class TopList(Gtk.Box):
         treeview_songs = Gtk.TreeView()
         # checked, name, artist, album, rid, artistid, albumid
         self.liststore_songs = Gtk.ListStore(bool, str, str, str, int, int,
-                int)
+                int, GdkPixbuf.Pixbuf, GdkPixbuf.Pixbuf, GdkPixbuf.Pixbuf)
         treeview_songs.set_model(self.liststore_songs)
         treeview_songs.set_headers_visible(False)
         treeview_songs.connect('row_activated', 
@@ -75,20 +92,20 @@ class TopList(Gtk.Box):
         col_album.props.expand = True
         treeview_songs.append_column(col_album)
 
-        play = Gtk.CellRendererPixbuf(pixbuf=self.app.theme['play'])
-        col_play = Gtk.TreeViewColumn('Play', play)
+        play = Gtk.CellRendererPixbuf()
+        col_play = Gtk.TreeViewColumn('Play', play, pixbuf=7)
         col_play.props.sizing = Gtk.TreeViewColumnSizing.FIXED
         col_play.props.fixed_width = 20
         treeview_songs.append_column(col_play)
 
-        add = Gtk.CellRendererPixbuf(pixbuf=self.app.theme['add'])
-        col_add = Gtk.TreeViewColumn('Add', add)
+        add = Gtk.CellRendererPixbuf()
+        col_add = Gtk.TreeViewColumn('Add', add, pixbuf=8)
         col_add.props.sizing = Gtk.TreeViewColumnSizing.FIXED
         col_add.props.fixed_width = 20
         treeview_songs.append_column(col_add)
 
-        cache = Gtk.CellRendererPixbuf(pixbuf=self.app.theme['cache'])
-        col_cache = Gtk.TreeViewColumn('Cache', cache)
+        cache = Gtk.CellRendererPixbuf()
+        col_cache = Gtk.TreeViewColumn('Cache', cache, pixbuf=9)
         col_cache.props.sizing = Gtk.TreeViewColumnSizing.FIXED
         col_cache.props.fixed_width = 20
         treeview_songs.append_column(col_cache)
@@ -114,10 +131,15 @@ class TopList(Gtk.Box):
                     node['pic'])
             i += 1
 
-    def on_home_btn_clicked(self, btn):
+    def on_button_home_clicked(self, btn):
         self.scrolled_nodes.show_all()
         self.scrolled_songs.hide()
         self.buttonbox.hide()
+
+    def on_button_selectall_toggled(self, btn):
+        toggled = btn.get_active()
+        for song in self.liststore_songs:
+            song[0] = toggled
 
     def on_iconview_nodes_item_activated(self, iconview, path):
         model = iconview.get_model()
@@ -137,30 +159,44 @@ class TopList(Gtk.Box):
         for song in songs:
             self.liststore_songs.append([True, song['name'], 
                 song['artist'], song['album'], int(song['id']), 
-                int(song['artistid']), int(song['albumid']), ])
+                int(song['artistid']), int(song['albumid']), 
+                self.app.theme['play'], self.app.theme['add'],
+                self.app.theme['cache'], ])
 
     def on_treeview_songs_row_activated(self, treeview, path, column):
         liststore = treeview.get_model()
         index = treeview.get_columns().index(column)
-        song = {
-                'name': liststore[path][1],
-                'artist': liststore[path][2],
-                'album': liststore[path][3],
-                'rid': liststore[path][4],
-                'artistid': liststore[path][5],
-                'albumid': liststore[path][6],
-                }
+        song = self.song_modelrow_to_dict(liststore[path])
 
-        if index in (1, 7):
+        if index in (1, 4):
             # level 1
             self.app.player.load(song)
         elif index == 2:
             print('will search artist')
         elif index == 3:
             print('will search album')
-        elif index == 8:
+        elif index == 5:
             # level 2
-            self.app.playlist.append(song)
-        elif index == 9:
+            print('will append song')
+            self.app.playlist.append_song(song)
+        elif index == 6:
             # level 3
-            self.app.playlist.cache(song)
+            self.app.playlist.cache_song(song)
+
+
+    def on_button_cache_clicked(self, btn):
+        print('on button cache clicked')
+        songs = [self.song_modelrow_to_dict(song) for song in self.liststore_songs if song[0]]
+        self.app.playlist.cache_songs(songs)
+
+    def song_modelrow_to_dict(self, song_row):
+        song = {
+                'name': song_row[1],
+                'artist': song_row[2],
+                'album': song_row[3],
+                'rid': song_row[4],
+                'artistid': song_row[5],
+                'albumid': song_row[6],
+                'filepath': '',
+                }
+        return song

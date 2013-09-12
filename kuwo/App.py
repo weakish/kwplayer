@@ -9,6 +9,8 @@ import os
 import sys
 
 from kuwo import Config
+from kuwo.Artists import Artists
+from kuwo.Lrc import Lrc
 from kuwo.Player import Player
 from kuwo.PlayList import PlayList
 from kuwo.TopList import TopList
@@ -45,11 +47,13 @@ class App:
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.window.add(box)
 
-        self.notebook = Gtk.Notebook()
-        box.pack_start(self.notebook, True, True, 0)
-
         self.player = Player(self)
         box.pack_start(self.player, False, False, 0)
+
+        self.notebook = Gtk.Notebook()
+        self.notebook.props.margin_top = 7
+        self.notebook.props.tab_pos = Gtk.PositionType.BOTTOM
+        box.pack_start(self.notebook, True, True, 0)
 
         builder = Gtk.Builder()
         builder.add_from_file(Config.MENUS)
@@ -76,6 +80,7 @@ class App:
         # make some changes after main window is shown.
         self.player.after_init()
         self.toplist.after_init()
+        self.artists.after_init()
 
     def on_app_shutdown(self, app):
         Config.dump_conf(self.conf)
@@ -99,143 +104,17 @@ class App:
         self.app.add_action(action)
 
     def init_notebook(self):
-
-        self.toplist = TopList(self)
-        self.notebook.append_page(self.toplist, Gtk.Label('热播榜'))
+        self.lrc = Lrc(self)
+        self.notebook.append_page(self.lrc, Gtk.Label('Lrc'))
 
         self.playlist = PlayList(self)
-        self.notebook.append_page(self.playlist, Gtk.Label('播放列表'))
+        self.notebook.append_page(self.playlist, Gtk.Label('Playlist'))
+
+        self.toplist = TopList(self)
+        self.notebook.append_page(self.toplist, Gtk.Label('TopList'))
+
+        self.artists = Artists(self)
+        self.notebook.append_page(self.artists, Gtk.Label('Artists'))
 
     def on_notebook_switch_page(self, notebook, page, page_num):
         page.first()
-
-#    def on_treeview_selection_nodes_changed(self, selection, 
-#            inited=[]):
-#
-#        model, tree_iter = selection.get_selected()
-#        path = model.get_path(tree_iter)
-#        nid = model[path][1]
-#        index = path.get_indices()[0]
-#        methods = [
-#                self.init_toplist,
-#                self.init_mv,
-#                self.init_artists,
-#                self.init_hot_categories,
-#                self.init_broadcasting,
-#                self.init_language,
-#                self.init_people,
-#                self.init_festival,
-#                self.init_temper,
-#                self.init_scene,
-#                self.init_genre,
-#                self.init_playlist,
-#                self.init_search,
-#                self.init_download,
-#                ]
-#        if index not in inited:
-#            inited.append(index)
-#            methods[index](nid)
-#        # switch to specific tab
-#        self.ui('notebook_main').set_current_page(index)
-
-
-
-
-
-
-
-
-    # Common signal handlers for song list
-#    def on_cellrenderer_toggled(self, liststore, path):
-#        '''
-#        Use connect_swap()
-#        '''
-#        liststore[path][0] = not liststore[path][0]
-#
-#
-#
-#    # toplist
-#    def init_toplist(self, nid):
-#        self.ui('scrolledwindow_toplist_nodes').show_all()
-#        self.ui('scrolledwindow_toplist_songs').hide()
-#        self.ui('buttonbox_toplist').hide()
-#
-#        nodes = Cache.Node(nid).get_nodes()
-#
-#        liststore = self.ui('liststore_toplist_nodes')
-#        liststore.clear()
-#        i = 0
-#        for node in nodes:
-#            liststore.append([self.theme['anonymous'], 
-#                node['disname'], node['sourceid'], ])
-#            Cache.update_liststore_image(liststore, i, 0, node['pic'])
-#            i += 1
-#
-#    def on_button_toplist_clicked(self, btn):
-#        '''
-#        Back to top list from sublist
-#        '''
-#        self.ui('scrolledwindow_toplist_nodes').show_all()
-#        self.ui('scrolledwindow_toplist_songs').hide()
-#        self.ui('buttonbox_toplist').hide()
-#    
-#
-#    # mv
-#    def init_mv(self, nid):
-#        pass
-#
-#
-#    # artists
-#    def init_artists(self, nid):
-#        liststore_prefix = self.ui('liststore_artists_prefix')
-#        liststore_prefix.append(('All', ''))
-#        for ch in string.ascii_uppercase:
-#            liststore_prefix.append((ch, ch.lower()))
-#        liststore_prefix.append(('#', '%23'))
-#        self.ui('combobox_artists_prefix').set_active(0)
-#        
-#        liststore_country = self.ui('liststore_artists_country')
-#        for country in Config.ARTISTS_COUNTRY:
-#            liststore_country.append(country)
-#        self.ui('combobox_artists_country').set_active(0)
-#
-#        self.ui('scrolledwindow_artists_songs').hide()
-#
-#        artists = Cache.Artists().get_artists(0, 0)
-#        liststore = self.ui('liststore_artists')
-#        i = 0
-#        for artist in artists:
-#            print('artist:', artist)
-#            print('artist:', artist)
-#            liststore.append([self.theme['anonymous'], artist['name'],
-#                int(artist['id'])])
-#            Cache.update_liststore_image(liststore, i, 0, artist['pic'])
-#            i += 1
-#
-#
-#    def on_button_artists_clicked(self, btn):
-#        self.ui('scrolledwindow_artists_songs').hide()
-#        self.ui('scrolledwindow_artists').show_all()
-#        self.ui('buttonbox_artists').hide()
-#
-#    def on_iconview_artists_item_activated(self, iconview, path):
-#        model = iconview.get_model()
-#        self.ui('buttonbox_artists').show_all()
-#        self.ui('label_artists').set_label(model[path][1])
-#        self.show_artists_songs(model[path][1])
-#
-#    def show_artists_songs(self, artist):
-#        self.ui('scrolledwindow_artists').hide()
-#        self.ui('scrolledwindow_artists_songs').show_all()
-#        self.artist = Cache.ArtistSong(artist)
-#        songs = self.artist.get_songs()
-#
-#
-#        liststore = self.ui('liststore_artists_songs')
-#        liststore.clear()
-#        for song in songs:
-#            liststore.append([True, song['NAME'], song['ALBUM'],
-#                int(song['MUSICRID'][6:]), int(song['ALBUMID']), 
-#                self.theme['play'], self.theme['add'],
-#                self.theme['download']])
-#

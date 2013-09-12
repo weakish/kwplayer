@@ -1,17 +1,3 @@
-
-    # scrolledwindow_main
-    def init_scrolled_main(self):
-        self.ui('treeview_selection_nodes').select_path(0)
-
-    def init_artists(self):
-        '''
-        init artists tab
-        '''
-        return
-        liststore_artists = self.ui('liststore_artists')
-        self.artists_list = Config.load_artists_list()
-        grid_artists = self.ui('grid_artists')
-
         i = 0
         double = 1
         prev = None

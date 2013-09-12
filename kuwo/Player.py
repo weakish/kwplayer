@@ -33,6 +33,7 @@ class Player(Gtk.Box):
 
         toolbar = Gtk.Toolbar()
         toolbar.set_style(Gtk.ToolbarStyle.ICONS)
+        toolbar.get_style_context().add_class(Gtk.STYLE_CLASS_PRIMARY_TOOLBAR)
         toolbar.set_show_arrow(False)
         toolbar.set_icon_size(5)
 
@@ -63,24 +64,22 @@ class Player(Gtk.Box):
         sep = Gtk.SeparatorToolItem()
         toolbar.insert(sep, 4)
 
-        shuffle_btn = Gtk.ToggleToolButton()
-        shuffle_btn.set_label('Shuffle')
-        shuffle_btn.set_icon_name('media-playlist-shuffle-symbolic')
-        shuffle_btn.connect('clicked', self.play_shuffle)
-        toolbar.insert(shuffle_btn, 5)
+        self.shuffle_btn = Gtk.ToggleToolButton()
+        self.shuffle_btn.set_label('Shuffle')
+        self.shuffle_btn.set_icon_name('media-playlist-shuffle-symbolic')
+        toolbar.insert(self.shuffle_btn, 5)
 
-        repeat_btn = Gtk.ToggleToolButton()
-        repeat_btn.set_label('Repeat')
-        repeat_btn.set_icon_name('media-playlist-repeat-symbolic')
-        repeat_btn.connect('clicked', self.play_repeat)
-        toolbar.insert(repeat_btn, 6)
+        self.repeat_btn = Gtk.ToggleToolButton()
+        self.repeat_btn.set_label('Repeat')
+        self.repeat_btn.set_icon_name('media-playlist-repeat-symbolic')
+        toolbar.insert(self.repeat_btn, 6)
         
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.pack_start(box, True, True, 0)
 
         box.pack_start(toolbar, False, False, 0)
 
-        self.label = Gtk.Label('')
+        self.label = Gtk.Label('<b>Unknown</b> <i>by unknown</i>')
         self.label.props.use_markup = True
         self.label.props.xalign = 0
         box.pack_start(self.label, True, False, 0)
@@ -89,7 +88,7 @@ class Player(Gtk.Box):
         box.pack_start(box2, True, False, 0)
 
         self.scale = Gtk.Scale()
-        self.adjustment = Gtk.Adjustment()
+        self.adjustment = Gtk.Adjustment(0, 0, 100, 1, 10, 0)
         self.scale.set_adjustment(self.adjustment)
         self.scale.props.draw_value = False
         self.scale.connect('change-value', self.on_scale_change_value)
@@ -114,24 +113,24 @@ class Player(Gtk.Box):
             del self._player
         self._player = Gst.ElementFactory.make('playbin', 'player')
         local_song = self.app.playlist.play_song(song)
-        print('local song is :', local_song)
         if local_song is not None:
-            self._player.set_property('uri', 'file://'+ local_song['filepath'])
+            self._player.set_property('uri', 
+                    'file://'+ local_song['filepath'])
             GLib.timeout_add(500, self.init_adjustment)
             self.adj_timeout = 0
             self.play_start(None)
+            self.curr_song = song
             self.update_player_info(song)
+            self.get_lrc()
             return
         # download and load the song.
         parse_song = Net.Song()
         parse_song.connect('can-play', self.on_can_play)
         parse_song.get_song(song)
 
-
-
     def on_can_play(self, widget, song_info):
         # store this song_info to db.
-        self.app.playlist.append_song(song_info)
+        self.app.playlist.append_cached_song(song_info)
         self.load(song_info)
 
     def init_adjustment(self):
@@ -185,11 +184,6 @@ class Player(Gtk.Box):
         self.pause_btn.hide()
         self.play_btn.show()
 
-    def play_shuffle(self, toggle):
-        pass
-
-    def play_repeat(self, toggle):
-        pass
 
     def on_scale_change_value(self, scale, scroll_type, value):
         '''
@@ -223,7 +217,6 @@ class Player(Gtk.Box):
 
     def update_player_info(self, song):
         def _update_logo(info, error=None):
-            print('update player logo:', info)
             if info is None:
                 return
             self.logo.set_tooltip_text(info['info'].replace('<br>', '\n'))
@@ -236,11 +229,18 @@ class Player(Gtk.Box):
             '<b>', html.escape(song['name']), '</b> ',
             '<i><small>by ', html.escape(song['artist']), ' from ',
             html.escape(song['album']), '</small></i>'])
-        print('label text:', label)
         self.label.set_label(label)
         self.logo.set_from_pixbuf(self.app.theme['anonymous'])
-
         Net.get_artist_info(_update_logo, song['artistid'])
+
+    def get_lrc(self):
+        print('get lrc()')
+        def _update_lrc(lrc_text, error):
+            print('lrc:', lrc_text)
+            if lrc_text is None:
+                print('failed to get lrc')
+
+        Net.async_call(Net.get_lrc, _update_lrc, self.curr_song['rid'])
 
     def on_eos(self):
         '''
@@ -248,3 +248,10 @@ class Player(Gtk.Box):
         '''
         print('End of Source')
         self.play_pause()
+        _repeat = self.repeat_btn.get_active()
+        _shuffle = self.shuffle_btn.get_active()
+        next_song = self.app.playlist.get_next_song(self.curr_song,
+                repeat=_repeat, shuffle=_shuffle)
+        print('next song:', next_song)
+        if next_song is not None:
+            self.load(next_song)
