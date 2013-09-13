@@ -1,9 +1,10 @@
 
-from gi.repository import Gtk
 from gi.repository import GdkPixbuf
+from gi.repository import Gtk
 import time
 
 from kuwo import Net
+from kuwo import Widgets
 
 
 class Artists(Gtk.Box):
@@ -15,7 +16,7 @@ class Artists(Gtk.Box):
         self.buttonbox = Gtk.Box()
         self.pack_start(self.buttonbox, False, False, 0)
 
-        button_home = Gtk.Button('Artists')
+        button_home = Gtk.Button('歌手')
         button_home.connect('clicked', self.on_button_home_clicked)
         self.buttonbox.pack_start(button_home, False, False, 0)
 
@@ -63,12 +64,10 @@ class Artists(Gtk.Box):
         adj.connect('value-changed', self.on_artists_window_scrolled)
         self.box_artists.pack_start(scrolled_artists, True, True, 0)
 
-        # logo, name, nid
-        self.liststore_artists = Gtk.ListStore(GdkPixbuf.Pixbuf, str, int)
-        iconview_artists = Gtk.IconView(model=self.liststore_artists)
-        iconview_artists.set_pixbuf_column(0)
-        iconview_artists.set_text_column(1)
-        iconview_artists.set_item_width(95)
+        # logo, name, nid, num of songs
+        self.liststore_artists = Gtk.ListStore(GdkPixbuf.Pixbuf, str, int, 
+                str)
+        iconview_artists = Widgets.IconView(self.liststore_artists)
         iconview_artists.connect('item_activated', 
                 self.on_iconview_artists_item_activated)
         scrolled_artists.add(iconview_artists)
@@ -78,54 +77,10 @@ class Artists(Gtk.Box):
 
         # checked, name, artist, album, rid, artistid, albumid
         # play, add, cache
-        self.liststore_songs = Gtk.ListStore(bool, str, str, str, int, int,
-                int, GdkPixbuf.Pixbuf, GdkPixbuf.Pixbuf, GdkPixbuf.Pixbuf)
-        treeview_songs = Gtk.TreeView(model=self.liststore_songs)
-        treeview_songs.set_headers_visible(False)
-        treeview_songs.connect('row_activated', 
-                self.on_treeview_songs_row_activated)
-        self.scrolled_songs.add(treeview_songs)
-
-        checked = Gtk.CellRendererToggle()
-        checked.connect('toggled', self.on_song_checked)
-        column_check = Gtk.TreeViewColumn('Checked', checked, active=0)
-        treeview_songs.append_column(column_check)
-
-        name = Gtk.CellRendererText()
-        col_name = Gtk.TreeViewColumn('Name', name, text=1)
-        col_name.props.sizing = Gtk.TreeViewColumnSizing.AUTOSIZE
-        col_name.props.expand = True
-        treeview_songs.append_column(col_name)
-
-        artist = Gtk.CellRendererText()
-        col_artist = Gtk.TreeViewColumn('Artist', artist, text=2)
-        col_artist.props.sizing = Gtk.TreeViewColumnSizing.AUTOSIZE
-        col_artist.props.expand = True
-        treeview_songs.append_column(col_artist)
-
-        album = Gtk.CellRendererText()
-        col_album = Gtk.TreeViewColumn('Album', album, text=3)
-        col_album.props.sizing = Gtk.TreeViewColumnSizing.AUTOSIZE
-        col_album.props.expand = True
-        treeview_songs.append_column(col_album)
-
-        play = Gtk.CellRendererPixbuf()
-        col_play = Gtk.TreeViewColumn('Play', play, pixbuf=7)
-        col_play.props.sizing = Gtk.TreeViewColumnSizing.FIXED
-        col_play.props.fixed_width = 20
-        treeview_songs.append_column(col_play)
-
-        add = Gtk.CellRendererPixbuf()
-        col_add = Gtk.TreeViewColumn('Add', add, pixbuf=8)
-        col_add.props.sizing = Gtk.TreeViewColumnSizing.FIXED
-        col_add.props.fixed_width = 20
-        treeview_songs.append_column(col_add)
-
-        cache = Gtk.CellRendererPixbuf()
-        col_cache = Gtk.TreeViewColumn('Cache', cache, pixbuf=9)
-        col_cache.props.sizing = Gtk.TreeViewColumnSizing.FIXED
-        col_cache.props.fixed_width = 20
-        treeview_songs.append_column(col_cache)
+        self.liststore_songs = Gtk.ListStore(bool, str, str, str, 
+                int, int, int)
+        treeview_songs = Widgets.TreeViewSongs(self.liststore_songs, 
+                self.app)
 
     def after_init(self):
         self.buttonbox.hide()
@@ -208,7 +163,8 @@ class Artists(Gtk.Box):
         i = len(self.liststore_artists)
         for artist in artists:
             self.liststore_artists.append([self.app.theme['anonymous'],
-                artist['name'], int(artist['id']), ])
+                artist['name'], int(artist['id']), 
+                artist['music_num']+'首歌曲', ])
             Net.update_artist_logo(self.liststore_artists, i, 0, 
                     artist['pic'])
             i += 1
@@ -251,41 +207,3 @@ class Artists(Gtk.Box):
         print('on button cache clicked')
         songs = [self.song_modelrow_to_dict(song) for song in self.liststore_songs if song[0]]
         #self.app.playlist.cache_songs(songs)
-
-    def on_treeview_songs_row_activated(self, treeview, path, column):
-        liststore = treeview.get_model()
-        index = treeview.get_columns().index(column)
-        song = self.song_modelrow_to_dict(liststore[path])
-
-        if index in (1, 4):
-            # level 1
-            print('will play song')
-            #self.app.player.load(song)
-        elif index == 2:
-            print('will search artist')
-        elif index == 3:
-            print('will search album')
-        elif index == 5:
-            # level 2
-            print('will append song')
-            #self.app.playlist.append_song(song)
-        elif index == 6:
-            # level 3
-            print('will cache song')
-            #self.app.playlist.cache_song(song)
-
-
-    def on_song_checked(self, widget, path):
-        self.liststore_songs[path][0] = not self.liststore_songs[path][0]
-
-    def song_modelrow_to_dict(self, song_row):
-        song = {
-                'name': song_row[1],
-                'artist': song_row[2],
-                'album': song_row[3],
-                'rid': song_row[4],
-                'artistid': song_row[5],
-                'albumid': song_row[6],
-                'filepath': '',
-                }
-        return song
