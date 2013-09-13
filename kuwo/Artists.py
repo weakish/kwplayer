@@ -76,11 +76,11 @@ class Artists(Gtk.Box):
         self.pack_start(self.scrolled_songs, True, True, 0)
 
         # checked, name, artist, album, rid, artistid, albumid
-        # play, add, cache
         self.liststore_songs = Gtk.ListStore(bool, str, str, str, 
                 int, int, int)
         treeview_songs = Widgets.TreeViewSongs(self.liststore_songs, 
                 self.app)
+        self.scrolled_songs.add(treeview_songs)
 
     def after_init(self):
         self.buttonbox.hide()
@@ -191,9 +191,7 @@ class Artists(Gtk.Box):
         for song in songs:
             self.liststore_songs.append([True, song['SONGNAME'], 
                 song['ARTIST'], song['ALBUM'], int(song['MUSICRID'][6:]), 
-                int(song['ARTISTID']), int(song['ALBUMID']), 
-                self.app.theme['play'], self.app.theme['add'],
-                self.app.theme['cache'], ])
+                int(song['ARTISTID']), int(song['ALBUMID']), ]) 
 
 
 
