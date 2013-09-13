@@ -14,13 +14,19 @@ from kuwo import Utils
 
 ARTIST_LOGO = 'http://img4.kwcdn.kuwo.cn/star/starheads/'
 ARTIST = 'http://artistlistinfo.kuwo.cn/mb.slist?'
+QUKU = 'http://qukudata.kuwo.cn/q.k?'
 SEARCH = 'http://search.kuwo.cn/r.s?'
 SONG = 'http://antiserver.kuwo.cn/anti.s?'
+
 CHUNK = 16 * 1024
 CHUNK_TO_PLAY = 1024 * 1024
 
 conf = Config.load_conf()
 
+# Using weak reference to cache http request.
+class Dict(dict):
+    pass
+req_cache = Dict()
 
 # calls f on another thread
 def async_call(func, func_done, *args):
@@ -41,17 +47,19 @@ def async_call(func, func_done, *args):
 def get_nodes(nid):
     print('get_nodes:', nid, type(nid))
     url = ''.join([
-        'http://qukudata.kuwo.cn/q.k?',
-        'op=query&fmt=json&src=mbox&cont=ninfo&rn=200&node=',
+        QUKU,
+        'op=query&fmt=json&src=mbox&cont=ninfo&rn=300&node=',
         str(nid),
         '&pn=0',
         ])
     print('node url:', url)
-    req = request.urlopen(url)
-    if req.status != 200:
-        return None
+    if url not in req_cache:
+        req = request.urlopen(url)
+        if req.status != 200:
+            return None
+        req_cache[url] = req.read()
     try:
-        nodes = json.loads(req.read().decode())
+        nodes = json.loads(req_cache[url].decode())
     except Exception as e:
         print(e)
         return None
@@ -86,7 +94,7 @@ def update_liststore_image(liststore, path, col, url):
     def _update_image(filepath, error):
         if filepath is None:
             return
-        pix = GdkPixbuf.Pixbuf.new_from_file(filepath)
+        pix = GdkPixbuf.Pixbuf.new_from_file_at_size(filepath, 100, 100)
         liststore[path][col] = pix
     async_call(get_image, _update_image, url)
 
@@ -98,11 +106,13 @@ def get_toplist_songs(nid):
         str(nid),
         ])
     print('url-songs:', url)
-    req = request.urlopen(url)
-    if req.status != 200:
-        return None
+    if url not in req_cache:
+        req = request.urlopen(url)
+        if req.status != 200:
+            return None
+        req_cache[url] = req.read()
     try:
-        songs = json.loads(req.read().decode())
+        songs = json.loads(req_cache[url].decode())
     except Exception as e:
         print(e)
         return None
@@ -120,11 +130,13 @@ def get_artists(catid, page, prefix):
     if len(prefix) > 0:
         url = url + '&prefix=' + prefix
     print('get artists url:', url)
-    req = request.urlopen(url)
-    if req.status != 200:
-        return None
+    if url not in req_cache:
+        req = request.urlopen(url)
+        if req.status != 200:
+            return None
+        req_cache[url] = req.read()
     try:
-        artists = Utils.json_loads_single(req.read().decode())
+        artists = Utils.json_loads_single(req_cache[url].decode())
     except Exception as e:
         print(e)
         return None
@@ -135,8 +147,8 @@ def update_toplist_node_logo(liststore, path, col, url):
     update_liststore_image(liststore, path, col, url)
 
 def update_artist_logo(liststore, path, col, logo_id):
-    if logo_id[:3] in ('55/', '90/', '100'):
-        logo_id = '120/' + logo_id[3:]
+    if logo_id[:2] in ('55', '90',):
+        logo_id = '100/' + logo_id[2:]
     url = ARTIST_LOGO + logo_id
     update_liststore_image(liststore, path, col, url)
 
@@ -159,19 +171,21 @@ def get_artist_info(callback, artistid):
             ])
 
         print('artist-info:', url)
-        req = request.urlopen(url)
-        if req.status != 200:
-            return None
+        if url not in req_cache:
+            req = request.urlopen(url)
+            if req.status != 200:
+                return None
+            req_cache[url] = req.read()
         try:
-            info = Utils.json_loads_single(req.read().decode())
+            info = Utils.json_loads_single(req_cache[url].decode())
         except Exception as e:
             print(e)
             return None
 
-        # set logo size to 120x120
+        # set logo size to 100x100
         logo_id = info['pic']
-        if logo_id[:3] in ('55/', '90/', '100'):
-            logo_id = '120/' + logo_id[3:]
+        if logo_id[:2] in ('55', '90',):
+            logo_id = '100/' + logo_id[2:]
         url = ARTIST_LOGO + logo_id
         info['logo'] = get_image(url)
         return info
@@ -190,11 +204,13 @@ def get_artist_songs(artist, page):
         str(page),
         ])
     print('url-songs:', url)
-    req = request.urlopen(url)
-    if req.status != 200:
-        return None
+    if url not in req_cache:
+        req = request.urlopen(url)
+        if req.status != 200:
+            return None
+        req_cache[url] = req.read()
     try:
-        songs = Utils.json_loads_single(req.read().decode())
+        songs = Utils.json_loads_single(req_cache[url].decode())
     except Error as e:
         print(e)
         return None
@@ -248,11 +264,17 @@ def search(keyword, _type, page=0):
             str(page),
             ])
     print('url-search:', url)
-    req = request.urlopen(url)
-    if req.status != 200:
+    if url not in req_cache:
+        req = request.urlopen(url)
+        if req.status != 200:
+            return None
+        req_cache[url] = req.read()
+    try:
+        result = Utils.json_loads_single(req_cache[url].decode('gbk'))
+    except Exception as e:
+        print(e)
         return None
-    txt = req.read().decode('gbk').replace("'", '"')
-    return json.loads(txt)
+    return result
 
 
 def get_index_nodes(nid):
@@ -265,21 +287,75 @@ def get_index_nodes(nid):
         str(nid),
         '&pn=0',
         ])
-    print('_parse_node url:', url)
-    if url in _requests:
-        return _requests[url]
-    _requests[url] = None
-    req = request.urlopen(url)
-    if req.status != 200:
-        return None
+    print('get index nodes:', url)
+    if url not in req_cache:
+        req = request.urlopen(url)
+        if req.status != 200:
+            return None
+        req_cache[url] = req.read()
     try:
-        nodes = json.loads(req.read().decode())
+        nodes_wrap = json.loads(req_cache[url].decode())
     except Error as e:
         print(e)
         return None
-    _requests[url] = nodes['child']
-    return _requests[url]
+    return nodes_wrap
 
+def get_themes_main():
+    def append_to_nodes(nid, use_child=True):
+        node_wrap = get_index_nodes(nid)
+        if node_wrap is None:
+            return None
+        if use_child:
+            # node is limited to 10, no more are needed.
+            for node in node_wrap['child'][:10]:
+                nodes.append({
+                    'name': node['disname'],
+                    'nid': int(node['id']),
+                    'info': node['info'],
+                    'pic': node['pic'],
+                    })
+        else:
+            # Because of different image style, we use child picture instaed
+            node = node_wrap['ninfo']
+            pic = node_wrap['child'][0]['pic']
+            nodes.append({
+                'name': node['disname'],
+                'nid': int(node['id']),
+                'info': node['info'],
+                'pic': pic,
+                })
+
+    nodes = []
+    # 语言 10(+)
+    append_to_nodes(10)
+    return nodes
+    # Test:
+    # 人群 11
+    append_to_nodes(11, False)
+    # 节日 12
+    append_to_nodes(12, False)
+    # 心情 13(+)
+    append_to_nodes(13)
+    # 场景 14
+    append_to_nodes(14, False)
+    # 曲风流派 15(+)
+    append_to_nodes(15)
+    # 环境 72326
+    append_to_nodes(72326, False)
+    # 精选集 22997
+    append_to_nodes(22997, False)
+
+    if len(nodes) > 0:
+        return nodes
+    else:
+        return None
+
+
+def get_themes_sub(nid):
+    return get_nodes(nid)
+
+def get_themes_songs(nid):
+    pass
 
 class Song(GObject.GObject):
     '''
