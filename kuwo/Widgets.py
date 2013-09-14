@@ -4,23 +4,71 @@ from gi.repository import GdkPixbuf
 from gi.repository import Gtk
 
 
-def song_row_to_dict(song_row):
+def song_row_to_dict(song_row, start=1, withpath=True):
     song = {
-            'name': song_row[1],
-            'artist': song_row[2],
-            'album': song_row[3],
-            'rid': song_row[4],
-            'artistid': song_row[5],
-            'albumid': song_row[6],
-            'filepath': '',
+            'name': song_row[start],
+            'artist': song_row[start+1],
+            'album': song_row[start+2],
+            'rid': song_row[start+3],
+            'artistid': song_row[start+4],
+            'albumid': song_row[start+5],
             }
+    if withpath:
+        song['filepath'] = song_row[start+6]
     return song
+
+def song_dict_to_row(song):
+    # with filepath
+    song_row = [song['name'], song['artist'], song['album'], song['rid'], 
+            song['artistid'], song['albumid'], song['filepath']]
+    return song_row
 
 def short_str(_str):
     if len(_str) > 10:
         return _str[:9] + '..'
     return _str
 
+
+class BoxControl(Gtk.Box):
+    def __init__(self, liststore, app):
+        super().__init__(spacing=5)
+        self.liststore = liststore
+        self.app = app
+
+        button_selectall = Gtk.ToggleButton('Select All')
+        button_selectall.set_active(True)
+        button_selectall.connect('toggled', 
+                self.on_button_selectall_toggled)
+        self.pack_start(button_selectall, False, False, 0)
+
+        button_play = Gtk.Button('Play')
+        button_play.connect('clicked', self.on_button_play_clicked)
+        self.pack_start(button_play, False, False, 0)
+
+        button_add = Gtk.Button('Add to Playlist')
+        button_add.connect('clicked', self.on_button_add_clicked)
+        self.pack_start(button_add, False, False, 0)
+
+        button_cache = Gtk.Button('Cache')
+        button_cache.connect('clicked', self.on_button_cache_clicked)
+        self.pack_start(button_cache, False, False, 0)
+
+    def on_button_selectall_toggled(self, btn):
+        toggled = btn.get_active()
+        for song in self.liststore:
+            song[0] = toggled
+
+    def on_button_play_clicked(self, btn):
+        songs = [song_row_to_dict(s, withpath=False) for s in self.liststore if s[0]]
+        self.app.playlist.play_songs(songs)
+
+    def on_button_add_clicked(self, btn):
+        songs = [song_row_to_dict(s, withpath=False) for s in self.liststore if s[0]]
+        self.app.playlist.add_songs_to_playlist(songs)
+
+    def on_button_cache_clicked(self, btn):
+        songs = [song_row_to_dict(s, withpath=False) for s in self.liststore if s[0]]
+        self.app.playlist.cache_songs(songs)
 
 
 class IconView(Gtk.IconView):
@@ -34,13 +82,13 @@ class IconView(Gtk.IconView):
         self.pack_start(cell_name, True)
         self.add_attribute(cell_name, 'text', 1)
 
-        cell_nums = Gtk.CellRendererText()
+        cell_info = Gtk.CellRendererText()
         fore_color = Gdk.RGBA(red=136/256, green=139/256, blue=132/256)
-        cell_nums.props.foreground_rgba = fore_color
-        cell_nums.props.size_points = 10
-        cell_nums.set_alignment(0.5, 0.5)
-        self.pack_start(cell_nums, True)
-        self.add_attribute(cell_nums, 'text', 3)
+        cell_info.props.foreground_rgba = fore_color
+        cell_info.props.size_points = 9
+        cell_info.set_alignment(0.5, 0.5)
+        self.pack_start(cell_info, True)
+        self.add_attribute(cell_info, 'text', 3)
 
 
 class TreeViewSongs(Gtk.TreeView):
@@ -94,28 +142,28 @@ class TreeViewSongs(Gtk.TreeView):
         self.connect('row_activated', self.on_row_activated)
 
     def on_song_checked(self, widget, path):
-        self.liststore[path][0] = not self.liststore_songs[path][0]
+        self.liststore[path][0] = not self.liststore[path][0]
 
     def on_row_activated(self, treeview, path, column):
         print('on row activated')
-        liststore = treeview.get_model()
+        model = treeview.get_model()
         index = treeview.get_columns().index(column)
-        song = song_row_to_dict(liststore[path])
+        song = song_row_to_dict(model[path], withpath=False)
         print('song:', song)
+        print('index:', index)
+        print('mode[path]:', model[path])
 
         if index in (1, 4):
             # level 1
             print('will play song')
-            #self.app.player.load(song)
+            self.app.playlist.play_song(song)
         elif index == 2:
             print('will search artist')
         elif index == 3:
             print('will search album')
         elif index == 5:
-            # level 2
             print('will append song')
-            #self.app.playlist.append_song(song)
+            self.app.playlist.add_song_to_playlist(song)
         elif index == 6:
-            # level 3
             print('will cache song')
-            #self.app.playlist.cache_song(song)
+            self.app.playlist.cache_song(song)
