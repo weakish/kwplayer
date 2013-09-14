@@ -9,6 +9,9 @@ import time
 
 from kuwo import Net
 
+# Gdk.EventType.2BUTTON_PRESS is an invalid variable
+GDK_2BUTTON_PRESS = 5
+
 
 def delta(sec_float):
     _seconds = sec_float // 10**9
@@ -26,10 +29,14 @@ class Player(Gtk.Box):
         self.app = app
 
         self._player = None
+        self.adj_timeout = 0
+
+        event_logo = Gtk.EventBox()
+        self.pack_start(event_logo, False, False, 0)
+        event_logo.connect('button-press-event', self.on_logo_pressed)
 
         self.logo = Gtk.Image.new_from_pixbuf(app.theme['anonymous'])
-
-        self.pack_start(self.logo, False, False, 0)
+        event_logo.add(self.logo)
 
         toolbar = Gtk.Toolbar()
         toolbar.set_style(Gtk.ToolbarStyle.ICONS)
@@ -98,6 +105,7 @@ class Player(Gtk.Box):
         box2.pack_start(self.label_time, False, False, 0)
 
         self.volume = Gtk.VolumeButton()
+        self.volume.props.use_symbolic = True
         self.volume.set_value(0.2)
         self.volume.connect('value-changed', self.on_volume_value_changed)
         box2.pack_start(self.volume, False, False, 0)
@@ -106,32 +114,33 @@ class Player(Gtk.Box):
         self.pause_btn.hide()
 
     def load(self, song):
-        print('player will load this song:')
-        print(song)
         if self._player is not None:
             self.play_pause(None)
             del self._player
         self._player = Gst.ElementFactory.make('playbin', 'player')
-        local_song = self.app.playlist.play_song(song)
-        if local_song is not None:
-            self._player.set_property('uri', 
-                    'file://'+ local_song['filepath'])
+
+        if len(song['filepath']) != 0: 
+            self._player.set_property('uri', 'file://'+ song['filepath'])
             GLib.timeout_add(500, self.init_adjustment)
             self.adj_timeout = 0
             self.play_start(None)
             self.curr_song = song
             self.update_player_info(song)
+            print(' will call get lrc() in player')
             self.get_lrc()
             return
         # download and load the song.
         parse_song = Net.Song()
         parse_song.connect('can-play', self.on_can_play)
+        parse_song.connect('downloaded', self.on_song_downloaded)
         parse_song.get_song(song)
 
-    def on_can_play(self, widget, song_info):
+    def on_can_play(self, widget, song):
         # store this song_info to db.
-        self.app.playlist.append_cached_song(song_info)
-        self.load(song_info)
+        self.load(song)
+
+    def on_song_downloaded(self, widget, song):
+        self.app.playlist.on_song_downloaded(song)
 
     def init_adjustment(self):
         print('init adjustment()')
@@ -144,7 +153,6 @@ class Player(Gtk.Box):
         return True
     
     def sync_adjustment(self):
-        print('sync_adjustment()')
         status, curr = self._player.query_position(Gst.Format.TIME)
         if status:
             self.adjustment.set_value(curr)
@@ -160,11 +168,24 @@ class Player(Gtk.Box):
         total = delta(self.adjustment.get_upper())
         self.label_time.set_label('{0}/{1}'.format(curr, total))
 
+
+    # top widgets
+    def on_logo_pressed(self, eventbox, event):
+        if event.type == GDK_2BUTTON_PRESS:
+            self.app.playlist.locate_curr_song()
+
     def play_previous(self, btn):
-        pass
+        _repeat = self.repeat_btn.get_active()
+        _shuffle = self.shuffle_btn.get_active()
+        prev_song = self.app.playlist.get_prev_song(repeat=_repeat, 
+                shuffle=_shuffle)
+        print('prev song:', prev_song)
+        if prev_song is not None:
+            self.load(prev_song)
 
     def play_next(self, btn):
-        pass
+        # use EOS to force load next song.
+        self.on_eos()
 
     def play_start(self, btn=None):
         if self._player is None:
@@ -222,7 +243,7 @@ class Player(Gtk.Box):
             self.logo.set_tooltip_text(info['info'].replace('<br>', '\n'))
             if info['logo'] is not None:
                 pix = GdkPixbuf.Pixbuf.new_from_file_at_size(info['logo'], 
-                        120, 120)
+                        100, 100)
                 self.logo.set_from_pixbuf(pix)
             
         label = ''.join([
@@ -234,9 +255,8 @@ class Player(Gtk.Box):
         Net.get_artist_info(_update_logo, song['artistid'])
 
     def get_lrc(self):
-        print('get lrc()')
         def _update_lrc(lrc_text, error):
-            print('lrc:', lrc_text)
+            print('_update_lrc()')
             if lrc_text is None:
                 print('failed to get lrc')
 
@@ -250,8 +270,8 @@ class Player(Gtk.Box):
         self.play_pause()
         _repeat = self.repeat_btn.get_active()
         _shuffle = self.shuffle_btn.get_active()
-        next_song = self.app.playlist.get_next_song(self.curr_song,
-                repeat=_repeat, shuffle=_shuffle)
+        next_song = self.app.playlist.get_next_song(repeat=_repeat, 
+                shuffle=_shuffle)
         print('next song:', next_song)
         if next_song is not None:
             self.load(next_song)
