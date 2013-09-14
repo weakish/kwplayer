@@ -76,7 +76,7 @@ class Themes(Gtk.Box):
         i = 0
         for node in nodes:
             self.liststore_main.append([self.app.theme['anonymous'],
-                    Widgets.short_str(node['name']), node['nid'], 
+                    Widgets.short_str(node['name']), int(node['nid']), 
                     node['info'], ])
             Net.update_liststore_image(self.liststore_main, i, 0, 
                     node['pic'])
@@ -132,6 +132,7 @@ class Themes(Gtk.Box):
             return
         self.total_songs = songs_wrap['total']
         songs = songs_wrap['musiclist']
+        self.liststore_songs.clear()
         for song in songs:
             self.liststore_songs.append([
                 True, song['name'], song['artist'], song['album'],
