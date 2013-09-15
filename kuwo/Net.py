@@ -47,7 +47,9 @@ def async_call(func, func_done, *args):
     thread = threading.Thread(target=do_call, args=args)
     thread.start()
 
-def urlopen(url):
+def urlopen(_url):
+    # set host port from 81 to 80, to fix image problem
+    url = _url.replace(':81', '')
     retries = 0
     while retries < MAXTIMES:
         try:
@@ -55,6 +57,7 @@ def urlopen(url):
             return req
         except Exception as e:
             print(e)
+            print('with url:', url)
             retries += 1
     if retries == MAXTIMES:
         return None
