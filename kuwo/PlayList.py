@@ -18,9 +18,21 @@ class TreeViewCommonSong(Gtk.TreeView):
         super().__init__(**keys)
         self.set_headers_visible(False)
         self.set_search_column(0)
+        self.props.reorderable = True
         selection = self.get_selection()
         selection.set_mode(Gtk.SelectionMode.MULTIPLE)
-        self.set_rubber_banding(True)
+        # rubber_banding selection method causes some problem.
+        #self.set_rubber_banding(True)
+
+        self.connect('key-press-event', self.on_key_pressed)
+
+    def on_key_pressed(self, widget, event):
+        if event.keyval == Gdk.KEY_Delete:
+            selection = self.get_selection()
+            model, paths = selection.get_selected_rows()
+            # paths needs to be reversed, or else an IndexError throwed.
+            for path in reversed(paths):
+                model.remove(model[path].iter)
 
 class NormalSongTab(Gtk.ScrolledWindow):
     def __init__(self, liststore):
@@ -30,19 +42,19 @@ class NormalSongTab(Gtk.ScrolledWindow):
         self.add(self.treeview)
 
         song_name = Gtk.CellRendererText()
-        col_song = Gtk.TreeViewColumn('Name', song_name, text=0)
+        col_song = Widgets.TreeViewColumnText('Name', song_name, text=0)
         self.treeview.append_column(col_song)
 
         artist = Gtk.CellRendererText()
-        col_artist = Gtk.TreeViewColumn('Aritst', artist, text=1)
+        col_artist = Widgets.TreeViewColumnText('Aritst', artist, text=1)
         self.treeview.append_column(col_artist)
 
         album = Gtk.CellRendererText()
-        col_album = Gtk.TreeViewColumn('Album', album, text=2)
+        col_album = Widgets.TreeViewColumnText('Album', album, text=2)
         self.treeview.append_column(col_album)
 
         delete = Gtk.CellRendererPixbuf(icon_name='user-trash-symbolic')
-        col_delete = Gtk.TreeViewColumn('Delete', delete)
+        col_delete = Widgets.TreeViewColumnIcon('Delete', delete)
         self.treeview.append_column(col_delete)
         
 
@@ -52,7 +64,10 @@ class PlayList(Gtk.Box):
 
         self.app = app
         self.first_show = False
+        # self.liststores contains all playlists
         self.liststores = {}
+        # self.lists_name contains playlists name, except `Cached`.
+        self.lists_name = []
         self.treeviews = {}
         self.curr_playing = [None, None]
 
@@ -86,7 +101,8 @@ class PlayList(Gtk.Box):
 
         toolbar = Gtk.Toolbar()
         toolbar.get_style_context().add_class(
-                Gtk.STYLE_CLASS_PRIMARY_TOOLBAR)
+                Gtk.STYLE_CLASS_INLINE_TOOLBAR)
+                #Gtk.STYLE_CLASS_PRIMARY_TOOLBAR)
         toolbar.props.show_arrow = False
         toolbar.props.toolbar_style = Gtk.ToolbarStyle.ICONS
         toolbar.props.icon_size = 1
@@ -108,7 +124,9 @@ class PlayList(Gtk.Box):
         self.notebook.props.show_tabs = False
         self.pack_start(self.notebook, True, True, 0)
 
-        GLib.idle_add(self.first)
+        # Use this trick to accelerate startup speed of app.
+        #GLib.idle_add(self.init_ui)
+        GLib.timeout_add(1500, self.init_ui)
 
     def do_destroy(self):
         print('do destroy()')
@@ -120,11 +138,12 @@ class PlayList(Gtk.Box):
         pass
 
     def first(self):
-        if self.first_show:
-            return
-        self.first_show = True
+        pass
+
+    def init_ui(self):
         self.init_table()
         self.load_playlists()
+        return False
 
     def init_table(self):
         sql = '''
@@ -140,6 +159,24 @@ class PlayList(Gtk.Box):
         '''
         self.cursor.execute(sql)
         self.conn.commit()
+
+    def dump_playlists(self):
+        print('dump playlists()')
+        filepath = self.app.conf['playlists']
+        names = [list(p) for p in self.liststore_left]
+        for path in self.liststore_left:
+            print('path:', path, list(path))
+        print('names:', names)
+        playlists = {
+                '_names_': names,
+                }
+        for name in names:
+            if name[1] == 'Cached':
+                continue
+            playlists[name[1]] = [list(p) for p in self.liststores[name[1]]]
+        print('dump playlists()', playlists)
+        with open(filepath, 'w') as fh:
+            fh.write(json.dumps(playlists))
 
     def load_playlists(self):
         filepath = self.app.conf['playlists']
@@ -160,22 +197,24 @@ class PlayList(Gtk.Box):
         else:
             playlists = _default
         for playlist in playlists['_names_']:
+            list_name = playlist[1]
             self.liststore_left.append(playlist)
-            if playlist[1] == 'Cached':
+            if list_name == 'Cached':
                 self.init_cached_tab()
-            elif playlist[1] == 'Caching':
+                continue
+            elif list_name == 'Caching':
                 self.init_caching_tab(playlists['Caching'])
             else:
-                self.init_normal_song_tab(playlist[1], 
-                        playlists[playlist[1]])
+                self.init_normal_song_tab(list_name, playlists[list_name])
+            self.lists_name.append(list_name)
 
     def init_cached_tab(self):
         songs = self.get_all_cached_songs_from_db()
 
         # name, artist, album, rid, artistid, albumid, filepath
-        self.liststores['Cached'] = Gtk.ListStore(str, str, str, int, int, 
+        liststore = Gtk.ListStore(str, str, str, int, int, 
                 int, str)
-        liststore = self.liststores['Cached']
+        self.liststores['Cached'] = liststore
         if songs is not None:
             for song in songs:
                 liststore.append(song)
@@ -184,13 +223,13 @@ class PlayList(Gtk.Box):
         treeview.connect('row_activated', 
                 self.on_treeview_songs_row_activated, 'Cached')
         name = Gtk.CellRendererText()
-        col_name = Gtk.TreeViewColumn('Name', name, text=0)
+        col_name = Widgets.TreeViewColumnText('Name', name, text=0)
         treeview.append_column(col_name)
         artist = Gtk.CellRendererText()
-        col_artist = Gtk.TreeViewColumn('Artist', artist, text=1)
+        col_artist = Widgets.TreeViewColumnText('Artist', artist, text=1)
         treeview.append_column(col_artist)
         album = Gtk.CellRendererText()
-        col_album = Gtk.TreeViewColumn('Album', album, text=2)
+        col_album = Widgets.TreeViewColumnText('Album', album, text=2)
         treeview.append_column(col_album)
 
         scrolled_cached = Gtk.ScrolledWindow()
@@ -206,8 +245,6 @@ class PlayList(Gtk.Box):
         button_start = Gtk.Button('Start Caching')
         button_start.connect('clicked', self.switch_caching_daemon)
         buttonbox.pack_start(button_start, False, False, 0)
-        button_remove = Gtk.Button('Clear')
-        buttonbox.pack_start(button_remove, False, False, 0)
 
         # name, artist, album, rid, artistid, 
         # albumid, filepath
@@ -239,20 +276,6 @@ class PlayList(Gtk.Box):
         self.notebook.append_page(scrolled_win, Gtk.Label(list_name))
         scrolled_win.show_all()
 
-    def dump_playlists(self):
-        print('dump playlists()')
-        filepath = self.app.conf['playlists']
-        names = [list(p) for p in self.liststore_left]
-        playlists = {
-                '_names_': names,
-                }
-        for name in names:
-            if name[1] == 'Cached':
-                continue
-            playlists[name[1]] = [list(p) for p in self.liststores[name[1]]]
-        with open(filepath, 'w') as fh:
-            fh.write(json.dumps(playlists))
-
     # Side Panel
     def on_tree_selection_left_changed(self, tree_sel):
         '''
@@ -267,8 +290,19 @@ class PlayList(Gtk.Box):
     def on_treeview_songs_row_activated(self, treeview, path, 
             column, _list_name):
         model = treeview.get_model()
+        index = treeview.get_columns().index(column)
         song = Widgets.song_row_to_dict(model[path], start=0)
-        self.play_song(song, list_name=_list_name)
+        song = Widgets.song_row_to_dict(model[path], start=0, withpath=True)
+        #self.play_song(song, list_name=_list_name)
+        if index == 0:
+            self.play_song(song, list_name=_list_name)
+        elif index == 1:
+            print('will search artist')
+        elif index == 2:
+            print('will search album')
+        elif index == 3:
+            print('will delete song from liststore:', song, _list_name)
+            model.remove(model[path].iter)
 
     # Open API for others to call.
     def play_song(self, song, list_name='Default'):
@@ -363,26 +397,28 @@ class PlayList(Gtk.Box):
 
     def do_cache_song_pool(self):
         def on_downloaded(song_info, error):
-            print('on downloaded:', threading.current_thread())
             print('song_info:', song_info, 'error:', error)
             if song_info is not None:
                 self.on_song_downloaded(song_info, is_cache=True)
             self.cache_job = None
 
-        print('do cache_song pool:', threading.current_thread())
         list_name = ''
-        liststores = [l for l in self.liststores if l != 'Cached']
-        for list_name in liststores:
-            if len(self.liststores[list_name]) > 0:
-                break
+        path = 0
+        for list_name in self.lists_name:
+            if len(self.liststores[list_name]) == 0:
+                continue
+            path = 0
+            for row in self.liststores[list_name]:
+                if row[6] == '':
+                    break
         if len(self.liststores[list_name]) == 0:
-            print('Songs in all liststores are cached, add some songs')
+            print('all playlists are empty, please add some')
             return
-
+        print('current list_name is:', list_name)
         liststore = self.liststores[list_name]
-        self.curr_caching = [list_name, 0]
-        song_dict = Widgets.song_row_to_dict(liststore[0], start=0, 
-                withpath=False)
+        self.curr_caching = [list_name, path]
+        song_dict = Widgets.song_row_to_dict(liststore[path], start=0)
+        print('song dict to download:', song_dict)
         self.cache_job = Net.AsyncSong()
         self.cache_job.get_song(song_dict, on_downloaded)
 
