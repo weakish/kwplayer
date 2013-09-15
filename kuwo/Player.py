@@ -8,6 +8,7 @@ import html
 import time
 
 from kuwo import Net
+from kuwo import Widgets
 
 # Gdk.EventType.2BUTTON_PRESS is an invalid variable
 GDK_2BUTTON_PRESS = 5
@@ -120,6 +121,7 @@ class Player(Gtk.Box):
         self._player = Gst.ElementFactory.make('playbin', 'player')
 
         if len(song['filepath']) != 0: 
+            print('player will load:', song)
             self._player.set_property('uri', 'file://'+ song['filepath'])
             GLib.timeout_add(500, self.init_adjustment)
             self.adj_timeout = 0
@@ -143,7 +145,6 @@ class Player(Gtk.Box):
         self.app.playlist.on_song_downloaded(song)
 
     def init_adjustment(self):
-        print('init adjustment()')
         self.adjustment.set_value(0.0)
         self.adjustment.set_lower(0.0)
         status, upper = self._player.query_duration(Gst.Format.TIME)
@@ -247,9 +248,11 @@ class Player(Gtk.Box):
                 self.logo.set_from_pixbuf(pix)
             
         label = ''.join([
-            '<b>', html.escape(song['name']), '</b> ',
-            '<i><small>by ', html.escape(song['artist']), ' from ',
-            html.escape(song['album']), '</small></i>'])
+            '<b>', Widgets.short_str(html.escape(song['name']), length=45),
+            '</b> ', '<i><small>by ', 
+            Widgets.short_str(html.escape(song['artist']), length=15), 
+            ' from ', Widgets.short_str(html.escape(song['album']), 
+                length=30), '</small></i>'])
         self.label.set_label(label)
         self.logo.set_from_pixbuf(self.app.theme['anonymous'])
         Net.get_artist_info(_update_logo, song['artistid'])
@@ -264,7 +267,7 @@ class Player(Gtk.Box):
 
     def on_eos(self):
         '''
-        When EOS is reached, do something.
+        When EOS is reached, try to fetch next song.
         '''
         print('End of Source')
         self.play_pause()
