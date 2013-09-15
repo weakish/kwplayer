@@ -17,16 +17,33 @@ def song_row_to_dict(song_row, start=1, withpath=True):
         song['filepath'] = song_row[start+6]
     return song
 
-def song_dict_to_row(song):
+def song_dict_to_row(song, withpath=True):
     # with filepath
-    song_row = [song['name'], song['artist'], song['album'], song['rid'], 
-            song['artistid'], song['albumid'], song['filepath']]
+    song_row = [song['name'], song['artist'], song['album'], 
+            int(song['rid']), int(song['artistid']), int(song['albumid']),]
+    if withpath:
+        song_row.append(song['filepath'])
     return song_row
 
-def short_str(_str):
-    if len(_str) > 10:
-        return _str[:9] + '..'
+def short_str(_str, length=10):
+    if len(_str) > length:
+        return _str[:length-1] + '..'
     return _str
+
+class TreeViewColumnText(Gtk.TreeViewColumn):
+    def __init__(self, *args, **keys):
+        super().__init__(*args, **keys)
+        self.props.sizing = Gtk.TreeViewColumnSizing.AUTOSIZE
+        #self.props.sizing = Gtk.TreeViewColumnSizing.GROW_ONLY
+        self.props.expand = True
+        self.props.max_width = 280
+
+
+class TreeViewColumnIcon(Gtk.TreeViewColumn):
+    def __init__(self, *args, **keys):
+        super().__init__(*args, **keys)
+        self.props.sizing = Gtk.TreeViewColumnSizing.FIXED
+        self.props.fixed_width = 20
 
 
 class BoxControl(Gtk.Box):
@@ -104,39 +121,27 @@ class TreeViewSongs(Gtk.TreeView):
         self.append_column(column_check)
 
         name = Gtk.CellRendererText()
-        col_name = Gtk.TreeViewColumn('Name', name, text=1)
-        col_name.props.sizing = Gtk.TreeViewColumnSizing.AUTOSIZE
-        col_name.props.expand = True
+        col_name = TreeViewColumnText('Name', name, text=1)
         self.append_column(col_name)
 
         artist = Gtk.CellRendererText()
-        col_artist = Gtk.TreeViewColumn('Artist', artist, text=2)
-        col_artist.props.sizing = Gtk.TreeViewColumnSizing.AUTOSIZE
-        col_artist.props.expand = True
+        col_artist = TreeViewColumnText('Artist', artist, text=2)
         self.append_column(col_artist)
 
         album = Gtk.CellRendererText()
-        col_album = Gtk.TreeViewColumn('Album', album, text=3)
-        col_album.props.sizing = Gtk.TreeViewColumnSizing.AUTOSIZE
-        col_album.props.expand = True
+        col_album = TreeViewColumnText('Album', album, text=3)
         self.append_column(col_album)
 
         play = Gtk.CellRendererPixbuf(pixbuf=app.theme['play'])
-        col_play = Gtk.TreeViewColumn('Play', play)
-        col_play.props.sizing = Gtk.TreeViewColumnSizing.FIXED
-        col_play.props.fixed_width = 20
+        col_play = TreeViewColumnIcon('Play', play)
         self.append_column(col_play)
 
         add = Gtk.CellRendererPixbuf(pixbuf=app.theme['add'])
-        col_add = Gtk.TreeViewColumn('Add', add)
-        col_add.props.sizing = Gtk.TreeViewColumnSizing.FIXED
-        col_add.props.fixed_width = 20
+        col_add = TreeViewColumnIcon('Add', add)
         self.append_column(col_add)
 
         cache = Gtk.CellRendererPixbuf(pixbuf=app.theme['cache'])
-        col_cache = Gtk.TreeViewColumn('Cache', cache)
-        col_cache.props.sizing = Gtk.TreeViewColumnSizing.FIXED
-        col_cache.props.fixed_width = 20
+        col_cache = TreeViewColumnIcon('Cache', cache)
         self.append_column(col_cache)
 
         self.connect('row_activated', self.on_row_activated)
@@ -149,21 +154,14 @@ class TreeViewSongs(Gtk.TreeView):
         model = treeview.get_model()
         index = treeview.get_columns().index(column)
         song = song_row_to_dict(model[path], withpath=False)
-        print('song:', song)
-        print('index:', index)
-        print('mode[path]:', model[path])
 
         if index in (1, 4):
-            # level 1
-            print('will play song')
             self.app.playlist.play_song(song)
         elif index == 2:
             print('will search artist')
         elif index == 3:
             print('will search album')
         elif index == 5:
-            print('will append song')
             self.app.playlist.add_song_to_playlist(song)
         elif index == 6:
-            print('will cache song')
             self.app.playlist.cache_song(song)
