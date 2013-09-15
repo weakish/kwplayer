@@ -31,6 +31,12 @@ class TopCategories(Gtk.Box):
         self.label = Gtk.Label('')
         self.buttonbox.pack_start(self.label, False, False, 0)
 
+        # checked, name, artist, album, rid, artistid, albumid
+        self.liststore_songs = Gtk.ListStore(bool, str, str, str,
+                int, int, int)
+        self.box_control = Widgets.BoxControl(self.liststore_songs, app)
+        self.buttonbox.pack_end(self.box_control, False, False, 0)
+
         self.scrolled_main = Gtk.ScrolledWindow()
         self.pack_start(self.scrolled_main, True, True, 0)
         # logo, name, nid, num of lists(info)
@@ -60,12 +66,8 @@ class TopCategories(Gtk.Box):
 
         self.scrolled_songs = Gtk.ScrolledWindow()
         self.pack_start(self.scrolled_songs, True, True, 0)
-        # checked, name, artist, album, rid, artistid, albumid
-        self.liststore_songs = Gtk.ListStore(bool, str, str, str,
-                int, int, int)
         treeview_songs = Widgets.TreeViewSongs(self.liststore_songs, app)
         self.scrolled_songs.add(treeview_songs)
-
 
     def after_init(self):
         self.buttonbox.hide()
@@ -108,6 +110,7 @@ class TopCategories(Gtk.Box):
         self.buttonbox.show_all()
         self.button_sub1.hide()
         self.button_sub2.hide()
+        self.box_control.hide()
         self.scrolled_sub1.get_vadjustment().set_value(0)
         self.scrolled_sub1.show_all()
         nodes  = Net.get_nodes(self.curr_sub1_id)
@@ -185,6 +188,7 @@ class TopCategories(Gtk.Box):
         print('show songs')
         self.scrolled_sub1.hide()
         self.button_sub1.show_all()
+        self.box_control.show_all()
         if self.use_sub2:
             self.scrolled_sub2.hide()
             self.button_sub2.show_all()
@@ -227,17 +231,17 @@ class TopCategories(Gtk.Box):
         self.scrolled_main.show_all()
 
     def on_button_sub1_clicked(self, btn):
-        print('button sub1 clicked')
         self.scrolled_songs.hide()
         self.scrolled_sub2.hide()
         self.button_sub1.hide()
         self.button_sub2.hide()
+        self.box_control.hide()
         self.label.set_label(self.button_sub1.get_label())
         self.scrolled_sub1.show_all()
 
     def on_button_sub2_clicked(self, btn):
-        print('button sub2 clicked')
         self.scrolled_songs.hide()
         self.button_sub2.hide()
+        self.box_control.hide()
         self.label.set_label(self.button_sub2.get_label())
         self.scrolled_sub2.show_all()
