@@ -10,6 +10,7 @@ import random
 import sqlite3
 import threading
 
+from kuwo import Config
 from kuwo import Net
 from kuwo import Widgets
 
@@ -79,9 +80,8 @@ class PlayList(Gtk.Box):
         # Use `check_same_thread=False to share sqlite connections between
         # threads
         # FIXME: got segmantation falt
-        #self.conn = sqlite3.connect(app.conf['song-db'], 
+        self.conn = sqlite3.connect(Config.SONG_DB)
         #        check_same_thread=False)
-        self.conn = sqlite3.connect(app.conf['song-db'])
         self.cursor = self.conn.cursor()
 
         box_left = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
@@ -161,8 +161,7 @@ class PlayList(Gtk.Box):
         self.conn.commit()
 
     def dump_playlists(self):
-        print('dump playlists()')
-        filepath = self.app.conf['playlists']
+        filepath = Config.PLS_JSON
         names = [list(p) for p in self.liststore_left]
         playlists = {'_names_': names}
         for name in names:
@@ -173,7 +172,7 @@ class PlayList(Gtk.Box):
             fh.write(json.dumps(playlists))
 
     def load_playlists(self):
-        filepath = self.app.conf['playlists']
+        filepath = Config.PLS_JSON
         _default = {
                 '_names_': [
                     ['已缓存', 'Cached', False],
@@ -413,7 +412,7 @@ class PlayList(Gtk.Box):
         self.curr_caching = [list_name, path]
         song_dict = Widgets.song_row_to_dict(liststore[path], start=0)
         print('song dict to download:', song_dict)
-        self.cache_job = Net.AsyncSong()
+        self.cache_job = Net.AsyncSong(self.app)
         self.cache_job.get_song(song_dict, on_downloaded)
 
     # Others

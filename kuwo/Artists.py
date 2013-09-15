@@ -78,8 +78,7 @@ class Artists(Gtk.Box):
         # checked, name, artist, album, rid, artistid, albumid
         self.liststore_songs = Gtk.ListStore(bool, str, str, str, 
                 int, int, int)
-        treeview_songs = Widgets.TreeViewSongs(self.liststore_songs, 
-                self.app)
+        treeview_songs = Widgets.TreeViewSongs(self.liststore_songs, app)
         self.scrolled_songs.add(treeview_songs)
 
     def after_init(self):

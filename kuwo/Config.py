@@ -10,70 +10,46 @@ if __file__.startswith('/usr/'):
 else:
     PREF = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'share', 'kuwo')
 
+APPNAME = 'KW Player'
+VERSION = '1.1'
+HOMEPAGE = 'https://github.com'
+MENUS = os.path.join(PREF, 'ui', 'menus.ui')
 
 HOME_DIR = os.path.expanduser('~')
 CACHE_DIR = os.path.join(HOME_DIR, '.cache', 'kuwo')
+# used for small logos(100x100)
+IMG_DIR = os.path.join(CACHE_DIR, 'images')
+# used by today_recommand images
+IMG_LARGE_DIR = os.path.join(CACHE_DIR, 'images_large')
+# lyrics are putted here
+LRC_DIR = os.path.join(CACHE_DIR, 'lrc')
+# song index
+SONG_DB = os.path.join(CACHE_DIR, 'music.sqlite')
+# url requests are stored here.
+CACHE_DB = os.path.join(CACHE_DIR, 'cache.db')
+# store playlists, `cached` not included.
+PLS_JSON = os.path.join(CACHE_DIR, 'pls.json')
+
 CONF_DIR = os.path.join(HOME_DIR, '.config', 'kuwo')
-_conf_file = os.path.join(CONF_DIR, 'kuwo', 'conf.json')
-
-MENUS = os.path.join(PREF, 'ui', 'menus.ui')
-
-NODES = (
-       ('Top List', 2), # 排行榜
-       ('MV', 3),
-       ('Artists', 4), # 歌手
-       ('Hot Categories', 5), # 热门分类
-       ('Broadcasting', 8), # 电台
-       ('Language', 10), # 语言
-       ('People', 11), # 人群
-       ('Festival', 12), # 节日
-       ('Temper', 13), # 心情
-       ('Scene', 14), # 场景
-       ('Genre', 15), # 曲风流派
-       ('Playlist', 0),
-       ('Search', 0),
-       ('Download', 0),
-        )
-
-ARTISTS_COUNTRY = (
-        ('热门歌手', 0),
-        ('华语男', 1),
-        ('华语女', 2),
-        ('华语组合', 3),
-        ('日韩男', 4),
-        ('日韩女', 5),
-        ('日韩组合', 6),
-        ('欧美男', 7),
-        ('欧美女', 8),
-        ('欧美组合', 9),
-        ('其它', 10),
-        )
-
+_conf_file = os.path.join(CONF_DIR, 'conf.json')
 _default_conf = {
-        'window-size': (900, 580),
+        'window-size': (840, 580),
         'use-ape': False,
         'use-mkv': False,
         'song-dir': os.path.join(CACHE_DIR, 'song'),
-        'lrc-dir': os.path.join(CACHE_DIR, 'lrc'),
-        'img-dir': os.path.join(CACHE_DIR, 'images'),
         'mv-dir': os.path.join(CACHE_DIR, 'mv'),
-        'cache-dir': os.path.join(CACHE_DIR, 'cache'),
-        'cache-db': os.path.join(CACHE_DIR, 'cache.sqlite'),
-        'playlists': os.path.join(CACHE_DIR, 'pls.json'),
-        'song-db': os.path.join(CACHE_DIR, 'music.sqlite'),
-        'mv-db': os.path.join(CACHE_DIR, 'music.sqlite'),
         'theme': os.path.join(PREF, 'themes', 'default', 'images.json')
         }
 
 def load_conf():
-    return _default_conf
-    # TODO: For test
     if os.path.exists(_conf_file):
         with open(_conf_file) as fh:
             return json.loads(fh.read())
-
     try:
         os.makedirs(os.path.dirname(_conf_file))
+        os.makedirs(IMG_DIR)
+        os.mkdir(IMG_LARGE_DIR)
+        os.mkdir(_default_conf['song-dir'])
     except Exception as e:
         print('Error', e)
     dump_conf(_default_conf)
@@ -83,7 +59,6 @@ def dump_conf(conf):
     with open(_conf_file, 'w') as fh:
         fh.write(json.dumps(conf))
 
-# TODO: use theme
 def load_theme(conf):
     theme_dir = os.path.split(conf['theme'])[0]
     try:

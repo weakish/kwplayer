@@ -4,7 +4,6 @@ from gi.repository import GdkPixbuf
 from gi.repository import GObject
 import json
 import os
-import sqlite3
 import threading
 import urllib.error
 from urllib import parse
@@ -20,12 +19,10 @@ QUKU_SONG = 'http://nplserver.kuwo.cn/pl.svc?'
 SEARCH = 'http://search.kuwo.cn/r.s?'
 SONG = 'http://antiserver.kuwo.cn/anti.s?'
 
-CHUNK = 16 * 1024
-CHUNK_TO_PLAY = 1024 * 1024
+CHUNK = 2 ** 14
+CHUNK_TO_PLAY = 2 ** 21
 MAXTIMES = 3
 TIMEOUT = 30
-
-conf = Config.load_conf()
 
 # Using weak reference to cache http request.
 class Dict(dict):
@@ -99,7 +96,7 @@ def get_image(url):
     if len(url) == 0:
         return None
     filename = os.path.split(url)[1]
-    filepath = os.path.join(conf['img-dir'], filename)
+    filepath = os.path.join(Config.IMG_DIR, filename)
     if os.path.exists(filepath):
         return filepath
 
@@ -277,7 +274,7 @@ def get_lrc(_rid):
         return lrc
 
     rid = str(_rid)
-    filepath = os.path.join(conf['lrc-dir'], rid + '.lrc')
+    filepath = os.path.join(Config.LRC_DIR, rid + '.lrc')
     if os.path.exists(filepath):
         with open(filepath) as fh:
             return fh.read()
@@ -442,8 +439,9 @@ class Song(GObject.GObject):
             'downloaded': (GObject.SIGNAL_RUN_LAST, 
                 GObject.TYPE_NONE, (object, ))
             }
-    def __init__(self):
+    def __init__(self, app):
         super().__init__()
+        self.app = app
 
     def get_song(self, song):
         '''
@@ -458,12 +456,12 @@ class Song(GObject.GObject):
             return None
 
         song_info = copy.copy(song)
-        song_info['filepath'] = os.path.join(conf['song-dir'], 
+        song_info['filepath'] = os.path.join(self.app.conf['song-dir'], 
                 os.path.split(song_link)[1])
         return self._download_song(song_link, song_info)
 
     def _parse_song_link(self, rid):
-        if conf['use-ape']:
+        if self.app.conf['use-ape']:
             _format = 'ape|mp3'
         else:
             _format = 'mp3'
@@ -500,7 +498,7 @@ class Song(GObject.GObject):
 
                     # check retrieved_size, and emit can-play signal.
                     # this signal only emit once.
-                    if (received_size > CHUNK_TO_PLAY or percent > 30) \
+                    if (received_size > CHUNK_TO_PLAY or percent > 40) \
                             and not can_play_emited:
                         print('song can be played now')
                         can_play_emited = True
@@ -544,7 +542,7 @@ class AsyncSong(Song):
             return None
 
         song_info = copy.copy(song)
-        song_info['filepath'] = os.path.join(conf['song-dir'], 
+        song_info['filepath'] = os.path.join(self.app.conf['song-dir'], 
                 os.path.split(song_link)[1])
         return self._download_song(song_link, song_info)
 GObject.type_register(AsyncSong)

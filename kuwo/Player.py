@@ -6,6 +6,7 @@ from gi.repository import Gst
 from gi.repository import Gtk
 import html
 import time
+import threading
 
 from kuwo import Net
 from kuwo import Widgets
@@ -106,7 +107,7 @@ class Player(Gtk.Box):
         box2.pack_start(self.label_time, False, False, 0)
 
         self.volume = Gtk.VolumeButton()
-        self.volume.props.use_symbolic = True
+        #self.volume.props.use_symbolic = True
         self.volume.set_value(0.2)
         self.volume.connect('value-changed', self.on_volume_value_changed)
         box2.pack_start(self.volume, False, False, 0)
@@ -115,6 +116,7 @@ class Player(Gtk.Box):
         self.pause_btn.hide()
 
     def load(self, song):
+        print('Player.load(), thread:', threading.current_thread())
         if self._player is not None:
             self.play_pause(None)
             del self._player
@@ -132,16 +134,17 @@ class Player(Gtk.Box):
             self.get_lrc()
             return
         # download and load the song.
-        parse_song = Net.Song()
+        parse_song = Net.AsyncSong(self.app)
         parse_song.connect('can-play', self.on_can_play)
-        parse_song.connect('downloaded', self.on_song_downloaded)
-        parse_song.get_song(song)
+        parse_song.get_song(song, self.on_song_downloaded)
 
     def on_can_play(self, widget, song):
-        # store this song_info to db.
-        self.load(song)
+        # Maybe we should ignore this signal
+        print('Player.on_can_play, thread:', threading.current_thread())
+        GLib.idle_add(self.load, song)
 
-    def on_song_downloaded(self, widget, song):
+    def on_song_downloaded(self, song, error):
+        print('Player.on song downloaded()', threading.current_thread())
         self.app.playlist.on_song_downloaded(song)
 
     def init_adjustment(self):
@@ -230,6 +233,8 @@ class Player(Gtk.Box):
 
     def on_volume_value_changed(self, volume, value):
         # Use a factor to reduce volume change
+        if self._player is None:
+            return
         if value < 0.3:
             self._player.set_property('volume', value*0.25)
         elif value < 0.6:
