@@ -23,6 +23,7 @@ SONG = 'http://antiserver.kuwo.cn/anti.s?'
 CHUNK = 16 * 1024
 CHUNK_TO_PLAY = 1024 * 1024
 MAXTIMES = 3
+TIMEOUT = 30
 
 conf = Config.load_conf()
 
@@ -53,7 +54,7 @@ def urlopen(_url):
     retries = 0
     while retries < MAXTIMES:
         try:
-            req = request.urlopen(url)
+            req = request.urlopen(url, timeout=TIMEOUT)
             return req
         except Exception as e:
             print(e)
