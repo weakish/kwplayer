@@ -164,17 +164,11 @@ class PlayList(Gtk.Box):
         print('dump playlists()')
         filepath = self.app.conf['playlists']
         names = [list(p) for p in self.liststore_left]
-        for path in self.liststore_left:
-            print('path:', path, list(path))
-        print('names:', names)
-        playlists = {
-                '_names_': names,
-                }
+        playlists = {'_names_': names}
         for name in names:
             if name[1] == 'Cached':
                 continue
             playlists[name[1]] = [list(p) for p in self.liststores[name[1]]]
-        print('dump playlists()', playlists)
         with open(filepath, 'w') as fh:
             fh.write(json.dumps(playlists))
 
