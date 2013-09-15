@@ -33,6 +33,9 @@ def short_str(_str, length=10):
 class TreeViewColumnText(Gtk.TreeViewColumn):
     def __init__(self, *args, **keys):
         super().__init__(*args, **keys)
+        # This is the best option, but Gtk raises some Exceptions like:
+        # (kuwo.py:14225): Gtk-CRITICAL **: _gtk_tree_view_column_autosize: assertion `GTK_IS_TREE_VIEW (tree_view)' failed
+        # I don't know why that happens and how to fix it.  
         self.props.sizing = Gtk.TreeViewColumnSizing.AUTOSIZE
         #self.props.sizing = Gtk.TreeViewColumnSizing.GROW_ONLY
         self.props.expand = True
