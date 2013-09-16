@@ -3,6 +3,7 @@ import copy
 from gi.repository import GdkPixbuf
 from gi.repository import GObject
 import json
+import leveldb
 import os
 import threading
 import urllib.error
@@ -24,10 +25,13 @@ CHUNK_TO_PLAY = 2 ** 21
 MAXTIMES = 3
 TIMEOUT = 30
 
-# Using weak reference to cache http request.
+# Using weak reference to cache song list in TopList and Radio.
 class Dict(dict):
     pass
 req_cache = Dict()
+
+# Using leveldb to cache urlrequest
+ldb = leveldb.LevelDB(Config.CACHE_DB)
 
 # calls f on another thread
 def async_call(func, func_done, *args):
@@ -45,14 +49,23 @@ def async_call(func, func_done, *args):
     thread = threading.Thread(target=do_call, args=args)
     thread.start()
 
-def urlopen(_url):
+def urlopen(_url, use_cache=True):
     # set host port from 81 to 80, to fix image problem
     url = _url.replace(':81', '')
+    if use_cache:
+        try:
+            req = ldb.Get(url.encode())
+            return req
+        except KeyError:
+            req = None
     retries = 0
     while retries < MAXTIMES:
         try:
             req = request.urlopen(url, timeout=TIMEOUT)
-            return req
+            req_content = req.read()
+            if use_cache:
+                ldb.Put(url.encode(), req_content)
+            return req_content
         except Exception as e:
             print(e)
             print('with url:', url)
@@ -64,18 +77,16 @@ def get_nodes(nid):
     print('get_nodes:', nid, type(nid))
     url = ''.join([
         QUKU,
-        'op=query&fmt=json&src=mbox&cont=ninfo&rn=300&node=',
+        'op=query&fmt=json&src=mbox&cont=ninfo&rn=500&node=',
         str(nid),
         '&pn=0',
         ])
     print('node url:', url)
-    if url not in req_cache:
-        req = urlopen(url)
-        if req is None:
-            return None
-        req_cache[url] = req.read()
+    req_content = urlopen(url)
+    if req_content is None:
+        return None
     try:
-        nodes = json.loads(req_cache[url].decode())
+        nodes = json.loads(req_content.decode())
     except Exception as e:
         print(e)
         return None
@@ -84,10 +95,10 @@ def get_nodes(nid):
 def get_image(url):
     # url should be the absolute path.
     def _parse_image(url): 
-        req = urlopen(url)
-        if req is None:
+        req_content = urlopen(url, use_cache=False)
+        if req_content is None:
             return None
-        return req.read()
+        return req_content
     
     def _dump_image(image, filepath):
         with open(filepath, 'wb') as fh:
@@ -114,13 +125,11 @@ def get_album(albumid):
         str(albumid),
         ])
     print('album url:', url)
-    if url not in req_cache:
-        req = urlopen(url)
-        if req is None:
-            return None
-        req_cache[url] = req.read()
+    req_content = urlopen(url)
+    if req_content is None:
+        return None
     try:
-        songs_wrap = Utils.json_loads_single(req_cache[url].decode())
+        songs_wrap = Utils.json_loads_single(req_content.decode())
     except Exception as e:
         print(e)
         return None
@@ -146,10 +155,10 @@ def get_toplist_songs(nid):
         ])
     print('url-songs:', url)
     if url not in req_cache:
-        req = urlopen(url)
-        if req is None:
+        req_content = urlopen(url, use_cache=False)
+        if req_content is None:
             return None
-        req_cache[url] = req.read()
+        req_cache[url] = req_content
     try:
         songs = json.loads(req_cache[url].decode())
     except Exception as e:
@@ -169,20 +178,17 @@ def get_artists(catid, page, prefix):
     if len(prefix) > 0:
         url = url + '&prefix=' + prefix
     print('get artists url:', url)
-    if url not in req_cache:
-        req = urlopen(url)
-        if req is None:
-            return None
-        req_cache[url] = req.read()
+    req_content = urlopen(url)
+    if req_content is None:
+        return None
     try:
-        artists = Utils.json_loads_single(req_cache[url].decode())
+        artists = Utils.json_loads_single(req_content.decode())
     except Exception as e:
         print(e)
         return None
     return artists
 
 def update_toplist_node_logo(liststore, path, col, url):
-    # TODO:
     update_liststore_image(liststore, path, col, url)
 
 def update_artist_logo(liststore, path, col, logo_id):
@@ -210,13 +216,11 @@ def get_artist_info(callback, artistid):
             ])
 
         print('artist-info:', url)
-        if url not in req_cache:
-            req = urlopen(url)
-            if req is None:
-                return None
-            req_cache[url] = req.read()
+        req_content = urlopen(url)
+        if req_content is None:
+            return None
         try:
-            info = Utils.json_loads_single(req_cache[url].decode())
+            info = Utils.json_loads_single(req_content.decode())
         except Exception as e:
             print(e)
             return None
@@ -243,31 +247,26 @@ def get_artist_songs(artist, page):
         str(page),
         ])
     print('url-songs:', url)
-    if url not in req_cache:
-        req = urlopen(url)
-        if req is None:
-            return None
-        req_cache[url] = req.read()
+    req_content = urlopen(url)
+    if req_content is None:
+        return None
     try:
-        songs = Utils.json_loads_single(req_cache[url].decode())
+        songs = Utils.json_loads_single(req_content.decode())
     except Error as e:
         print(e)
         return None
     return songs
-
-
 
 def get_lrc(_rid):
     def _parse_lrc():
         url = ('http://newlyric.kuwo.cn/newlyric.lrc?' + 
                 Utils.encode_lrc_url(rid))
         print('lrc url:', url)
-        req = urlopen(url)
-        if req is None:
+        req_content = urlopen(url, use_cache=False)
+        if req_content is None:
             return None
-        data = req.read()
         try:
-            lrc = Utils.decode_lrc_content(data)
+            lrc = Utils.decode_lrc_content(req_content)
         except Exception as e:
             print(e)
             return None
@@ -286,7 +285,6 @@ def get_lrc(_rid):
         return lrc
     return None
 
-
 def search(keyword, _type, page=0):
     '''
     Search songs, albums, MV.
@@ -304,17 +302,16 @@ def search(keyword, _type, page=0):
             ])
     print('url-search:', url)
     if url not in req_cache:
-        req = urlopen(url)
-        if req is None:
+        req_content = urlopen(url, use_cache=False)
+        if req_content is None:
             return None
-        req_cache[url] = req.read()
+        req_cache[url] = req_content
     try:
         result = Utils.json_loads_single(req_cache[url].decode('gbk'))
     except Exception as e:
         print(e)
         return None
     return result
-
 
 def get_index_nodes(nid):
     '''
@@ -327,13 +324,11 @@ def get_index_nodes(nid):
         '&pn=0',
         ])
     print('get index nodes:', url)
-    if url not in req_cache:
-        req = urlopen(url)
-        if req is None:
-            return None
-        req_cache[url] = req.read()
+    req_content = urlopen(url)
+    if req_content is None:
+        return None
     try:
-        nodes_wrap = json.loads(req_cache[url].decode())
+        nodes_wrap = json.loads(req_content.decode())
     except Error as e:
         print(e)
         return None
@@ -384,7 +379,6 @@ def get_themes_main():
     append_to_nodes(72326, False)
     # 精选集 22997 这个格式不正确, 不要了.
     #append_to_nodes(22997, False)
-
     if len(nodes) > 0:
         return nodes
     else:
@@ -404,10 +398,10 @@ def get_themes_songs(nid, page):
         ])
     print('get themes songs:', url)
     if url not in req_cache:
-        req = urlopen(url)
-        if req is None:
+        req_content = urlopen(url, use_cache=False)
+        if req_content is None:
             return None
-        req_cache[url] = req.read()
+        req_cache[url] = req_content
     try:
         songs_wrap = json.loads(req_cache[url].decode())
     except Exception as e:
@@ -473,17 +467,17 @@ class Song(GObject.GObject):
             str(rid),
             ])
         print('url-song-link:', url)
-        req = urlopen(url)
-        if req is None:
+        req_content = urlopen(url, use_cache=False)
+        if req_content is None:
             return None
-        return req.read().decode()
+        return req_content.decode()
 
     def _download_song(self, song_link, song_info):
-        print('_download song()', threading.current_thread())
         def _wrap(req):
             received_size = 0
             can_play_emited = False
             content_length = int(req.headers.get('Content-Length'))
+            print('size of file: ', round(content_length / 2**20, 2), 'M')
             with open(song_info['filepath'], 'wb') as fh:
                 while True:
                     chunk = req.read(CHUNK)
@@ -491,9 +485,9 @@ class Song(GObject.GObject):
                     # emit chunk-received signals
                     # contains content_length and retrieved_size
                     percent = int(received_size/content_length * 100)
+                    #print('percent:', percent)
                     # emit every 10% received, to reduce GUI queue draw. 
                     #if percent % 10 == 0:
-                    #    print('new chunk received:', percent)
                     #    self.emit('chunk-received', song_info, percent)
 
                     # check retrieved_size, and emit can-play signal.
@@ -535,7 +529,6 @@ class AsyncSong(Song):
         async_call(self._get_song, callback, song)
 
     def _get_song(self, song):
-        print('_get song:', threading.current_thread())
         song_link = self._parse_song_link(song['rid'])
         print('song link:', song_link)
         if song_link is None:
