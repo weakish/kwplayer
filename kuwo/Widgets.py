@@ -96,6 +96,8 @@ class IconView(Gtk.IconView):
         super().__init__(model=liststore)
 
         self.set_pixbuf_column(0)
+        self.props.item_width = 150
+
         cell_name = Gtk.CellRendererText()
         cell_name.set_alignment(0.5, 0.5)
         #cell_name.props.max_width_chars = 20
