@@ -398,15 +398,15 @@ class PlayList(Gtk.Box):
         list_name = ''
         path = 0
         for list_name in self.lists_name:
-            if len(self.liststores[list_name]) == 0:
-                continue
-            path = 0
-            for row in self.liststores[list_name]:
-                if row[6] == '':
-                    break
+            if len(self.liststores[list_name]) > 0:
+                break
         if len(self.liststores[list_name]) == 0:
             print('all playlists are empty, please add some')
             return
+        path = 0
+        for row in self.liststores[list_name]:
+            if len(row[6]) == 0:
+                break
         print('current list_name is:', list_name)
         liststore = self.liststores[list_name]
         self.curr_caching = [list_name, path]
