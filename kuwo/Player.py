@@ -108,7 +108,7 @@ class Player(Gtk.Box):
 
         self.volume = Gtk.VolumeButton()
         #self.volume.props.use_symbolic = True
-        self.volume.set_value(0.2)
+        self.volume.set_value(0.1)
         self.volume.connect('value-changed', self.on_volume_value_changed)
         box2.pack_start(self.volume, False, False, 0)
 
@@ -129,6 +129,7 @@ class Player(Gtk.Box):
             self.adj_timeout = 0
             self.play_start(None)
             self.curr_song = song
+            self._player.set_property('volume', self.volume.get_value())
             self.update_player_info(song)
             print(' will call get lrc() in player')
             self.get_lrc()
@@ -235,12 +236,13 @@ class Player(Gtk.Box):
         # Use a factor to reduce volume change
         if self._player is None:
             return
-        if value < 0.3:
-            self._player.set_property('volume', value*0.25)
-        elif value < 0.6:
-            self._player.set_property('volume', value*0.5)
-        else:
-            self._player.set_property('volume', value)
+        self._player.set_property('volume', value)
+#        if value < 0.3:
+#            self._player.set_property('volume', value*0.25)
+#        elif value < 0.6:
+#            self._player.set_property('volume', value*0.5)
+#        else:
+#            self._player.set_property('volume', value)
 
     def update_player_info(self, song):
         def _update_logo(info, error=None):
