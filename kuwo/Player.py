@@ -6,7 +6,6 @@ from gi.repository import Gst
 from gi.repository import Gtk
 import html
 import time
-import threading
 
 from kuwo import Net
 from kuwo import Widgets
@@ -116,7 +115,6 @@ class Player(Gtk.Box):
         self.pause_btn.hide()
 
     def load(self, song):
-        print('Player.load(), thread:', threading.current_thread())
         if self._player is not None:
             self.play_pause(None)
             del self._player
@@ -125,7 +123,7 @@ class Player(Gtk.Box):
         if len(song['filepath']) != 0: 
             print('player will load:', song)
             self._player.set_property('uri', 'file://'+ song['filepath'])
-            GLib.timeout_add(500, self.init_adjustment)
+            GLib.timeout_add(1000, self.init_adjustment)
             self.adj_timeout = 0
             self.play_start(None)
             self.curr_song = song
@@ -141,16 +139,18 @@ class Player(Gtk.Box):
 
     def on_can_play(self, widget, song):
         # Maybe we should ignore this signal
-        print('Player.on_can_play, thread:', threading.current_thread())
         GLib.idle_add(self.load, song)
 
     def on_song_downloaded(self, song, error):
-        print('Player.on song downloaded()', threading.current_thread())
+        # use this to temporarily solve the problem above.
+        GLib.idle_add(self.init_adjustment)
         self.app.playlist.on_song_downloaded(song)
 
     def init_adjustment(self):
         self.adjustment.set_value(0.0)
         self.adjustment.set_lower(0.0)
+        # when song is not totally downloaded but can play, query_duration
+        # might give incorrect/inaccurate result.
         status, upper = self._player.query_duration(Gst.Format.TIME)
         if status and upper > 0:
             self.adjustment.set_upper(upper)
@@ -160,9 +160,10 @@ class Player(Gtk.Box):
     def sync_adjustment(self):
         status, curr = self._player.query_position(Gst.Format.TIME)
         if status:
+            status, total = self._player.query_duration(Gst.Format.TIME)
             self.adjustment.set_value(curr)
-            total_time = delta(self.adjustment.get_upper())
             curr_time = delta(curr)
+            total_time = delta(total)
             self.label_time.set_label('{0}/{1}'.format(curr_time, total_time))
             if total_time == curr_time:
                 self.on_eos()
