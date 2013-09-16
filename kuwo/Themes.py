@@ -98,6 +98,7 @@ class Themes(Gtk.Box):
         self.box_songs.hide()
         self.buttonbox.show_all()
         self.button_sub.hide()
+        self.box_control.hide()
         self.scrolled_sub.get_vadjustment().set_value(0)
         self.scrolled_sub.show_all()
         nodes  = Net.get_themes_sub(self.curr_sub_id)
@@ -127,6 +128,7 @@ class Themes(Gtk.Box):
         print('show songs')
         self.scrolled_sub.hide()
         self.button_sub.show_all()
+        self.box_control.show_all()
         self.scrolled_songs.get_vadjustment().set_value(0.0)
         self.box_songs.show_all()
         songs_wrap = Net.get_themes_songs(self.curr_list_id, 
