@@ -2,6 +2,7 @@
 import copy
 from gi.repository import GdkPixbuf
 from gi.repository import GObject
+import hashlib
 import json
 import leveldb
 import os
@@ -49,12 +50,20 @@ def async_call(func, func_done, *args):
     thread = threading.Thread(target=do_call, args=args)
     thread.start()
 
+def hash_key(_str):
+    return hashlib.sha512(_str.encode()).digest()
+
+def img_url(_str):
+    return hashlib.sha1(_str.encode()).hexdigest()
+
 def urlopen(_url, use_cache=True):
     # set host port from 81 to 80, to fix image problem
     url = _url.replace(':81', '')
+    # hash the url to accelerate string compare speed in db.
+    key = hash_key(url)
     if use_cache:
         try:
-            req = ldb.Get(url.encode())
+            req = ldb.Get(key)
             return req
         except KeyError:
             req = None
@@ -64,7 +73,7 @@ def urlopen(_url, use_cache=True):
             req = request.urlopen(url, timeout=TIMEOUT)
             req_content = req.read()
             if use_cache:
-                ldb.Put(url.encode(), req_content)
+                ldb.Put(key, req_content)
             return req_content
         except Exception as e:
             print(e)
@@ -284,6 +293,42 @@ def get_lrc(_rid):
             fh.write(lrc)
         return lrc
     return None
+
+def get_recommend_lists(artist):
+    url = ''.join([
+        'http://artistpicserver.kuwo.cn/pic.web?',
+        'type=big_artist_pic&pictype=url&content=list&&id=0&from=pc',
+        '&name=',
+        Utils.encode_uri(artist),
+        ])
+    print('recommend lists url:', url)
+    req_content = urlopen(url)
+    print('req_content:', req_content)
+    if req_content is None:
+        return None
+    return req_content.decode()
+
+def get_recommend_image(url):
+    def _parse_image(url): 
+        req_content = urlopen(url, use_cache=False)
+        if req_content is None:
+            return None
+        return req_content
+
+    if len(url) == 0:
+        return None
+    ext = os.path.splitext(url)[1]
+    filename = img_url(url) + ext
+    filepath = os.path.join(Config.IMG_LARGE_DIR, filename)
+    if os.path.exists(filepath):
+        return filepath
+
+    image = _parse_image(url)
+    if image is None:
+        return None
+    with open(filepath, 'wb') as fh:
+        fh.write(image)
+    return filepath
 
 def search(keyword, _type, page=0):
     '''
