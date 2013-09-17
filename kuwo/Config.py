@@ -38,20 +38,24 @@ _default_conf = {
         'use-mkv': False,
         'song-dir': os.path.join(CACHE_DIR, 'song'),
         'mv-dir': os.path.join(CACHE_DIR, 'mv'),
-        'theme': os.path.join(PREF, 'themes', 'default', 'images.json')
+        'theme': os.path.join(PREF, 'themes', 'default'),
         }
+
+def check_first():
+    if not os.path.exists(_conf_file):
+        try:
+            os.makedirs(os.path.dirname(_conf_file))
+            os.makedirs(IMG_DIR)
+            os.mkdir(IMG_LARGE_DIR)
+            os.mkdir(_default_conf['song-dir'])
+        except Exception as e:
+            print('Error', e)
+check_first()
 
 def load_conf():
     if os.path.exists(_conf_file):
         with open(_conf_file) as fh:
             return json.loads(fh.read())
-    try:
-        os.makedirs(os.path.dirname(_conf_file))
-        os.makedirs(IMG_DIR)
-        os.mkdir(IMG_LARGE_DIR)
-        os.mkdir(_default_conf['song-dir'])
-    except Exception as e:
-        print('Error', e)
     dump_conf(_default_conf)
     return _default_conf
 
@@ -59,10 +63,10 @@ def dump_conf(conf):
     with open(_conf_file, 'w') as fh:
         fh.write(json.dumps(conf))
 
-def load_theme(conf):
-    theme_dir = os.path.split(conf['theme'])[0]
+def load_theme(theme_dir):
+    theme_file = os.path.join(theme_dir, 'images.json')
     try:
-        with open(conf['theme']) as fh:
+        with open(theme_file) as fh:
             theme = json.loads(fh.read())
     except Exception as e:
         print(e)
