@@ -1,6 +1,7 @@
 
 import base64
 import json
+from urllib import parse
 import zlib
 
 
@@ -65,3 +66,6 @@ def json_loads_single(_str):
     Actually this is not a good idea.
     '''
     return json.loads(_str.replace('"', '''\\"''').replace("'", '"'))
+
+def encode_uri(text):
+    return parse.quote(text, safe='~@#$&()*!+=:;,.?/\'')
