@@ -458,6 +458,21 @@ def get_radios_nodes():
     nid = 8
     return get_nodes(nid)
 
+def get_radio_songs(nid, offset):
+    url = ''.join([
+        'http://gxh2.kuwo.cn/newradio.nr?',
+        'type=4&uid=0&login=0&size=20&fid=',
+        str(nid),
+        '&offset=',
+        str(offset),
+        ])
+    print('get_radio_songs(), url:', url)
+    req_content = urlopen(url)
+    if req_content is None:
+        return None
+    songs = Utils.parse_radio_songs(req_content.decode('gbk'))
+    return songs
+
 class Song(GObject.GObject):
     '''
     Use Gobject to emit signals:

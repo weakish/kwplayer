@@ -69,3 +69,22 @@ def json_loads_single(_str):
 
 def encode_uri(text):
     return parse.quote(text, safe='~@#$&()*!+=:;,.?/\'')
+
+def parse_radio_songs(txt):
+    if len(txt) == 0:
+        return None
+    lines = txt.splitlines()
+    if len(lines) == 0 or lines[0] != 'success':
+        return None
+    songs = []
+    for line in lines[2:]:
+        info = line.split('\t')
+        songs.append({
+            'rid': info[0],
+            'artist': info[1],
+            'name': info[2],
+            'artistid': 0,
+            'album': '',
+            'albumid': 0,
+            })
+    return songs

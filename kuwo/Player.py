@@ -31,6 +31,7 @@ class Player(Gtk.Box):
 
         self._player = None
         self.adj_timeout = 0
+        self.is_radio = False
 
         event_logo = Gtk.EventBox()
         self.pack_start(event_logo, False, False, 0)
@@ -107,7 +108,7 @@ class Player(Gtk.Box):
 
         self.volume = Gtk.VolumeButton()
         #self.volume.props.use_symbolic = True
-        self.volume.set_value(0.1)
+        self.volume.set_value(app.conf['volume'])
         self.volume.connect('value-changed', self.on_volume_value_changed)
         box2.pack_start(self.volume, False, False, 0)
 
@@ -115,6 +116,7 @@ class Player(Gtk.Box):
         self.pause_btn.hide()
 
     def load(self, song):
+        self.is_radio = False
         if self._player is not None:
             self.play_pause(None)
             del self._player
@@ -141,10 +143,11 @@ class Player(Gtk.Box):
         # Maybe we should ignore this signal
         GLib.idle_add(self.load, song)
 
-    def on_song_downloaded(self, song, error):
+    def on_song_downloaded(self, song, error=None):
         # use this to temporarily solve the problem above.
         GLib.idle_add(self.init_adjustment)
-        self.app.playlist.on_song_downloaded(song)
+        if song:
+            self.app.playlist.on_song_downloaded(song)
 
     def init_adjustment(self):
         self.adjustment.set_value(0.0)
@@ -188,6 +191,8 @@ class Player(Gtk.Box):
             self.app.playlist.locate_curr_song()
 
     def play_previous(self, btn):
+        if self.is_radio:
+            return
         _repeat = self.repeat_btn.get_active()
         _shuffle = self.shuffle_btn.get_active()
         prev_song = self.app.playlist.get_prev_song(repeat=_repeat, 
@@ -241,6 +246,7 @@ class Player(Gtk.Box):
         return False
 
     def on_volume_value_changed(self, volume, value):
+        self.app.conf['volume'] = value
         # Use a factor to reduce volume change
         if self._player is None:
             return
@@ -273,18 +279,18 @@ class Player(Gtk.Box):
         Net.get_artist_info(_update_logo, song['artistid'])
 
     def get_lrc(self):
-        def _update_lrc(lrc_text, error):
+        def _update_lrc(lrc_text, error=None):
             print('_update_lrc()')
             self.app.lrc.set_lrc(lrc_text)
         Net.async_call(Net.get_lrc, _update_lrc, self.curr_song['rid'])
 
     def get_recommend_lists(self):
         self.recommend_imgs = None
-        def on_list_received(imgs, error=None):
+        def _on_list_received(imgs, error=None):
             if imgs is None or len(imgs) == 0:
                 return
             self.recommend_imgs = imgs.splitlines()
-        Net.async_call(Net.get_recommend_lists, on_list_received, 
+        Net.async_call(Net.get_recommend_lists, _on_list_received, 
                 self.curr_song['artist'])
 
     def update_lrc_background(self, url):
@@ -301,8 +307,40 @@ class Player(Gtk.Box):
         self.play_pause()
         _repeat = self.repeat_btn.get_active()
         _shuffle = self.shuffle_btn.get_active()
-        next_song = self.app.playlist.get_next_song(repeat=_repeat, 
-                shuffle=_shuffle)
-        print('next song:', next_song)
-        if next_song is not None:
-            self.load(next_song)
+        if self.is_radio:
+            self.curr_radio_item.play_next_song()
+        else:
+            next_song = self.app.playlist.get_next_song(repeat=_repeat, 
+                    shuffle=_shuffle)
+            print('next song:', next_song)
+            if next_song is not None:
+                self.load(next_song)
+
+    # Radio part
+    def play_radio(self, song, radio_item):
+        def _on_radio_can_play(widget, song):
+            GLib.idle_add(self.on_radio_can_play(song))
+
+        def _on_radio_downloaded(*args):
+            pass
+
+        self.is_radio = True
+        self.curr_radio_item = radio_item
+        if self._player is not None:
+            self.play_pause(None)
+            del self._player
+        self._player = Gst.ElementFactory.make('playbin', 'player')
+        parse_song = Net.AsyncSong(self.app)
+        parse_song.connect('can-play', _on_radio_can_play)
+        parse_song.get_song(song, _on_radio_downloaded)
+
+    def on_radio_can_play(self, song):
+        self._player.set_property('uri', 'file://'+ song['filepath'])
+        GLib.timeout_add(1000, self.init_adjustment)
+        self.adj_timeout = 0
+        self.play_start(None)
+        self.curr_song = song
+        self._player.set_property('volume', self.volume.get_value())
+        self.update_player_info(song)
+        self.get_lrc()
+        self.get_recommend_lists()
