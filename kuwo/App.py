@@ -1,4 +1,5 @@
 
+from gi.repository import Gdk
 from gi.repository import GdkPixbuf
 from gi.repository import Gio
 from gi.repository import GObject
@@ -29,8 +30,7 @@ class App:
         self.app.connect('shutdown', self.on_app_shutdown)
 
         self.conf = Config.load_conf()
-        # TODO: check theme is not None
-        self.theme = Config.load_theme(self.conf)
+        self.theme = Config.load_theme(self.conf['theme'])
 
     def run(self, argv):
         self.app.run(argv)
@@ -73,10 +73,12 @@ class App:
         # init Gst so that play works ok.
         Gst.init_check(sys.argv)
 
-        # TODO: init others
         # signal should be connected after all pages in notebook all added.
         self.init_notebook()
         self.notebook.connect('switch-page', self.on_notebook_switch_page)
+
+        # load styles
+        self.load_styles()
 
         self.window.show_all()
 
@@ -195,3 +197,16 @@ class App:
 
     def on_notebook_switch_page(self, notebook, page, page_num):
         page.first()
+
+    def load_styles(self):
+        style_file = os.path.join(self.conf['theme'], 'main.css')
+        with open(style_file, 'rb') as fh:
+            css = fh.read()
+
+        style_provider = Gtk.CssProvider()
+        style_provider.load_from_data(css)
+        Gtk.StyleContext.add_provider_for_screen(
+                Gdk.Screen.get_default(),
+                style_provider,
+                Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+                )
