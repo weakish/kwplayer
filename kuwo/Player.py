@@ -14,8 +14,8 @@ from kuwo import Widgets
 GDK_2BUTTON_PRESS = 5
 
 
-def delta(sec_float):
-    _seconds = sec_float // 10**9
+def delta(nanosec_float):
+    _seconds = nanosec_float // 10**9
     mm, ss = divmod(_seconds, 60)
     hh, mm = divmod(mm, 60)
     if hh == 0:
@@ -129,8 +129,8 @@ class Player(Gtk.Box):
             self.curr_song = song
             self._player.set_property('volume', self.volume.get_value())
             self.update_player_info(song)
-            print(' will call get lrc() in player')
             self.get_lrc()
+            self.get_recommend_lists()
             return
         # download and load the song.
         parse_song = Net.AsyncSong(self.app)
@@ -167,6 +167,13 @@ class Player(Gtk.Box):
             self.label_time.set_label('{0}/{1}'.format(curr_time, total_time))
             if total_time == curr_time:
                 self.on_eos()
+            self.app.lrc.sync_lrc(curr)
+            if self.recommend_imgs:
+                div, mod = divmod(int(curr / 10**9), 20)
+                if mod == 0:
+                    div, mod = divmod(div, len(self.recommend_imgs))
+                    url = self.recommend_imgs[mod]
+                    self.update_lrc_background(url)
         return True
 
     def sync_label_by_adjustment(self):
@@ -268,10 +275,23 @@ class Player(Gtk.Box):
     def get_lrc(self):
         def _update_lrc(lrc_text, error):
             print('_update_lrc()')
-            if lrc_text is None:
-                print('failed to get lrc')
-
+            self.app.lrc.set_lrc(lrc_text)
         Net.async_call(Net.get_lrc, _update_lrc, self.curr_song['rid'])
+
+    def get_recommend_lists(self):
+        self.recommend_imgs = None
+        def on_list_received(imgs, error=None):
+            if imgs is None or len(imgs) == 0:
+                return
+            self.recommend_imgs = imgs.splitlines()
+        Net.async_call(Net.get_recommend_lists, on_list_received, 
+                self.curr_song['artist'])
+
+    def update_lrc_background(self, url):
+        def _update_background(filepath, error=None):
+            if filepath:
+                self.app.lrc.update_background(filepath)
+        Net.async_call(Net.get_recommend_image, _update_background, url)
 
     def on_eos(self):
         '''
