@@ -15,6 +15,8 @@ from kuwo import Config
 from kuwo import Utils
 
 ARTIST_LOGO = 'http://img4.kwcdn.kuwo.cn/star/starheads/'
+#IMG_CDN = 'http://img4.kwcdn.kuwo.cn/'
+ALBUM_COVER = 'http://img4.sycdn.kuwo.cn/star/albumcover/'
 ARTIST = 'http://artistlistinfo.kuwo.cn/mb.slist?'
 QUKU = 'http://qukudata.kuwo.cn/q.k?'
 QUKU_SONG = 'http://nplserver.kuwo.cn/pl.svc?'
@@ -143,6 +145,21 @@ def get_album(albumid):
         print(e)
         return None
     return songs_wrap
+
+def update_album_covers(liststore, path, col, _url):
+    def _update_image(filepath, error):
+        if filepath is None:
+            return
+        try:
+            pix = GdkPixbuf.Pixbuf.new_from_file_at_size(filepath, 100, 100)
+            liststore[path][col] = pix
+        except Exception as e:
+            print(e, 'filepath:', filepath)
+    if _url and len(_url) == 0:
+        return None
+    if not _url.startswith('http'):
+        url = ALBUM_COVER + _url
+    async_call(get_image, _update_image, url)
 
 def update_liststore_image(liststore, path, col, url):
     def _update_image(filepath, error):
@@ -303,7 +320,6 @@ def get_recommend_lists(artist):
         ])
     print('recommend lists url:', url)
     req_content = urlopen(url)
-    print('req_content:', req_content)
     if req_content is None:
         return None
     return req_content.decode()
@@ -330,33 +346,67 @@ def get_recommend_image(url):
         fh.write(image)
     return filepath
 
-def search(keyword, _type, page=0):
-    '''
-    Search songs, albums, MV.
-    No local cache.
-    '''
-    url = ''
-    if _type == 'all':
-        url = ''.join([
-            SEARCH,
-            'all=',
-            parse.quote(keyword),
-            '&rformat=json&encoding=UTF8&rn=50',
-            '&pn=',
-            str(page),
-            ])
-    print('url-search:', url)
+def search_songs(keyword, page=0):
+    url = ''.join([
+        SEARCH,
+        'ft=music&rn=200&newsearch=1&primitive=0&cluster=0',
+        '&itemset=newkm&rformat=json&encoding=utf8&all=',
+        parse.quote(keyword),
+        '&pn=',
+        str(page),
+        ])
+    print('search songs url:', url)
     if url not in req_cache:
         req_content = urlopen(url, use_cache=False)
         if req_content is None:
             return None
         req_cache[url] = req_content
     try:
-        result = Utils.json_loads_single(req_cache[url].decode('gbk'))
+        songs_wrap = Utils.json_loads_single(req_cache[url].decode())
     except Exception as e:
         print(e)
         return None
-    return result
+    return songs_wrap
+
+def search_artists(keyword):
+    url = ''.join([
+        SEARCH,
+        'ft=artist&pn=0&rn=500&newsearch=1&primitive=0&cluster=0',
+        '&itemset=newkm&rformat=json&encoding=utf8&all=',
+        parse.quote(keyword),
+        ])
+    print('url-search artist:', url)
+    if url not in req_cache:
+        req_content = urlopen(url, use_cache=False)
+        if req_content is None:
+            return None
+        req_cache[url] = req_content
+    try:
+        artists_wrap = Utils.json_loads_single(req_cache[url].decode())
+    except Exception as e:
+        print(e)
+        return None
+    return artists_wrap
+
+def search_albums(keyword):
+    url = ''.join([
+        SEARCH,
+        'ft=album&pn=0&rn=500&newsearch=1&primitive=0&cluster=0',
+        '&itemset=newkm&rformat=json&encoding=utf8&all=',
+        parse.quote(keyword),
+        ])
+    print('url search alum:', url)
+    if url not in req_cache:
+        req_content = urlopen(url, use_cache=False)
+        if req_content is None:
+            return None
+        req_cache[url] = req_content
+    try:
+        albums_wrap = Utils.json_loads_single(req_cache[url].decode())
+    except Exception as e:
+        print(e)
+        return None
+    return albums_wrap
 
 def get_index_nodes(nid):
     '''
