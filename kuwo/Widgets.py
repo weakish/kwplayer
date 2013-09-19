@@ -3,6 +3,19 @@ from gi.repository import Gdk
 from gi.repository import GdkPixbuf
 from gi.repository import Gtk
 
+import html
+
+def short_str(_str, length=10):
+    if len(_str) > length:
+        return _str[:length-2] + '..'
+    return _str
+
+# deprecated
+def tooltip(_str):
+    return html.escape(_str.replace('<br>', '\n'))
+
+def short_tooltip(tooltip, length=10):
+    return short_str(html.escape(tooltip.replace('<br>', '\n')), length)
 
 def song_row_to_dict(song_row, start=1, withpath=True):
     song = {
@@ -25,10 +38,14 @@ def song_dict_to_row(song, withpath=True):
         song_row.append(song['filepath'])
     return song_row
 
-def short_str(_str, length=10):
-    if len(_str) > length:
-        return _str[:length-1] + '..'
-    return _str
+class ListRadioButton(Gtk.RadioButton):
+    def __init__(self, label, last_button=None):
+        super().__init__(label)
+        self.props.draw_indicator = False
+        if last_button:
+            self.join_group(last_button)
+        # it might need a class name.
+
 
 class TreeViewColumnText(Gtk.TreeViewColumn):
     def __init__(self, *args, **keys):
@@ -92,15 +109,19 @@ class BoxControl(Gtk.Box):
 
 
 class IconView(Gtk.IconView):
-    def __init__(self, liststore):
+    def __init__(self, liststore, info_pos=3):
         super().__init__(model=liststore)
 
+        # liststore:
+        # 0 - logo
+        # 1 - name
+        # 3 - info
         self.set_pixbuf_column(0)
         self.props.item_width = 150
 
         cell_name = Gtk.CellRendererText()
         cell_name.set_alignment(0.5, 0.5)
-        #cell_name.props.max_width_chars = 20
+        #cell_name.props.max_width_chars = 18
         self.pack_start(cell_name, True)
         self.add_attribute(cell_name, 'text', 1)
 
@@ -108,9 +129,10 @@ class IconView(Gtk.IconView):
         fore_color = Gdk.RGBA(red=136/256, green=139/256, blue=132/256)
         cell_info.props.foreground_rgba = fore_color
         cell_info.props.size_points = 9
+        #cell_info.props.max_width_chars = 18
         cell_info.set_alignment(0.5, 0.5)
         self.pack_start(cell_info, True)
-        self.add_attribute(cell_info, 'text', 3)
+        self.add_attribute(cell_info, 'text', info_pos)
 
 
 class TreeViewSongs(Gtk.TreeView):

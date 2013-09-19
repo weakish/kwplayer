@@ -107,7 +107,6 @@ class Themes(Gtk.Box):
         self.liststore_sub.clear()
         i = 0
         for node in nodes:
-            print('node:', node)
             self.liststore_sub.append([self.app.theme['anonymous'],
                 Widgets.short_str(node['name']), int(node['sourceid']), 
                 node['info'], ])

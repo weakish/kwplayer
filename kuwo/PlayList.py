@@ -77,9 +77,6 @@ class PlayList(Gtk.Box):
         self.cache_timeout = 0
         self.curr_caching = [None, None]
 
-        # Use `check_same_thread=False to share sqlite connections between
-        # threads
-        # FIXME: got segmantation falt
         self.conn = sqlite3.connect(Config.SONG_DB)
         #        check_same_thread=False)
         self.cursor = self.conn.cursor()
@@ -125,11 +122,9 @@ class PlayList(Gtk.Box):
         self.pack_start(self.notebook, True, True, 0)
 
         # Use this trick to accelerate startup speed of app.
-        #GLib.idle_add(self.init_ui)
         GLib.timeout_add(1500, self.init_ui)
 
     def do_destroy(self):
-        print('do destroy()')
         self.conn.commit()
         self.conn.close()
         self.dump_playlists()
@@ -306,6 +301,8 @@ class PlayList(Gtk.Box):
         song is always returned with `filepath` setted.
         So player should check `filepath` is ''
         '''
+        if not song:
+            return
         liststore = self.liststores[list_name]
         rid = song['rid']
         path = self.get_song_path_in_liststore(liststore, rid)
@@ -325,6 +322,8 @@ class PlayList(Gtk.Box):
         self.app.player.load(song)
 
     def play_songs(self, songs):
+        if not songs or len(songs) == 0:
+            return
         self.add_songs_to_playlist(songs, list_name='Default')
         self.play_song(songs[0])
 

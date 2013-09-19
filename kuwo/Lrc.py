@@ -3,6 +3,7 @@
 import cairo
 from gi.repository import Gdk
 from gi.repository import GdkPixbuf
+from gi.repository import GdkX11
 from gi.repository import Gtk
 import os
 import re
@@ -16,7 +17,6 @@ def list_to_time(time_tags):
     else:
         curr_time = int(mm) * 60 + int(ss) + float(ml)
     return int(curr_time * 10**9)
-
 
 def lrc_parser(lrc_txt):
     if lrc_txt is None:
@@ -38,28 +38,37 @@ def lrc_parser(lrc_txt):
             lrc_obj.append((tag, content))
     return sorted(lrc_obj)
 
-class Lrc(Gtk.ScrolledWindow):
+class Lrc(Gtk.Box):
     def __init__(self, app):
-        super().__init__()
+        super().__init__(orientation=Gtk.Orientation.VERTICAL)
         self.app = app
         self.lrc_obj = None
-        self.tv_background = os.path.join(app.conf['theme'],
+        self.lrc_default_background = os.path.join(app.conf['theme'],
                 'lrc-background.jpg')
+        self.lrc_background = None
 
-        self.buf = Gtk.TextBuffer()
-        self.buf.set_text('Lrc loading...')
-        self.tag_centered = self.buf.create_tag('blue_fg', 
+        # lyrics window
+        self.lrc_window = Gtk.ScrolledWindow()
+        self.pack_start(self.lrc_window, True, True, 0)
+
+        self.lrc_buf = Gtk.TextBuffer()
+        self.lrc_buf.set_text('Lrc loading...')
+        self.tag_centered = self.lrc_buf.create_tag('blue_fg', 
                 foreground='blue')
-        self.tv= Gtk.TextView(buffer=self.buf)
-        self.tv.props.editable = False
-        self.tv.props.cursor_visible = False
-        self.tv.props.justification = Gtk.Justification.CENTER
-        self.tv.props.pixels_above_lines = 10
-        self.tv.connect('draw', self.on_tv_draw)
-        self.add(self.tv)
+        self.lrc_tv = Gtk.TextView(buffer=self.lrc_buf)
+        self.lrc_tv.props.editable = False
+        self.lrc_tv.props.cursor_visible = False
+        self.lrc_tv.props.justification = Gtk.Justification.CENTER
+        self.lrc_tv.props.pixels_above_lines = 10
+        self.lrc_tv.connect('draw', self.on_lrc_tv_draw)
+        self.lrc_window.add(self.lrc_tv)
+
+        # mv window
+        self.mv_window = Gtk.DrawingArea()
+        self.pack_start(self.mv_window, True, True, 0)
 
     def after_init(self):
-        pass
+        self.mv_window.hide()
 
     def first(self):
         pass
@@ -67,20 +76,19 @@ class Lrc(Gtk.ScrolledWindow):
     def set_lrc(self, lrc_txt):
         self.old_line = -1
         self.old_line_iter = None
-        print('lrc_txt:', lrc_txt)
         if lrc_txt is None:
             print('failed to get lrc')
-            self.buf.set_text('No lrc available')
+            self.lrc_buf.set_text('No lrc available')
             self.lrc_obj = None
             return
         self.lrc_obj = lrc_parser(lrc_txt)
-        print('lrc obj:', self.lrc_obj)
-        self.get_vadjustment().set_value(0)
+        self.lrc_window.get_vadjustment().set_value(0)
         self.lrc_content = [l[1] for l in self.lrc_obj]
-        self.buf.set_text('\n'.join(self.lrc_content))
+        self.lrc_buf.set_text('\n'.join(self.lrc_content))
         self.sync_lrc(0)
 
     def sync_lrc(self, timestamp):
+        # FIXME: TODO:
         if self.lrc_obj is None:
             return
         line_num = self.old_line + 1
@@ -89,27 +97,30 @@ class Lrc(Gtk.ScrolledWindow):
             return
         if self.old_line >= 0 and self.old_line_iter and \
                 len(self.old_line_iter) == 2:
-            self.buf.remove_tag(self.tag_centered, *self.old_line_iter)
+            self.lrc_buf.remove_tag(self.tag_centered, *self.old_line_iter)
         while len(self.lrc_obj) > line_num and \
                 timestamp > self.lrc_obj[line_num][0]:
             line_num += 1
         line_num -= 1
-        iter_start = self.buf.get_iter_at_line(line_num)
-        iter_end = self.buf.get_iter_at_line(line_num+1)
-        self.buf.apply_tag(self.tag_centered, iter_start, iter_end)
-        self.tv.scroll_to_iter(iter_start, 0, True, 0, 0.5)
+        iter_start = self.lrc_buf.get_iter_at_line(line_num)
+        iter_end = self.lrc_buf.get_iter_at_line(line_num+1)
+        self.lrc_buf.apply_tag(self.tag_centered, iter_start, iter_end)
+        self.lrc_tv.scroll_to_iter(iter_start, 0, True, 0, 0.5)
         self.old_line_iter = (iter_start, iter_end)
         self.old_line = line_num
 
     def update_background(self, filepath, error=None):
         if filepath and os.path.exists(filepath):
-            self.tv_background = filepath
+            self.lrc_background = filepath
+        else:
+            self.lrc_background = None
 
-    def on_tv_draw(self, textview, cr):
-        tv_width = self.tv.get_allocated_width()
-        tv_height = self.tv.get_allocated_height()
+    def on_lrc_tv_draw(self, textview, cr):
+        tv_width = self.lrc_tv.get_allocated_width()
+        tv_height = self.lrc_tv.get_allocated_height()
 
         # TODO, use a better linear gradient
+        # TODO: use percentage
         lg3 = cairo.LinearGradient(20.0, 260.0, 20.0, 360.0)
         lg3.add_color_stop_rgba(0.9, 0.9, 0.9, 0.9, 10) 
         lg3.add_color_stop_rgba(0.7, 0.7, 0.7, 0.7, 10) 
@@ -118,23 +129,35 @@ class Lrc(Gtk.ScrolledWindow):
         cr.set_source(lg3)
         cr.fill()
 
-        if self.tv_background:
-            pix = GdkPixbuf.Pixbuf.new_from_file_at_size(self.tv_background,
-                    tv_width, tv_height)
-            pix_width = pix.get_width()
-            pix_height = pix.get_height()
-            d_width = (tv_width - pix_width) / 2
-            d_height = (tv_height - pix_height) / 2
-            Gdk.cairo_set_source_pixbuf(cr, pix, d_width, d_height)
-            cr.paint()
-
-            cr.set_source_rgba(0.83, 0.84, 0.83, 0.45)
-            cr.set_line_width(14)
-            cr.rectangle(d_width + 30, d_height+30, pix_width-65, 
-                    pix_height-65)
-            cr.fill()
+        if self.lrc_background:
+            pix = GdkPixbuf.Pixbuf.new_from_file_at_size(
+                    self.lrc_background, tv_width, tv_height)
         else:
-            cr.set_source_rgba(0.83, 0.84, 0.83, 0.65)
-            cr.set_line_width(14)
-            cr.rectangle(0, 0, tv_width, tv_height)
-            cr.fill()
+            pix = GdkPixbuf.Pixbuf.new_from_file_at_size(
+                    self.lrc_default_background, tv_width, tv_height)
+        pix_width = pix.get_width()
+        pix_height = pix.get_height()
+        d_width = (tv_width - pix_width) / 2
+        d_height = (tv_height - pix_height) / 2
+        Gdk.cairo_set_source_pixbuf(cr, pix, d_width, d_height)
+        cr.paint()
+
+        back_rgba = Gdk.RGBA()
+        back_rgba.parse(self.app.conf['lrc-back-color'])
+        cr.set_source_rgba(back_rgba.red, back_rgba.green, 
+                back_rgba.blue, back_rgba.alpha)
+        cr.set_line_width(14)
+        cr.rectangle(d_width + 30, d_height+30, pix_width-65, 
+                pix_height-65)
+        cr.fill()
+
+    def show_mv(self):
+        self.lrc_window.hide()
+        self.mv_window.show_all()
+        Gdk.Window.process_all_updates()
+        self.mv_window.realize()
+        self.xid = self.app.lrc.mv_window.get_property('window').get_xid()
+
+    def show_music(self):
+        self.mv_window.hide()
+        self.lrc_window.show_all()

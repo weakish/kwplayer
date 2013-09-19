@@ -20,7 +20,6 @@ class RadioItem(Gtk.EventBox):
         # pic, name, radio_id, offset
         self.radio_info = radio_info
         self.expanded = False
-        print('RadioItem() radio_info:', radio_info)
 
         self.box = Gtk.Box()
         self.box.props.margin_top = 5
@@ -97,6 +96,7 @@ class RadioItem(Gtk.EventBox):
             self.update_label()
         index = self.get_index()
         if len(self.playlists[index]['songs']) == 0:
+            print('async name:', _update_songs)
             Net.async_call(Net.get_radio_songs, _update_songs, 
                     self.radio_info['radio_id'], self.radio_info['offset'])
     
@@ -111,6 +111,7 @@ class RadioItem(Gtk.EventBox):
             callback()
         index = self.get_index()
         offset = self.playlists[index]['offset']
+        print('async name:', _update_songs)
         Net.async_call(Net.get_radio_songs, _update_songs, 
                 self.radio_info['radio_id'], offset)
 
@@ -157,7 +158,14 @@ class RadioItem(Gtk.EventBox):
             return
         song = radio['songs'][radio['curr_song']]
         self.update_label()
-        self.app.playlist.play_song(song)
+        #self.app.playlist.play_song(song, list_name='Radio')
+        self.app.player.load_radio(song, self)
+
+    def play_next_song(self):
+        index = self.get_index()
+        self.playlists[index]['curr_song'] += 1
+        self.update_label()
+        self.play_song()
 
     def on_button_pressed(self, widget, event):
         parent = self.get_parent()
@@ -174,7 +182,6 @@ class RadioItem(Gtk.EventBox):
         index = self.get_index()
         self.playlists[index]['curr_song'] += 1
         self.update_label()
-        #self.play_song()
 
     def on_button_favorite_clicked(self, btn):
         index = self.get_index()
@@ -195,10 +202,14 @@ class Radio(Gtk.Box):
         self.load_playlists()
 
         # left side panel
+        scrolled_myradio = Gtk.ScrolledWindow()
+        scrolled_myradio.props.hscrollbar_policy = Gtk.PolicyType.NEVER
+        self.pack_start(scrolled_myradio, False, False, 0)
+
         # radios selected by user.
         self.box_myradio = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.box_myradio.props.margin_left = 10
-        self.pack_start(self.box_myradio, False, False, 0)
+        scrolled_myradio.add(self.box_myradio)
 
         self.scrolled_radios = Gtk.ScrolledWindow()
         self.pack_start(self.scrolled_radios, True, True, 0)
@@ -243,7 +254,6 @@ class Radio(Gtk.Box):
         else:
             playlists = _default
         self.playlists = playlists
-        print('self.playlists:', playlists)
 
     def dump_playlists(self):
         filepath = Config.RADIO_JSON

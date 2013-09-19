@@ -29,16 +29,20 @@ SONG_DB = os.path.join(CACHE_DIR, 'music.sqlite')
 CACHE_DB = os.path.join(CACHE_DIR, 'cache.db')
 # store playlists, `cached` not included.
 PLS_JSON = os.path.join(CACHE_DIR, 'pls.json')
+# store radio playlist.
+RADIO_JSON = os.path.join(CACHE_DIR, 'radio.json')
 
 CONF_DIR = os.path.join(HOME_DIR, '.config', 'kuwo')
 _conf_file = os.path.join(CONF_DIR, 'conf.json')
 _default_conf = {
         'window-size': (840, 580),
-        'use-ape': False,
-        'use-mkv': False,
         'song-dir': os.path.join(CACHE_DIR, 'song'),
         'mv-dir': os.path.join(CACHE_DIR, 'mv'),
         'theme': os.path.join(PREF, 'themes', 'default'),
+        'volume': 0.08,
+        'use-ape': False,
+        'use-mkv': False,
+        'lrc-back-color': 'rgba(0.82, 0.83, 0.84, 0.45)',
         }
 
 def check_first():
@@ -48,6 +52,7 @@ def check_first():
             os.makedirs(IMG_DIR)
             os.mkdir(IMG_LARGE_DIR)
             os.mkdir(_default_conf['song-dir'])
+            os.mkdir(_default_conf['mv-dir'])
         except Exception as e:
             print('Error', e)
 check_first()
