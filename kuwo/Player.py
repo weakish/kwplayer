@@ -41,6 +41,7 @@ class Player(Gtk.Box):
         super().__init__()
         self.app = app
 
+        self.fullscreen_sid = 0
         self.play_type = PlayType.NONE
         self.adj_timeout = 0
         self.recommend_imgs = None
@@ -106,12 +107,15 @@ class Player(Gtk.Box):
         self.show_mv_btn = Gtk.ToggleToolButton()
         self.show_mv_btn.set_label('Show MV')
         self.show_mv_btn.set_icon_name('video-x-generic-symbolic')
-        self.show_mv_btn.connect('toggled', self.on_show_mv_toggled)
+        self.show_mv_sid = self.show_mv_btn.connect('toggled', 
+                self.on_show_mv_toggled)
         toolbar.insert(self.show_mv_btn, 6)
 
         self.fullscreen_btn = Gtk.ToolButton()
         self.fullscreen_btn.set_label('Fullscreen')
         self.fullscreen_btn.set_icon_name('view-fullscreen-symbolic')
+        self.fullscreen_btn.connect('clicked', 
+                self.on_fullscreen_button_clicked)
         toolbar.insert(self.fullscreen_btn, 7)
 
         self.label = Gtk.Label('<b>Unknown</b> <i>by unknown</i>')
@@ -145,6 +149,7 @@ class Player(Gtk.Box):
         self.playbin.set_state(Gst.State.NULL)
 
     def load(self, song):
+        print('Player.load')
         def _on_song_can_play(widget, song):
             GLib.idle_add(self._load_song, song)
 
@@ -163,6 +168,7 @@ class Player(Gtk.Box):
         self._load_song(song)
 
     def _load_song(self, song):
+        print('Player._load_song()')
         self.curr_song = song
         self.playbin.set_property('uri', 'file://' + song['filepath'])
         self.start_player(load=True)
@@ -255,7 +261,9 @@ class Player(Gtk.Box):
             self.playbin.set_state(Gst.State.NULL)
             self.scale.set_value(0)
             self.show_mv_btn.set_sensitive(False)
+            self.show_mv_btn.handler_block(self.show_mv_sid)
             self.show_mv_btn.set_active(False)
+            self.show_mv_btn.handler_unblock(self.show_mv_sid)
             self.time_label.set_label('0:00/0:00')
         else:
             self.playbin.set_state(Gst.State.PAUSED)
@@ -293,6 +301,7 @@ class Player(Gtk.Box):
 
 
     def update_player_info(self, song):
+        print('Player.update player info()')
         def _update_pic(info, error=None):
             if info is None or error:
                 return
@@ -316,6 +325,7 @@ class Player(Gtk.Box):
                 name, artist, album)
         self.label.set_label(label)
         self.artist_pic.set_from_pixbuf(self.app.theme['anonymous'])
+        print('will call Net.get_artist_info')
         Net.async_call(Net.get_artist_info, _update_pic, song['artistid'])
 
     def get_lrc(self):
@@ -387,7 +397,6 @@ class Player(Gtk.Box):
             return
         state = toggle_button.get_active()
         if state:
-            # load MV using self.curr_song
             self.app.lrc.show_mv()
             self.enable_bus_sync()
             self.load_mv(self.curr_song)
@@ -399,11 +408,13 @@ class Player(Gtk.Box):
 
     def load_mv(self, song):
         self.play_type = PlayType.MV
-        self.pause_player(stop=True)
         self.curr_song = song
+        self.pause_player(stop=True)
         self.show_mv_btn.set_sensitive(True)
-        self.show_mv_btn.set_active(True)
         self.scale.set_sensitive(False)
+        self.show_mv_btn.handler_block(self.show_mv_sid)
+        self.show_mv_btn.set_active(True)
+        self.show_mv_btn.handler_unblock(self.show_mv_sid)
         self.get_mv_link()
 
     def _load_mv(self, mv_path):
@@ -446,3 +457,35 @@ class Player(Gtk.Box):
         if msg.get_structure().get_name() == 'prepare-window-handle':
             #print('prepare-window-handle')
             msg.src.set_window_handle(self.app.lrc.xid)
+
+
+    # Fullscreen
+    def on_fullscreen_button_clicked(self, button):
+        window = self.app.window
+        if self.fullscreen_sid > 0:
+            button.set_icon_name('view-fullscreen-symbolic')
+            window.realize()
+            window.unfullscreen()
+            window.disconnect(self.fullscreen_sid)
+            self.fullscreen_sid = 0
+        else:
+            button.set_icon_name('view-restore-symbolic')
+            window.realize()
+            window.fullscreen()
+            self.fullscreen_sid = window.connect('motion-notify-event',
+                    self.on_window_move_notified)
+
+    def on_window_move_notified(self, window, event=None):
+        # show control_panel and notebook label
+        self.show_all()
+        self.app.notebook.set_show_tabs(True)
+        # delay 3 seconds to hide them
+        self.fullscreen_timestamp = time.time()
+        GLib.timeout_add(3000, self.hide_control_panel_and_label, 
+                self.fullscreen_timestamp)
+
+    def hide_control_panel_and_label(self, timestamp):
+        if timestamp == self.fullscreen_timestamp and \
+                self.fullscreen_sid > 0:
+            self.app.notebook.set_show_tabs(False)
+            self.hide()
