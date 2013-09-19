@@ -13,9 +13,9 @@ def decode_lrc_content(lrc, is_lrcx=False):
     lrc_bytes = lrc[index+4:]
     str_lrc = zlib.decompress(lrc_bytes)
     if is_lrcx is False:
-        return str_lrc.decode('gb2312')
+        return str_lrc.decode('gb18030')
     str_bytes = base64.decodebytes(str_lrc)
-    return xor_bytes(str_bytes).decode('gb2312')
+    return xor_bytes(str_bytes).decode('gb18030')
 
 def xor_bytes(str_bytes, key='yeelion'):
     #key = 'yeelion'
