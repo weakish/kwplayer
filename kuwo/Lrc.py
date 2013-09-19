@@ -83,6 +83,8 @@ class Lrc(Gtk.Box):
             return
         self.lrc_obj = lrc_parser(lrc_txt)
         self.lrc_window.get_vadjustment().set_value(0)
+        self.lrc_buf.remove_all_tags(self.lrc_buf.get_start_iter(),
+                self.lrc_buf.get_end_iter())
         self.lrc_content = [l[1] for l in self.lrc_obj]
         self.lrc_buf.set_text('\n'.join(self.lrc_content))
         self.sync_lrc(0)
