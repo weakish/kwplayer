@@ -9,6 +9,8 @@ def decode_lrc_content(lrc, is_lrcx=False):
     '''
     lrc currently is bytes.
     '''
+    if len(lrc) < 80:
+        return None
     index = lrc.index(b'\r\n\r\n')
     lrc_bytes = lrc[index+4:]
     str_lrc = zlib.decompress(lrc_bytes)

@@ -129,8 +129,8 @@ class Player(Gtk.Box):
         self.scale.connect('change-value', self.on_scale_change_value)
         scale_box.pack_start(self.scale, True, True, 0)
 
-        self.label_time = Gtk.Label('0:00/0:00')
-        scale_box.pack_start(self.label_time, False, False, 0)
+        self.time_label = Gtk.Label('0:00/0:00')
+        scale_box.pack_start(self.time_label, False, False, 0)
 
         self.volume = Gtk.VolumeButton()
         self.volume.props.use_symbolic = True
@@ -216,7 +216,7 @@ class Player(Gtk.Box):
     def sync_label_by_adjustment(self):
         curr = delta(self.adjustment.get_value())
         total = delta(self.adjustment.get_upper())
-        self.label_time.set_label('{0}/{1}'.format(curr, total))
+        self.time_label.set_label('{0}/{1}'.format(curr, total))
 
     # Control panel
     def on_pic_pressed(self, eventbox, event):
@@ -253,6 +253,8 @@ class Player(Gtk.Box):
         self.play_button.set_icon_name('media-playback-start-symbolic')
         if stop:
             self.playbin.set_state(Gst.State.NULL)
+            self.scale.set_value(0)
+            self.time_label.set_label('0:00/0:00')
         else:
             self.playbin.set_state(Gst.State.PAUSED)
         if self.adj_timeout > 0:
@@ -316,8 +318,7 @@ class Player(Gtk.Box):
 
     def get_lrc(self):
         def _update_lrc(lrc_text, error=None):
-            if lrc_text:
-                self.app.lrc.set_lrc(lrc_text)
+            self.app.lrc.set_lrc(lrc_text)
         Net.async_call(Net.get_lrc, _update_lrc, self.curr_song['rid'])
 
     def get_recommend_lists(self):
