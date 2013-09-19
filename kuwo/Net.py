@@ -593,7 +593,7 @@ class AsyncSong(GObject.GObject):
                     chunk = req.read(CHUNK)
                     received_size += len(chunk)
                     percent = int(received_size/content_length * 100)
-                    print('percent:', percent)
+                    #print('percent:', percent)
                     # check retrieved_size, and emit can-play signal.
                     # this signal only emit once.
                     if (received_size > CHUNK_TO_PLAY or percent > 40) \
@@ -664,7 +664,7 @@ class AsyncMV(GObject.GObject):
                     chunk = req.read(CHUNK)
                     received_size += len(chunk)
                     percent = int(received_size/content_length * 100)
-                    print('percent:', percent)
+                    #print('percent:', percent)
                     if (received_size > CHUNK_MV_TO_PLAY or percent > 20) \
                             and not can_play_emited:
                         can_play_emited = True

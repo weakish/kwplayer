@@ -66,7 +66,7 @@ class TreeViewColumnIcon(Gtk.TreeViewColumn):
         self.props.fixed_width = 20
 
 
-class BoxControl(Gtk.Box):
+class ControlBox(Gtk.Box):
     def __init__(self, liststore, app):
         super().__init__(spacing=5)
         self.liststore = liststore

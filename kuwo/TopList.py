@@ -25,8 +25,8 @@ class TopList(Gtk.Box):
         # checked, name, artist, album, rid, artistid, albumid
         self.liststore_songs = Gtk.ListStore(bool, str, str, str, int, int,
                 int)
-        box_control = Widgets.BoxControl(self.liststore_songs, app)
-        self.buttonbox.pack_end(box_control, False, False, 0)
+        control_box = Widgets.ControlBox(self.liststore_songs, app)
+        self.buttonbox.pack_end(control_box, False, False, 0)
 
         self.scrolled_nodes = Gtk.ScrolledWindow()
         self.pack_start(self.scrolled_nodes, True, True, 0)

@@ -149,7 +149,6 @@ class Player(Gtk.Box):
             GLib.idle_add(self._load_song, song)
 
         def _on_song_downloaded(widget, song):
-            print('_on_song_downloaded()')
             GLib.idle_add(self.on_song_downloaded, song)
 
         self.play_type = PlayType.SONG
@@ -201,6 +200,7 @@ class Player(Gtk.Box):
             return True
         status, total = self.playbin.query_duration(Gst.Format.TIME)
         self.adjustment.set_value(curr)
+        self.adjustment.set_upper(total)
         self.sync_label_by_adjustment()
         if self.play_type == PlayType.MV:
             return True
@@ -284,6 +284,7 @@ class Player(Gtk.Box):
         return False
 
     def on_volume_value_changed(self, volume, value):
+        print('on volume value changed')
         self.app.conf['volume'] = value
         self.playbin.set_property('volume', value)
 
@@ -359,7 +360,7 @@ class Player(Gtk.Box):
         Remember to update its information.
         '''
         def _on_radio_can_play(widget, song):
-            GLib.idle_add(self._load_song(song))
+            GLib.idle_add(self._load_song, song)
 
         def _on_radio_downloaded(*args):
             self.scale.set_sensitive(True)
@@ -438,5 +439,5 @@ class Player(Gtk.Box):
 
     def on_sync_message(self, bus, msg):
         if msg.get_structure().get_name() == 'prepare-window-handle':
-            print('prepare-window-handle')
+            #print('prepare-window-handle')
             msg.src.set_window_handle(self.app.lrc.xid)

@@ -47,7 +47,7 @@ class Search(Gtk.Box):
         # checked, name, artist, album, rid, artistid, albumid
         self.liststore_songs = Gtk.ListStore(bool, str, str, str, int, int,
                 int)
-        self.control_box = Widgets.BoxControl(self.liststore_songs, app)
+        self.control_box = Widgets.ControlBox(self.liststore_songs, app)
         #control_box.props.halign = Gtk.Align.END
         box_top.pack_end(self.control_box, False, False, 0)
 

@@ -86,7 +86,6 @@ class RadioItem(Gtk.EventBox):
         self.init_songs()
     
     def init_songs(self):
-        print('radio_item.load_songs()')
         def _update_songs(songs, error=None):
             if songs is None:
                 return
@@ -96,12 +95,10 @@ class RadioItem(Gtk.EventBox):
             self.update_label()
         index = self.get_index()
         if len(self.playlists[index]['songs']) == 0:
-            print('async name:', _update_songs)
             Net.async_call(Net.get_radio_songs, _update_songs, 
                     self.radio_info['radio_id'], self.radio_info['offset'])
     
     def load_more_songs(self, callback):
-        print('radio_item.load_songs()')
         def _update_songs(songs, error=None):
             if songs is None:
                 return
@@ -111,7 +108,6 @@ class RadioItem(Gtk.EventBox):
             callback()
         index = self.get_index()
         offset = self.playlists[index]['offset']
-        print('async name:', _update_songs)
         Net.async_call(Net.get_radio_songs, _update_songs, 
                 self.radio_info['radio_id'], offset)
 
@@ -133,7 +129,6 @@ class RadioItem(Gtk.EventBox):
         self.toolbar.hide()
 
     def update_label(self):
-        print('update label()')
         index = self.get_index()
         radio = self.playlists[index]
         if radio['curr_song'] >= 20:
@@ -273,7 +268,6 @@ class Radio(Gtk.Box):
                 'curr_song': 0,
                 'songs': [],
                 }
-        print('radio info:', radio_info)
         self.append_radio(radio_info)
 
     def append_radio(self, radio_info):

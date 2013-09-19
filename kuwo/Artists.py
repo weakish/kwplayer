@@ -23,17 +23,11 @@ class Artists(Gtk.Box):
         self.label = Gtk.Label('')
         self.buttonbox.pack_start(self.label, False, False, 20)
 
-        button_cache = Gtk.Button('Cache')
-        button_cache.connect('clicked', self.on_button_cache_clicked)
-        self.buttonbox.pack_end(button_cache, False, False, 0)
-
-        button_play = Gtk.Button('Play')
-        self.buttonbox.pack_end(button_play, False, False, 0)
-
-        button_selectall = Gtk.ToggleButton('Select All')
-        button_selectall.set_active(True)
-        #button_selectall.connect('toggled', self.on_button_selectall_toggled)
-        self.buttonbox.pack_end(button_selectall, False, False, 0)
+        # checked, name, artist, album, rid, artistid, albumid
+        self.liststore_songs = Gtk.ListStore(bool, str, str, str, 
+                int, int, int)
+        control_box = Widgets.ControlBox(self.liststore_songs, app)
+        self.buttonbox.pack_end(control_box, False, False, 0)
 
         self.box_artists = Gtk.Box()
         self.pack_start(self.box_artists, True, True, 0)
@@ -75,9 +69,6 @@ class Artists(Gtk.Box):
         self.scrolled_songs = Gtk.ScrolledWindow()
         self.pack_start(self.scrolled_songs, True, True, 0)
 
-        # checked, name, artist, album, rid, artistid, albumid
-        self.liststore_songs = Gtk.ListStore(bool, str, str, str, 
-                int, int, int)
         treeview_songs = Widgets.TreeViewSongs(self.liststore_songs, app)
         self.scrolled_songs.add(treeview_songs)
 
@@ -193,14 +184,8 @@ class Artists(Gtk.Box):
                 int(song['ARTISTID']), int(song['ALBUMID']), ]) 
 
 
-
     # Song window
     def on_button_home_clicked(self, btn):
         self.box_artists.show_all()
         self.scrolled_songs.hide()
         self.buttonbox.hide()
-
-    def on_button_cache_clicked(self, btn):
-        print('on button cache clicked')
-        songs = [self.song_modelrow_to_dict(song) for song in self.liststore_songs if song[0]]
-        #self.app.playlist.cache_songs(songs)

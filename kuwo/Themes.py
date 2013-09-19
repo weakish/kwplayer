@@ -29,8 +29,8 @@ class Themes(Gtk.Box):
         # checked, name, artist, album, rid, artistid, albumid
         self.liststore_songs = Gtk.ListStore(bool, str, str, str, 
                 int, int, int)
-        self.box_control = Widgets.BoxControl(self.liststore_songs, app)
-        self.buttonbox.pack_end(self.box_control, False, False, 0)
+        self.control_box = Widgets.ControlBox(self.liststore_songs, app)
+        self.buttonbox.pack_end(self.control_box, False, False, 0)
 
         self.scrolled_main = Gtk.ScrolledWindow()
         self.pack_start(self.scrolled_main, True, True, 0)
@@ -98,7 +98,7 @@ class Themes(Gtk.Box):
         self.box_songs.hide()
         self.buttonbox.show_all()
         self.button_sub.hide()
-        self.box_control.hide()
+        self.control_box.hide()
         self.scrolled_sub.get_vadjustment().set_value(0)
         self.scrolled_sub.show_all()
         nodes  = Net.get_themes_sub(self.curr_sub_id)
@@ -127,7 +127,7 @@ class Themes(Gtk.Box):
         print('show songs')
         self.scrolled_sub.hide()
         self.button_sub.show_all()
-        self.box_control.show_all()
+        self.control_box.show_all()
         self.scrolled_songs.get_vadjustment().set_value(0.0)
         self.box_songs.show_all()
         songs_wrap = Net.get_themes_songs(self.curr_list_id, 
@@ -148,7 +148,7 @@ class Themes(Gtk.Box):
         self.buttonbox.hide()
         self.scrolled_sub.hide()
         self.box_songs.hide()
-        self.box_control.hide()
+        self.control_box.hide()
         self.scrolled_main.show_all()
 
     def on_button_sub_clicked(self, btn):
@@ -156,5 +156,5 @@ class Themes(Gtk.Box):
         self.label.set_label(self.curr_sub_name)
         self.buttonbox.show_all()
         self.button_sub.hide()
-        self.box_control.hide()
+        self.control_box.hide()
         self.scrolled_sub.show_all()
