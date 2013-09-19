@@ -38,13 +38,10 @@ class RadioItem(Gtk.EventBox):
         box_right = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.box.pack_start(box_right, True, True, 0)
 
-        radio_name = Gtk.Label(radio_info['name'])
-        radio_name.props.max_width_chars = 8
+        radio_name = Gtk.Label(Widgets.short_str(radio_info['name'], 8))
         box_right.pack_start(radio_name, True, True, 0)
 
-        #self.song_name = Gtk.Label(radio_info['curr_song_name'])
         self.label = Gtk.Label('song name')
-        self.label.props.max_width_chars = 8
         self.label.get_style_context().add_class('info-label')
         box_right.pack_start(self.label, False, False, 0)
 
@@ -99,16 +96,19 @@ class RadioItem(Gtk.EventBox):
                     self.radio_info['radio_id'], self.radio_info['offset'])
     
     def load_more_songs(self, callback):
-        def _update_songs(songs, error=None):
+        print('load more song()')
+        def _on_more_songs_loaded(songs, error=None):
+            print('_update_songs()')
             if songs is None:
                 return
             index = self.get_index()
-            self.playlists[index]['songs'] = songs
-            self.playlists[index]['curr_song'] = 0
+            # merge next list of songs to current list
+            self.playlists[index]['songs'] += songs
             callback()
         index = self.get_index()
-        offset = self.playlists[index]['offset']
-        Net.async_call(Net.get_radio_songs, _update_songs, 
+        offset = self.playlists[index]['offset'] + 1
+        self.playlists[index]['offset'] = offset
+        Net.async_call(Net.get_radio_songs, _on_more_songs_loaded, 
                 self.radio_info['radio_id'], offset)
 
     def expand(self):
@@ -131,11 +131,11 @@ class RadioItem(Gtk.EventBox):
     def update_label(self):
         index = self.get_index()
         radio = self.playlists[index]
-        if radio['curr_song'] >= 20:
+        if radio['curr_song'] > 19:
             self.label.set_label('Song Name')
             return
         song = radio['songs'][radio['curr_song']]
-        self.label.set_label(song['name'])
+        self.label.set_label(Widgets.short_str(song['name'], length=12))
 
     def get_index(self):
         i = 0
@@ -148,12 +148,14 @@ class RadioItem(Gtk.EventBox):
     def play_song(self):
         index = self.get_index()
         radio = self.playlists[index]
-        if radio['curr_song'] >= len(radio['songs'])-1:
-            self.load_more_songs(self.play_song)
-            return
+        #if radio['curr_song'] >= len(radio['songs'])-1:
+            #self.load_more_songs(self.play_song)
+            #return
+        if radio['curr_song'] > 19:
+            radio['curr_song'] = 0
+            radio['songs'] = radio['songs'][20:]
         song = radio['songs'][radio['curr_song']]
         self.update_label()
-        #self.app.playlist.play_song(song, list_name='Radio')
         self.app.player.load_radio(song, self)
 
     def play_next_song(self):
@@ -161,6 +163,23 @@ class RadioItem(Gtk.EventBox):
         self.playlists[index]['curr_song'] += 1
         self.update_label()
         self.play_song()
+
+    def cache_next_song(self):
+        print('cache_next_song()')
+        def _cache_next_song(*args):
+            print('_cache_next_song():', args)
+            song = radio['songs'][radio['curr_song'] + 1]
+            print('next song to cache:', song)
+            parse_song = Net.AsyncSong(self.app)
+            parse_song.get_song(song)
+        index = self.get_index()
+        radio = self.playlists[index]
+        # TODO: check curr_song > 19
+        if radio['curr_song'] == 19:
+            print('curr_song is 19, load next list')
+            self.load_more_songs(_cache_next_song)
+            return
+        _cache_next_song()
 
     def on_button_pressed(self, widget, event):
         parent = self.get_parent()
@@ -175,8 +194,10 @@ class RadioItem(Gtk.EventBox):
 
     def on_button_next_clicked(self, btn):
         index = self.get_index()
+        radio = self.playlists[index]
         self.playlists[index]['curr_song'] += 1
-        self.update_label()
+        if radio['curr_song'] >= len(radio['songs'])-1:
+            self.load_more_songs(self.update_label)
 
     def on_button_favorite_clicked(self, btn):
         index = self.get_index()

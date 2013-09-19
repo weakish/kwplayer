@@ -605,6 +605,7 @@ class AsyncSong(GObject.GObject):
                         break
                     fh.write(chunk)
                 #emit downloaded signal.
+                print('song downloaded')
                 self.emit('downloaded', song)
 
         song_link = get_song_link(song['rid'], self.app.conf['use-ape'])
@@ -668,10 +669,12 @@ class AsyncMV(GObject.GObject):
                     if (received_size > CHUNK_MV_TO_PLAY or percent > 20) \
                             and not can_play_emited:
                         can_play_emited = True
+                        print('mv can play now')
                         self.emit('can-play', mv_path)
                     if not chunk:
                         break
                     fh.write(chunk)
+                print('mv downloaded')
                 self.emit('downloaded', mv_path)
         retried = 0
         while retried < MAXTIMES:

@@ -254,6 +254,8 @@ class Player(Gtk.Box):
         if stop:
             self.playbin.set_state(Gst.State.NULL)
             self.scale.set_value(0)
+            self.show_mv_btn.set_sensitive(False)
+            self.show_mv_btn.set_active(False)
             self.time_label.set_label('0:00/0:00')
         else:
             self.playbin.set_state(Gst.State.PAUSED)
@@ -286,9 +288,9 @@ class Player(Gtk.Box):
         return False
 
     def on_volume_value_changed(self, volume, value):
-        print('on volume value changed')
         self.app.conf['volume'] = value
         self.playbin.set_property('volume', value)
+
 
     def update_player_info(self, song):
         def _update_pic(info, error=None):
@@ -324,9 +326,10 @@ class Player(Gtk.Box):
     def get_recommend_lists(self):
         self.recommend_imgs = None
         def _on_list_received(imgs, error=None):
-            if imgs is None or len(imgs) == 0:
-                return
-            self.recommend_imgs = imgs.splitlines()
+            if imgs is None or len(imgs) < 10:
+                self.recommend_imgs = None
+            else:
+                self.recommend_imgs = imgs.splitlines()
         Net.async_call(Net.get_recommend_lists, _on_list_received, 
                 self.curr_song['artist'])
 
@@ -365,6 +368,7 @@ class Player(Gtk.Box):
 
         def _on_radio_downloaded(*args):
             self.scale.set_sensitive(True)
+            self.curr_radio_item.cache_next_song()
 
         self.play_type = PlayType.RADIO
         self.pause_player(stop=True)
