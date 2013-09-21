@@ -34,19 +34,15 @@ class App:
         self.conf = Config.load_conf()
         self.theme = Config.load_theme(self.conf['theme'])
 
-    def run(self, argv):
-        self.app.run(argv)
-
     def on_app_startup(self, app):
-        self.window = Gtk.ApplicationWindow.new(app)
+        self.window = Gtk.ApplicationWindow(application=app)
         self.window.set_default_size(*self.conf['window-size'])
         self.window.set_title(Config.APPNAME)
         self.window.props.hide_titlebar_when_maximized = True
-
         self.window.set_icon(self.theme['app-logo'])
-
-        self.window.connect('check-resize', self.on_main_window_resized)
         app.add_window(self.window)
+        self.window.connect('check-resize', self.on_main_window_resized)
+        self.window.connect('delete-event', self.on_main_window_deleted)
 
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.window.add(box)
@@ -55,14 +51,15 @@ class App:
         box.pack_start(self.player, False, False, 0)
 
         self.notebook = Gtk.Notebook()
-        self.notebook.props.tab_pos = Gtk.PositionType.BOTTOM
         #self.notebook.props.tab_pos = Gtk.PositionType.LEFT
+        self.notebook.props.tab_pos = Gtk.PositionType.BOTTOM
         box.pack_start(self.notebook, True, True, 0)
 
-        builder = Gtk.Builder()
-        builder.add_from_file(Config.MENUS)
-        builder.connect_signals(self)
-        appmenu = builder.get_object('appmenu')
+        self.builder = Gtk.Builder()
+        for ui in Config.UI_FILES:
+            self.builder.add_from_file(ui)
+        self.builder.connect_signals(self)
+        appmenu = self.builder.get_object('appmenu')
         app.set_app_menu(appmenu)
         
         self.add_simple_action('preferences', 
@@ -77,8 +74,8 @@ class App:
 
         # load styles
         self.load_styles()
-
         self.window.show_all()
+        self.init_status_icon()
 
         # make some changes after main window is shown.
         self.artists.after_init()
@@ -90,6 +87,9 @@ class App:
         self.themes.after_init()
         self.topcategories.after_init()
         self.toplist.after_init()
+
+    def run(self, argv):
+        self.app.run(argv)
 
     def on_app_shutdown(self, app):
         Config.dump_conf(self.conf)
@@ -178,3 +178,51 @@ class App:
                 style_provider,
                 Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
                 )
+
+    # StatusIcon
+    def on_main_window_deleted(self, window, event):
+        print('main window deleted')
+        window.hide()
+        return True
+
+    def init_status_icon(self):
+        # set status_icon as class property, to keep its life after function
+        # exited
+        self.status_icon = Gtk.StatusIcon()
+        self.status_icon.set_from_pixbuf(self.theme['app-logo'])
+        # left click
+        self.status_icon.connect('activate', self.on_status_icon_activate)
+        # right click
+        self.status_icon.connect('popup_menu', 
+                self.on_status_icon_popup_menu)
+        #self.status_icon.set_screen(self.window.get_screen())
+        self.status_icon.set_tooltip_text('tray icon')
+
+    def on_status_icon_activate(self, status_icon):
+        is_visible = self.window.is_visible()
+        if is_visible:
+            self.window.hide()
+        else:
+            self.window.present()
+
+    def on_status_icon_popup_menu(self, status_icon, event_button, 
+            event_time):
+        menu = Gtk.Menu()
+        show_item = Gtk.MenuItem(label='Show App') 
+        show_item.connect('activate', self.on_status_icon_show_app_activate)
+        menu.append(show_item)
+        
+        quit_item = Gtk.MenuItem(label='Quit')
+        quit_item.connect('activate', self.on_status_icon_quit_activate)
+        menu.append(quit_item)
+
+        menu.show_all()
+        menu.popup(None, None,
+                lambda a,b: Gtk.StatusIcon.position_menu(menu, status_icon),
+                None, event_button, event_time)
+
+    def on_status_icon_show_app_activate(self, menuitem):
+        self.window.present()
+
+    def on_status_icon_quit_activate(self, menuitem):
+        self.app.quit()

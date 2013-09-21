@@ -14,7 +14,9 @@ APPNAME = 'KW Player'
 VERSION = '1.1'
 HOMEPAGE = 'https://github.com'
 AUTHORS = ['LiuLang <gsushzhsosgsu@gmail.com>',]
-MENUS = os.path.join(PREF, 'ui', 'menus.ui')
+
+_UI_FILES = ('menus.ui', )
+UI_FILES = [os.path.join(PREF, 'ui', ui) for ui in _UI_FILES]
 
 HOME_DIR = os.path.expanduser('~')
 CACHE_DIR = os.path.join(HOME_DIR, '.cache', 'kuwo')

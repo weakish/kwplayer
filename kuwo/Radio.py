@@ -245,8 +245,10 @@ class Radio(Gtk.Box):
         if self.first_show:
             return
         self.first_show = True
-        radios = Net.get_radios_nodes()
-        if radios is None:
+        nid = 8
+        page = 0
+        radios, total_page = Net.get_nodes(nid, page)
+        if total_page == 0:
             return
         i = 0
         for radio in radios:

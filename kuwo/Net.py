@@ -253,11 +253,17 @@ def get_artist_info(artistid, artist=None):
     Artist pic is also retrieved and saved to info['pic']
     '''
     if artistid == 0:
-        url = ''.join([SEARCH, 'stype=artistinfo&artist=', 
-            artist.replace(' ', '+'), ])
+        url = ''.join([
+            SEARCH,
+            'stype=artistinfo&artist=', 
+            Utils.encode_uri(artist),
+            ])
     else:
-        url = ''.join([SEARCH, 'stype=artistinfo&artistid=', 
-            str(artistid), ])
+        url = ''.join([
+            SEARCH,
+            'stype=artistinfo&artistid=', 
+            str(artistid),
+            ])
     req_content = urlopen(url)
     if req_content is None:
         return None

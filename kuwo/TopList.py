@@ -51,8 +51,9 @@ class TopList(Gtk.Box):
             return
         self.first_show = True
         nid = 2
-        nodes = Net.get_nodes(nid)
-        if nodes is None:
+        page = 0
+        nodes, total_pages = Net.get_nodes(nid, page)
+        if total_pages == 0:
             return
         i = 0
         for node in nodes:
