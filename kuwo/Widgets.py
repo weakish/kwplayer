@@ -10,6 +10,9 @@ def short_str(_str, length=10):
         return _str[:length-2] + '..'
     return _str
 
+def reach_scrolled_bottom(adj):
+    return adj.get_upper() - adj.get_page_size() - adj.get_value() < 80
+
 # deprecated
 def tooltip(_str):
     return html.escape(_str.replace('<br>', '\n'))
@@ -17,7 +20,7 @@ def tooltip(_str):
 def short_tooltip(tooltip, length=10):
     return short_str(html.escape(tooltip.replace('<br>', '\n')), length)
 
-def song_row_to_dict(song_row, start=1, withpath=True):
+def song_row_to_dict(song_row, start=1):
     song = {
             'name': song_row[start],
             'artist': song_row[start+1],
@@ -26,16 +29,12 @@ def song_row_to_dict(song_row, start=1, withpath=True):
             'artistid': song_row[start+4],
             'albumid': song_row[start+5],
             }
-    if withpath:
-        song['filepath'] = song_row[start+6]
     return song
 
-def song_dict_to_row(song, withpath=True):
+def song_dict_to_row(song):
     # with filepath
     song_row = [song['name'], song['artist'], song['album'], 
             int(song['rid']), int(song['artistid']), int(song['albumid']),]
-    if withpath:
-        song_row.append(song['filepath'])
     return song_row
 
 class ListRadioButton(Gtk.RadioButton):
@@ -53,8 +52,8 @@ class TreeViewColumnText(Gtk.TreeViewColumn):
         # This is the best option, but Gtk raises some Exceptions like:
         # (kuwo.py:14225): Gtk-CRITICAL **: _gtk_tree_view_column_autosize: assertion `GTK_IS_TREE_VIEW (tree_view)' failed
         # I don't know why that happens and how to fix it.  
-        self.props.sizing = Gtk.TreeViewColumnSizing.AUTOSIZE
-        #self.props.sizing = Gtk.TreeViewColumnSizing.GROW_ONLY
+        #self.props.sizing = Gtk.TreeViewColumnSizing.AUTOSIZE
+        self.props.sizing = Gtk.TreeViewColumnSizing.GROW_ONLY
         self.props.expand = True
         self.props.max_width = 280
 
@@ -96,20 +95,20 @@ class ControlBox(Gtk.Box):
             song[0] = toggled
 
     def on_button_play_clicked(self, btn):
-        songs = [song_row_to_dict(s, withpath=False) for s in self.liststore if s[0]]
+        songs = [song_row_to_dict(s) for s in self.liststore if s[0]]
         self.app.playlist.play_songs(songs)
 
     def on_button_add_clicked(self, btn):
-        songs = [song_row_to_dict(s, withpath=False) for s in self.liststore if s[0]]
+        songs = [song_row_to_dict(s) for s in self.liststore if s[0]]
         self.app.playlist.add_songs_to_playlist(songs)
 
     def on_button_cache_clicked(self, btn):
-        songs = [song_row_to_dict(s, withpath=False) for s in self.liststore if s[0]]
+        songs = [song_row_to_dict(s) for s in self.liststore if s[0]]
         self.app.playlist.cache_songs(songs)
 
 
 class IconView(Gtk.IconView):
-    def __init__(self, liststore, info_pos=3):
+    def __init__(self, liststore, info_pos=3, tooltip=None):
         super().__init__(model=liststore)
 
         # liststore:
@@ -117,11 +116,14 @@ class IconView(Gtk.IconView):
         # 1 - name
         # 3 - info
         self.set_pixbuf_column(0)
+        if tooltip is not None:
+            self.set_tooltip_column(tooltip)
         self.props.item_width = 150
 
         cell_name = Gtk.CellRendererText()
         cell_name.set_alignment(0.5, 0.5)
-        #cell_name.props.max_width_chars = 18
+        cell_name.props.max_width_chars = 15
+        #cell_name.props.width_chars = 15
         self.pack_start(cell_name, True)
         self.add_attribute(cell_name, 'text', 1)
 
@@ -129,7 +131,8 @@ class IconView(Gtk.IconView):
         fore_color = Gdk.RGBA(red=136/256, green=139/256, blue=132/256)
         cell_info.props.foreground_rgba = fore_color
         cell_info.props.size_points = 9
-        #cell_info.props.max_width_chars = 18
+        cell_info.props.max_width_chars = 18
+        #cell_info.props.width_chars = 18
         cell_info.set_alignment(0.5, 0.5)
         self.pack_start(cell_info, True)
         self.add_attribute(cell_info, 'text', info_pos)
@@ -180,14 +183,19 @@ class TreeViewSongs(Gtk.TreeView):
         print('on row activated')
         model = treeview.get_model()
         index = treeview.get_columns().index(column)
-        song = song_row_to_dict(model[path], withpath=False)
+        song = song_row_to_dict(model[path])
 
         if index in (1, 4):
             self.app.playlist.play_song(song)
         elif index == 2:
-            print('will search artist')
+            if len(song['artist']) == 0:
+                print('artist is empty, no searching')
+            self.app.search.search_artist(song['artist'])
         elif index == 3:
-            print('will search album')
+            if len(song['album']) == 0:
+                print('album is empty, no searching')
+                return
+            self.app.search.search_album(song['album'])
         elif index == 5:
             self.app.playlist.add_song_to_playlist(song)
         elif index == 6:

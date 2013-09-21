@@ -13,6 +13,7 @@ else:
 APPNAME = 'KW Player'
 VERSION = '1.1'
 HOMEPAGE = 'https://github.com'
+AUTHORS = ['LiuLang <gsushzhsosgsu@gmail.com>',]
 MENUS = os.path.join(PREF, 'ui', 'menus.ui')
 
 HOME_DIR = os.path.expanduser('~')

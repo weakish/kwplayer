@@ -5,7 +5,6 @@ from gi.repository import Gtk
 from kuwo import Net
 from kuwo import Widgets
 
-NID = 2
 
 class TopList(Gtk.Box):
     def __init__(self, app):
@@ -51,9 +50,10 @@ class TopList(Gtk.Box):
         if self.first_show:
             return
         self.first_show = True
-
-        nodes = Net.get_nodes(NID)
-
+        nid = 2
+        nodes = Net.get_nodes(nid)
+        if nodes is None:
+            return
         i = 0
         for node in nodes:
             self.liststore_nodes.append([self.app.theme['anonymous'],

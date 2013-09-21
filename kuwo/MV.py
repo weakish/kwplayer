@@ -31,11 +31,15 @@ class MV(Gtk.Box):
         self.scrolled_nodes.add(iconview_nodes)
 
         self.scrolled_songs = Gtk.ScrolledWindow()
+        self.scrolled_songs.get_vadjustment().connect('value-changed',
+                self.on_scrolled_songs_scrolled)
         self.pack_start(self.scrolled_songs, True, True, 0)
         # logo, name, artist, album, rid, artistid, albumid
         self.liststore_songs = Gtk.ListStore(GdkPixbuf.Pixbuf, str, str, 
                 str, int, int, int)
         iconview_songs = Widgets.IconView(self.liststore_songs, info_pos=2)
+        iconview_songs.connect('item_activated', 
+                self.on_iconview_songs_item_activated)
         self.scrolled_songs.add(iconview_songs)
 
     def after_init(self):
@@ -64,18 +68,20 @@ class MV(Gtk.Box):
         model = iconview.get_model()
         self.buttonbox.show_all()
         self.label.set_label(model[path][1])
-        self.show_mv_songs(model[path][2])
-
-    def show_mv_songs(self, pid):
         self.scrolled_nodes.hide()
         self.scrolled_songs.show_all()
+        self.curr_node_id = model[path][2]
+        self.show_mv_songs(init=True)
 
-        songs_wrap = Net.get_mv_songs(pid)
-        if not songs_wrap:
+    def show_mv_songs(self, init=False):
+        if init:
+            self.songs_page = 0
+            self.liststore_songs.clear()
+        songs, self.songs_total = Net.get_mv_songs(self.curr_node_id,
+                self.songs_page)
+        if self.songs_total == 0:
             return
-        songs = songs_wrap['musiclist']
-        self.liststore_songs.clear()
-        i = 0
+        i = len(self.liststore_songs)
         for song in songs:
             self.liststore_songs.append([self.app.theme['anonymous'],
                 song['name'], song['artist'], song['album'],
@@ -85,7 +91,19 @@ class MV(Gtk.Box):
                     song['mvpic'])
             i += 1
 
+    def on_iconview_songs_item_activated(self, iconview, path):
+        model = iconview.get_model()
+        song = Widgets.song_row_to_dict(model[path])
+        self.app.player.load_mv(song)
+
     def on_button_home_clicked(self, btn):
         self.scrolled_nodes.show_all()
         self.scrolled_songs.hide()
         self.buttonbox.hide()
+
+    # scrolled window
+    def on_scrolled_songs_scrolled(self, adj):
+        if Widgets.reach_scrolled_bottom(adj) and \
+                self.songs_page < self.songs_total - 1:
+            self.songs_page += 1
+            self.show_mv_songs()

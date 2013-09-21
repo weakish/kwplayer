@@ -111,7 +111,7 @@ class App:
         dialog.set_copyright('Copyright (c) 2013 LiuLang')
         dialog.set_website(Config.HOMEPAGE)
         dialog.set_license_type(Gtk.License.GPL_3_0)
-        dialog.set_authors(['LiuLang <gsushzhsosgsu@gmail.com>',])
+        dialog.set_authors(Config.AUTHORS)
         dialog.run()
         dialog.destroy()
 
@@ -125,35 +125,46 @@ class App:
 
     def init_notebook(self):
         self.lrc = Lrc(self)
-        self.notebook.append_page(self.lrc, Gtk.Label('Lyrics'))
+        self.lrc.app_page = self.notebook.append_page(
+                self.lrc, Gtk.Label('Lyrics'))
 
         self.playlist = PlayList(self)
-        self.notebook.append_page(self.playlist, Gtk.Label('Playlist'))
+        self.playlist.app_page = self.notebook.append_page(
+                self.playlist, Gtk.Label('Playlist'))
 
         self.search = Search(self)
-        self.notebook.append_page(self.search, Gtk.Label('Search'))
+        self.search.app_page = self.notebook.append_page(
+                self.search, Gtk.Label('Search'))
 
         self.toplist = TopList(self)
-        self.notebook.append_page(self.toplist, Gtk.Label('Top List'))
+        self.toplist.app_page = self.notebook.append_page(
+                self.toplist, Gtk.Label('Top List'))
 
         self.radio = Radio(self)
-        self.notebook.append_page(self.radio, Gtk.Label('Radio'))
+        self.radio.app_page = self.notebook.append_page(
+                self.radio, Gtk.Label('Radio'))
 
         self.mv = MV(self)
-        self.notebook.append_page(self.mv, Gtk.Label('MV'))
+        self.mv.app_page = self.notebook.append_page(
+                self.mv, Gtk.Label('MV'))
 
         self.artists = Artists(self)
-        self.notebook.append_page(self.artists, Gtk.Label('Artists'))
+        self.artists.app_page = self.notebook.append_page(
+                self.artists, Gtk.Label('Artists'))
 
         self.topcategories = TopCategories(self)
-        self.notebook.append_page(self.topcategories, 
-                Gtk.Label('Categories'))
+        self.topcategories.app_page = self.notebook.append_page(
+                self.topcategories, Gtk.Label('Categories'))
 
         self.themes = Themes(self)
-        self.notebook.append_page(self.themes, Gtk.Label('Themes'))
+        self.themes.app_page = self.notebook.append_page(
+                self.themes, Gtk.Label('Themes'))
 
     def on_notebook_switch_page(self, notebook, page, page_num):
         page.first()
+
+    def popup_page(self, page):
+        self.notebook.set_current_page(page)
 
     def load_styles(self):
         style_file = os.path.join(self.conf['theme'], 'main.css')

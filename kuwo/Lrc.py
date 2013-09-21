@@ -74,6 +74,7 @@ class Lrc(Gtk.Box):
         pass
 
     def set_lrc(self, lrc_txt):
+        self.lrc_background = None
         self.old_line = -1
         self.old_line_iter = None
         if lrc_txt is None:

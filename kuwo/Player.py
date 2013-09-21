@@ -107,6 +107,7 @@ class Player(Gtk.Box):
         self.show_mv_btn = Gtk.ToggleToolButton()
         self.show_mv_btn.set_label('Show MV')
         self.show_mv_btn.set_icon_name('video-x-generic-symbolic')
+        self.show_mv_btn.set_sensitive(False)
         self.show_mv_sid = self.show_mv_btn.connect('toggled', 
                 self.on_show_mv_toggled)
         toolbar.insert(self.show_mv_btn, 6)
@@ -114,6 +115,9 @@ class Player(Gtk.Box):
         self.fullscreen_btn = Gtk.ToolButton()
         self.fullscreen_btn.set_label('Fullscreen')
         self.fullscreen_btn.set_icon_name('view-fullscreen-symbolic')
+        #self.fullscreen_btn.add_accelerator('clicked', GtkAccelGroup,
+                #Gdk.KEY_F11, Gdk.ModifierType.RELEASE_MASK,
+
         self.fullscreen_btn.connect('clicked', 
                 self.on_fullscreen_button_clicked)
         toolbar.insert(self.fullscreen_btn, 7)
@@ -130,6 +134,7 @@ class Player(Gtk.Box):
         self.adjustment = Gtk.Adjustment(0, 0, 100, 1, 10, 0)
         self.scale.set_adjustment(self.adjustment)
         self.scale.props.draw_value = False
+        self.scale.set_sensitive(False)
         self.scale.connect('change-value', self.on_scale_change_value)
         scale_box.pack_start(self.scale, True, True, 0)
 
@@ -149,41 +154,39 @@ class Player(Gtk.Box):
         self.playbin.set_state(Gst.State.NULL)
 
     def load(self, song):
-        print('Player.load')
-        def _on_song_can_play(widget, song):
-            GLib.idle_add(self._load_song, song)
+        def _on_song_can_play(widget, song_path):
+            if song_path:
+                GLib.idle_add(self._load_song, song_path)
+            else:
+                self.pause_player(stop=True)
 
-        def _on_song_downloaded(widget, song):
-            GLib.idle_add(self.on_song_downloaded, song)
+        def _on_song_downloaded(widget, song_path):
+            if song_path:
+                GLib.idle_add(self.on_song_downloaded, song_path)
 
         self.play_type = PlayType.SONG
-        self.scale.set_sensitive(False)
-        self.pause_player(stop=True)
-        if 'filepath' not in song or len(song['filepath']) == 0: 
-            parse_song = Net.AsyncSong(self.app)
-            parse_song.connect('can-play', _on_song_can_play)
-            parse_song.connect('downloaded', _on_song_downloaded)
-            parse_song.get_song(song)
-        self.scale.set_sensitive(True)
-        self._load_song(song)
-
-    def _load_song(self, song):
-        print('Player._load_song()')
         self.curr_song = song
-        self.playbin.set_property('uri', 'file://' + song['filepath'])
+        self.pause_player(stop=True)
+        parse_song = Net.AsyncSong(self.app)
+        parse_song.connect('can-play', _on_song_can_play)
+        parse_song.connect('downloaded', _on_song_downloaded)
+        parse_song.get_song(song)
+
+    def _load_song(self, song_path):
+        self.playbin.set_property('uri', 'file://' + song_path)
         self.start_player(load=True)
         self.app.lrc.show_music()
-        self.update_player_info(song)
+        self.update_player_info()
         self.get_lrc()
         self.show_mv_btn.set_sensitive(False)
         self.get_mv_link()
         self.get_recommend_lists()
 
-    def on_song_downloaded(self, song):
+    def on_song_downloaded(self, song_path):
         self.init_adjustment()
         self.scale.set_sensitive(True)
-        if song and not error:
-            self.app.playlist.on_song_downloaded(song)
+        if self.play_type == PlayType.SONG:
+            self.app.playlist.on_song_downloaded(self.curr_song)
 
     def is_playing(self):
         state = self.playbin.get_state(5)
@@ -239,7 +242,7 @@ class Player(Gtk.Box):
         prev_song = self.app.playlist.get_prev_song(repeat=_repeat, 
                 shuffle=_shuffle)
         if prev_song is not None:
-            # TODO: check PlayType
+            # TODO, FIXME: check PlayType
             self.load(prev_song)
 
     def on_play_button_clicked(self, button):
@@ -260,6 +263,7 @@ class Player(Gtk.Box):
         if stop:
             self.playbin.set_state(Gst.State.NULL)
             self.scale.set_value(0)
+            self.scale.set_sensitive(False)
             self.show_mv_btn.set_sensitive(False)
             self.show_mv_btn.handler_block(self.show_mv_sid)
             self.show_mv_btn.set_active(False)
@@ -300,8 +304,7 @@ class Player(Gtk.Box):
         self.playbin.set_property('volume', value)
 
 
-    def update_player_info(self, song):
-        print('Player.update player info()')
+    def update_player_info(self):
         def _update_pic(info, error=None):
             if info is None or error:
                 return
@@ -312,9 +315,10 @@ class Player(Gtk.Box):
                         info['pic'], 100, 100)
                 self.artist_pic.set_from_pixbuf(pix)
             
+        song = self.curr_song
         name = Widgets.short_tooltip(song['name'], 45)
         if len(song['artist']) > 0:
-            artist = Widgets.short_tooltip(song['artist'], 15)
+            artist = Widgets.short_tooltip(song['artist'], 20)
         else:
             artist = 'Unknown'
         if len(song['album']) > 0:
@@ -325,8 +329,8 @@ class Player(Gtk.Box):
                 name, artist, album)
         self.label.set_label(label)
         self.artist_pic.set_from_pixbuf(self.app.theme['anonymous'])
-        print('will call Net.get_artist_info')
-        Net.async_call(Net.get_artist_info, _update_pic, song['artistid'])
+        Net.async_call(Net.get_artist_info, _update_pic, 
+                song['artistid'], song['artist'])
 
     def get_lrc(self):
         def _update_lrc(lrc_text, error=None):
@@ -383,6 +387,7 @@ class Player(Gtk.Box):
         self.play_type = PlayType.RADIO
         self.pause_player(stop=True)
         self.curr_radio_item = radio_item
+        self.curr_song = song
         self.scale.set_sensitive(False)
         parse_song = Net.AsyncSong(self.app)
         parse_song.connect('can-play', _on_radio_can_play)
@@ -411,7 +416,6 @@ class Player(Gtk.Box):
         self.curr_song = song
         self.pause_player(stop=True)
         self.show_mv_btn.set_sensitive(True)
-        self.scale.set_sensitive(False)
         self.show_mv_btn.handler_block(self.show_mv_sid)
         self.show_mv_btn.set_active(True)
         self.show_mv_btn.handler_unblock(self.show_mv_sid)
@@ -422,10 +426,14 @@ class Player(Gtk.Box):
         self.app.lrc.show_mv()
         self.enable_bus_sync()
         self.start_player(load=True)
-        self.update_player_info(self.curr_song)
+        self.update_player_info()
 
     def on_mv_can_play(self, widget, mv_path):
-        GLib.idle_add(self._load_mv, mv_path)
+        if mv_path:
+            GLib.idle_add(self._load_mv, mv_path)
+        else:
+            # Failed to download MV,
+            self.pause_player(stop=True)
 
     def on_mv_downloaded(self, widget, mv_path):
         self.scale.set_sensitive(True)
@@ -477,6 +485,7 @@ class Player(Gtk.Box):
 
     def on_window_move_notified(self, window, event=None):
         # show control_panel and notebook label
+        print('on window move notified()')
         self.show_all()
         self.app.notebook.set_show_tabs(True)
         # delay 3 seconds to hide them
@@ -485,6 +494,7 @@ class Player(Gtk.Box):
                 self.fullscreen_timestamp)
 
     def hide_control_panel_and_label(self, timestamp):
+        print('hide control panel and label')
         if timestamp == self.fullscreen_timestamp and \
                 self.fullscreen_sid > 0:
             self.app.notebook.set_show_tabs(False)

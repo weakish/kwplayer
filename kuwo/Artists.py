@@ -54,8 +54,8 @@ class Artists(Gtk.Box):
         box.pack_start(self.combo_pref, False, False, 0)
 
         scrolled_artists = Gtk.ScrolledWindow()
-        adj = scrolled_artists.get_vadjustment()
-        adj.connect('value-changed', self.on_artists_window_scrolled)
+        scrolled_artists.get_vadjustment().connect('value-changed',
+                self.on_scrolled_artists_scrolled)
         self.box_artists.pack_start(scrolled_artists, True, True, 0)
 
         # logo, name, nid, num of songs
@@ -67,6 +67,8 @@ class Artists(Gtk.Box):
         scrolled_artists.add(iconview_artists)
 
         self.scrolled_songs = Gtk.ScrolledWindow()
+        self.scrolled_songs.get_vadjustment().connect('value-changed',
+                self.on_scrolled_songs_scrolled)
         self.pack_start(self.scrolled_songs, True, True, 0)
 
         treeview_songs = Widgets.TreeViewSongs(self.liststore_songs, app)
@@ -115,41 +117,25 @@ class Artists(Gtk.Box):
 
     def on_cate_changed(self, *args):
         self.append_artists(init=True)
-        return True
-
-    def on_artists_window_scrolled(self, adj):
-        timestamp = time.time()
-        if adj.get_upper() - adj.get_page_size() - adj.get_value() < 40 and\
-                timestamp - self.artists_appended_timestamp > 2:
-            self.artists_appended_timestamp = timestamp
-            self.append_artists()
-        else:
-            print('on artists window scrolled, do nothing')
 
     def append_artists(self, init=False):
         if init:
             self.liststore_artists.clear()
-            self.curr_artist_page = 0
+            self.artists_page = 0
         selection = self.treeview_cate.get_selection()
         result = selection.get_selected()
-        if result is not None and len(result) == 2:
-            model, _iter = result
-        else:
+        if result is None or len(result) != 2:
             return
+        model, _iter = result
         pref_index = self.combo_pref.get_active()
         catid = model[_iter][1]
         prefix = self.liststore_pref[pref_index][1]
-        artists_wrap = Net.get_artists(catid, self.curr_artist_page, prefix)
-        if 'artistlist' in artists_wrap:
-            artists = artists_wrap['artistlist']
-        else:
+        artists, self.artists_total = Net.get_artists(catid, 
+                self.artists_page, prefix)
+        if self.artists_total == 0:
             return
 
-        artists_total = int(artists_wrap['total'])
-        if artists_total < 200 * self.curr_artist_page:
-            return
-
-        self.artists_appended_timestamp = time.time()
+        #self.artists_appended_timestamp = time.time()
         i = len(self.liststore_artists)
         for artist in artists:
             self.liststore_artists.append([self.app.theme['anonymous'],
@@ -158,30 +144,39 @@ class Artists(Gtk.Box):
             Net.update_artist_logo(self.liststore_artists, i, 0, 
                     artist['pic'])
             i += 1
-        self.curr_artist_page += 1
-
 
     def on_iconview_artists_item_activated(self, iconview, path):
         model = iconview.get_model()
         self.label.set_label(model[path][1])
         self.curr_artist_name = model[path][1]
-        self.curr_song_page = 0
-        self.show_artists_songs()
+        self.append_songs(init=True)
 
-    def show_artists_songs(self):
-        self.box_artists.hide()
-        self.buttonbox.show_all()
-        self.scrolled_songs.show_all()
-        songs_wrap = Net.get_artist_songs(self.curr_artist_name,
-                self.curr_song_page)
-        if songs_wrap is None:
-            return
-        songs = songs_wrap['abslist']
-        self.liststore_songs.clear()
-        for song in songs:
-            self.liststore_songs.append([True, song['SONGNAME'], 
-                song['ARTIST'], song['ALBUM'], int(song['MUSICRID'][6:]), 
-                int(song['ARTISTID']), int(song['ALBUMID']), ]) 
+    def append_songs(self, init=False):
+        def _append_songs(songs_args, error=None):
+            songs, self.songs_total = songs_args
+            if self.songs_total == 0:
+                return
+            for song in songs:
+                self.liststore_songs.append([True, song['SONGNAME'], 
+                    song['ARTIST'], song['ALBUM'], 
+                    int(song['MUSICRID'][6:]), int(song['ARTISTID']), 
+                    int(song['ALBUMID']), ]) 
+        if init:
+            self.songs_page = 0
+            self.box_artists.hide()
+            self.buttonbox.show_all()
+            self.scrolled_songs.show_all()
+            self.liststore_songs.clear()
+        Net.async_call(Net.get_artist_songs, _append_songs, 
+                self.curr_artist_name, self.songs_page)
+        #songs, self.songs_total = Net.get_artist_songs(
+        #        self.curr_artist_name, self.songs_page)
+        #if self.songs_total == 0:
+        #    return
+        #for song in songs:
+        #    self.liststore_songs.append([True, song['SONGNAME'], 
+        #        song['ARTIST'], song['ALBUM'], int(song['MUSICRID'][6:]), 
+        #        int(song['ARTISTID']), int(song['ALBUMID']), ]) 
 
 
     # Song window
@@ -189,3 +184,17 @@ class Artists(Gtk.Box):
         self.box_artists.show_all()
         self.scrolled_songs.hide()
         self.buttonbox.hide()
+
+    # scrolled windows
+    def on_scrolled_artists_scrolled(self, adj):
+        print('on scrolled artists scrolled')
+        if Widgets.reach_scrolled_bottom(adj) and \
+                self.artists_page < self.artists_total - 1:
+            self.artists_page += 1
+            self.append_artists()
+
+    def on_scrolled_songs_scrolled(self, adj):
+        if Widgets.reach_scrolled_bottom(adj) and \
+                self.songs_page < self.songs_total - 1:
+            self.songs_page += 1
+            self.append_songs()

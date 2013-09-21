@@ -34,8 +34,7 @@ class Themes(Gtk.Box):
 
         self.scrolled_main = Gtk.ScrolledWindow()
         self.pack_start(self.scrolled_main, True, True, 0)
-        
-        # pic, name, id, num of lists
+        # pic, name, id, info(num of lists)
         self.liststore_main = Gtk.ListStore(GdkPixbuf.Pixbuf, str, int, str)
         iconview_main = Widgets.IconView(self.liststore_main)
         iconview_main.connect('item_activated', 
@@ -43,35 +42,32 @@ class Themes(Gtk.Box):
         self.scrolled_main.add(iconview_main)
 
         self.scrolled_sub = Gtk.ScrolledWindow()
+        self.scrolled_sub.get_vadjustment().connect('value-changed',
+                self.on_scrolled_sub_scrolled)
         self.pack_start(self.scrolled_sub, True, True, 0)
-
-        # pic, name, sourceid, num of lists
+        # pic, name, sourceid, info(num of lists)
         self.liststore_sub = Gtk.ListStore(GdkPixbuf.Pixbuf, str, int, str)
         iconview_sub = Widgets.IconView(self.liststore_sub)
         iconview_sub.connect('item_activated', 
                 self.on_iconview_sub_item_activated)
         self.scrolled_sub.add(iconview_sub)
 
-        self.box_songs = Gtk.Box()
-        self.pack_start(self.box_songs, True, True, 0)
-
         self.scrolled_songs = Gtk.ScrolledWindow()
-        self.box_songs.pack_start(self.scrolled_songs, True, True, 0)
-
-        treeview_songs = Widgets.TreeViewSongs(self.liststore_songs,
-                self.app)
+        self.scrolled_songs.get_vadjustment().connect('value-changed',
+                self.on_scrolled_songs_scrolled)
+        self.pack_start(self.scrolled_songs, True, True, 0)
+        treeview_songs = Widgets.TreeViewSongs(self.liststore_songs, app)
         self.scrolled_songs.add(treeview_songs)
 
     def after_init(self):
         self.buttonbox.hide()
         self.scrolled_sub.hide()
-        self.box_songs.hide()
+        self.scrolled_songs.hide()
 
     def first(self):
         if self.first_show:
             return
         self.first_show = True
-
         nodes = Net.get_themes_main()
         if nodes is None:
             print('Failed to get nodes, do something!')
@@ -79,8 +75,7 @@ class Themes(Gtk.Box):
         i = 0
         for node in nodes:
             self.liststore_main.append([self.app.theme['anonymous'],
-                    Widgets.short_str(node['name']), int(node['nid']), 
-                    node['info'], ])
+                    node['name'], int(node['nid']), node['info'], ])
             Net.update_liststore_image(self.liststore_main, i, 0, 
                     node['pic'])
             i += 1
@@ -90,26 +85,27 @@ class Themes(Gtk.Box):
         self.curr_sub_name = model[path][1]
         self.curr_sub_id = model[path][2]
         self.label.set_label(self.curr_sub_name)
-        #self.curr_sub_page = 0
-        self.show_sub()
+        self.show_sub(init=True)
 
-    def show_sub(self):
-        self.scrolled_main.hide()
-        self.box_songs.hide()
-        self.buttonbox.show_all()
-        self.button_sub.hide()
-        self.control_box.hide()
-        self.scrolled_sub.get_vadjustment().set_value(0)
-        self.scrolled_sub.show_all()
-        nodes  = Net.get_themes_sub(self.curr_sub_id)
+    def show_sub(self, init=False):
+        if init:
+            self.scrolled_main.hide()
+            self.scrolled_songs.hide()
+            self.buttonbox.show_all()
+            self.button_sub.hide()
+            self.control_box.hide()
+            self.scrolled_sub.get_vadjustment().set_value(0)
+            self.scrolled_sub.show_all()
+            self.nodes_page = 0
+            self.liststore_sub.clear()
+        nodes, self.nodes_total = Net.get_nodes(self.curr_sub_id,
+                self.nodes_page)
         if nodes is None:
             return
-        self.liststore_sub.clear()
-        i = 0
+        i = len(self.liststore_sub)
         for node in nodes:
             self.liststore_sub.append([self.app.theme['anonymous'],
-                Widgets.short_str(node['name']), int(node['sourceid']), 
-                node['info'], ])
+                node['name'], int(node['sourceid']), node['info'], ])
             Net.update_liststore_image(self.liststore_sub, i, 0, 
                     node['pic'])
             i += 1
@@ -120,23 +116,22 @@ class Themes(Gtk.Box):
         self.curr_list_id = model[path][2]
         self.label.set_label(self.curr_list_name)
         self.button_sub.set_label(self.curr_sub_name)
-        self.curr_list_page = 0
-        self.show_songs()
+        self.show_songs(init=True)
     
-    def show_songs(self):
-        print('show songs')
-        self.scrolled_sub.hide()
-        self.button_sub.show_all()
-        self.control_box.show_all()
-        self.scrolled_songs.get_vadjustment().set_value(0.0)
-        self.box_songs.show_all()
-        songs_wrap = Net.get_themes_songs(self.curr_list_id, 
-                self.curr_list_page)
-        if songs_wrap is None:
+    def show_songs(self, init=False):
+        if init:
+            self.liststore_songs.clear()
+            self.songs_page = 0
+            self.scrolled_sub.hide()
+            self.button_sub.show_all()
+            self.control_box.show_all()
+            self.scrolled_songs.get_vadjustment().set_value(0.0)
+            self.scrolled_songs.show_all()
+
+        songs, self.songs_total = Net.get_themes_songs(
+                self.curr_list_id, self.songs_page)
+        if songs is None:
             return
-        self.total_songs = songs_wrap['total']
-        songs = songs_wrap['musiclist']
-        self.liststore_songs.clear()
         for song in songs:
             self.liststore_songs.append([
                 True, song['name'], song['artist'], song['album'],
@@ -147,14 +142,26 @@ class Themes(Gtk.Box):
     def on_button_main_clicked(self, btn):
         self.buttonbox.hide()
         self.scrolled_sub.hide()
-        self.box_songs.hide()
+        self.scrolled_songs.hide()
         self.control_box.hide()
         self.scrolled_main.show_all()
 
     def on_button_sub_clicked(self, btn):
-        self.box_songs.hide()
+        self.scrolled_songs.hide()
         self.label.set_label(self.curr_sub_name)
         self.buttonbox.show_all()
         self.button_sub.hide()
         self.control_box.hide()
         self.scrolled_sub.show_all()
+
+    def on_scrolled_sub_scrolled(self, adj):
+        if Widgets.reach_scrolled_bottom(adj) and \
+                self.nodes_page < self.nodes_total - 1:
+            self.nodes_page += 1
+            self.show_sub()
+
+    def on_scrolled_songs_scrolled(self, adj):
+        if Widgets.reach_scrolled_bottom(adj) and \
+                self.songs_page < self.songs_total - 1:
+            self.songs_page += 1
+            self.show_songs()
