@@ -4,6 +4,24 @@ from gi.repository import Gtk
 
 from kuwo import Config
 
+class NoteTab(Gtk.Box):
+    def __init__(self):
+        super().__init__(orientation=Gtk.Orientation.VERTICAL)
+        self.set_border_width(10)
+
+
+class BoldLabel(Gtk.Label):
+    def __init__(self, label):
+        super().__init__(label)
+        self.set_use_markup(True)
+        self.props.halign = Gtk.Align.START
+        self.props.xalign = 0
+        self.props.margin_bottom = 10
+
+# TODO
+class ChooseFolder(Gtk.FileChooserButton):
+    def __init__(self):
+        super().__init__()
 
 class Preferences(Gtk.Dialog):
     def __init__(self, app):
@@ -19,16 +37,11 @@ class Preferences(Gtk.Dialog):
         box.pack_start(notebook, True, True, 0)
 
         # format tab
-        format_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        format_box.set_border_width(10)
+        format_box = NoteTab()
         notebook.append_page(format_box, Gtk.Label('Format'))
 
-        label_audio = Gtk.Label('<b>Prefered Audio Format</b>')
-        label_audio.set_use_markup(True)
-        label_audio.props.halign = Gtk.Align.START
-        label_audio.props.xalign = 0
-        label_audio.props.margin_bottom = 10
-        format_box.pack_start(label_audio, False, False, 0)
+        audio_label = BoldLabel('<b>Prefered Audio Format</b>')
+        format_box.pack_start(audio_label, False, False, 0)
         radio_mp3 = Gtk.RadioButton('MP3 (faster)')
         radio_mp3.props.margin_left = 15
         radio_mp3.connect('toggled', self.on_audio_toggled)
@@ -40,13 +53,9 @@ class Preferences(Gtk.Dialog):
         radio_ape.connect('toggled', self.on_audio_toggled)
         format_box.pack_start(radio_ape, False, False, 0)
 
-        label_video = Gtk.Label('<b>Prefered Video Format</b>')
-        label_video.set_use_markup(True)
-        label_video.props.halign = Gtk.Align.START
-        label_video.props.xalign = 0
-        label_video.props.margin_top = 20
-        label_video.props.margin_bottom = 10
-        format_box.pack_start(label_video, False, False, 0)
+        video_label = BoldLabel('<b>Prefered Video Format</b>')
+        video_label.props.margin_top = 20
+        format_box.pack_start(video_label, False, False, 0)
         radio_mp4 = Gtk.RadioButton('MP4 (faster)')
         radio_mp4.props.margin_left = 15
         radio_mp4.connect('toggled', self.on_video_toggled)
@@ -59,8 +68,7 @@ class Preferences(Gtk.Dialog):
         format_box.pack_start(radio_mkv, False, False, 0)
 
         # lyrics tab
-        lrc_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        lrc_box.set_border_width(10)
+        lrc_box = NoteTab()
         notebook.append_page(lrc_box, Gtk.Label('Lyrics'))
 
         lrc_back_box = Gtk.Box()
@@ -79,6 +87,17 @@ class Preferences(Gtk.Dialog):
         lrc_back_color.set_title('Choose color for Lyrics background')
         lrc_back_box.pack_start(lrc_back_color, False, False, 20)
         
+        # folders tab
+        folder_box = NoteTab()
+        notebook.append_page(folder_box, Gtk.Label('Folders'))
+
+        song_folder_label = NoteTab('<b>Place to store sogns</b>')
+        folder_box.pack_start(song_folder_label, False, False, 0)
+
+        song_folder_button = ChooseFolder()
+
+        mv_folder_label = NoteTab('<b>Place to store MVs</b>')
+        folder_box.pack_start(mv_folder_label, False, False, 0)
 
     def run(self):
         self.get_content_area().show_all()

@@ -44,6 +44,9 @@ class App:
         self.window.connect('check-resize', self.on_main_window_resized)
         self.window.connect('delete-event', self.on_main_window_deleted)
 
+        self.accel_group = Gtk.AccelGroup()
+        self.window.add_accel_group(self.accel_group)
+
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.window.add(box)
 

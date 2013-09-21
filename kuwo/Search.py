@@ -137,7 +137,7 @@ class Search(Gtk.Box):
                 int(song['MUSICRID'][6:]), int(song['ARTISTID']),
                 int(song['ALBUMID']), ])
 
-    def show_artists(self, reset_status):
+    def show_artists(self, reset_status=False):
         keyword = self.search_entry.get_text()
         if len(keyword) == 0:
             return
@@ -158,7 +158,7 @@ class Search(Gtk.Box):
                     artist['PICPATH'])
             i += 1
 
-    def show_albums(self, reset_status):
+    def show_albums(self, reset_status=False):
         keyword = self.search_entry.get_text()
         if len(keyword) == 0:
             return
@@ -233,4 +233,3 @@ class Search(Gtk.Box):
                 self.albums_page < self.albums_total - 1:
             self.albums_page += 1
             self.show_albums()
-

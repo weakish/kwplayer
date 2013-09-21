@@ -115,9 +115,9 @@ class Player(Gtk.Box):
         self.fullscreen_btn = Gtk.ToolButton()
         self.fullscreen_btn.set_label('Fullscreen')
         self.fullscreen_btn.set_icon_name('view-fullscreen-symbolic')
-        #self.fullscreen_btn.add_accelerator('clicked', GtkAccelGroup,
-                #Gdk.KEY_F11, Gdk.ModifierType.RELEASE_MASK,
-
+        key, mod = Gtk.accelerator_parse('F11')
+        self.fullscreen_btn.add_accelerator('clicked', app.accel_group,
+                key, mod, Gtk.AccelFlags.VISIBLE)
         self.fullscreen_btn.connect('clicked', 
                 self.on_fullscreen_button_clicked)
         toolbar.insert(self.fullscreen_btn, 7)
@@ -481,11 +481,10 @@ class Player(Gtk.Box):
             window.realize()
             window.fullscreen()
             self.fullscreen_sid = window.connect('motion-notify-event',
-                    self.on_window_move_notified)
+                    self.on_window_motion_notified)
 
-    def on_window_move_notified(self, window, event=None):
+    def on_window_motion_notified(self, *args):
         # show control_panel and notebook label
-        print('on window move notified()')
         self.show_all()
         self.app.notebook.set_show_tabs(True)
         # delay 3 seconds to hide them
@@ -494,7 +493,6 @@ class Player(Gtk.Box):
                 self.fullscreen_timestamp)
 
     def hide_control_panel_and_label(self, timestamp):
-        print('hide control panel and label')
         if timestamp == self.fullscreen_timestamp and \
                 self.fullscreen_sid > 0:
             self.app.notebook.set_show_tabs(False)
