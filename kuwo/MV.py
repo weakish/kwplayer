@@ -31,8 +31,6 @@ class MV(Gtk.Box):
         self.scrolled_nodes.add(iconview_nodes)
 
         self.scrolled_songs = Gtk.ScrolledWindow()
-        self.scrolled_songs.get_vadjustment().connect('value-changed',
-                self.on_scrolled_songs_scrolled)
         self.pack_start(self.scrolled_songs, True, True, 0)
         # logo, name, artist, album, rid, artistid, albumid
         self.liststore_songs = Gtk.ListStore(GdkPixbuf.Pixbuf, str, str, 
@@ -71,25 +69,31 @@ class MV(Gtk.Box):
         self.scrolled_nodes.hide()
         self.scrolled_songs.show_all()
         self.curr_node_id = model[path][2]
-        self.show_mv_songs(init=True)
+        self.append_songs(init=True)
 
-    def show_mv_songs(self, init=False):
+    def append_songs(self, init=False):
+        def _append_songs(songs_args, error=None):
+            songs, self.songs_total = songs_args
+            if self.songs_total == 0:
+                return
+            i = len(self.liststore_songs)
+            for song in songs:
+                self.liststore_songs.append([self.app.theme['anonymous'],
+                    song['name'], song['artist'], song['album'],
+                    int(song['id']), int(song['artistid']), 
+                    int(song['albumid']), ])
+                Net.update_mv_image(self.liststore_songs, i, 0,
+                        song['mvpic'])
+                i += 1
+            self.songs_page += 1
+            if self.songs_page < self.songs_total - 1:
+                self.append_songs()
+
         if init:
             self.songs_page = 0
             self.liststore_songs.clear()
-        songs, self.songs_total = Net.get_mv_songs(self.curr_node_id,
-                self.songs_page)
-        if self.songs_total == 0:
-            return
-        i = len(self.liststore_songs)
-        for song in songs:
-            self.liststore_songs.append([self.app.theme['anonymous'],
-                song['name'], song['artist'], song['album'],
-                int(song['id']), int(song['artistid']), 
-                int(song['albumid']), ])
-            Net.update_mv_image(self.liststore_songs, i, 0,
-                    song['mvpic'])
-            i += 1
+        Net.async_call(Net.get_mv_songs, _append_songs, 
+                self.curr_node_id, self.songs_page)
 
     def on_iconview_songs_item_activated(self, iconview, path):
         model = iconview.get_model()
@@ -100,10 +104,3 @@ class MV(Gtk.Box):
         self.scrolled_nodes.show_all()
         self.scrolled_songs.hide()
         self.buttonbox.hide()
-
-    # scrolled window
-    def on_scrolled_songs_scrolled(self, adj):
-        if Widgets.reach_scrolled_bottom(adj) and \
-                self.songs_page < self.songs_total - 1:
-            self.songs_page += 1
-            self.show_mv_songs()
