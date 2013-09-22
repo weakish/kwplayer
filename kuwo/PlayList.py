@@ -53,7 +53,7 @@ class NormalSongTab(Gtk.ScrolledWindow):
         
     def on_key_pressed(self, widget, event):
         if event.keyval == Gdk.KEY_Delete:
-            selection = self.get_selection()
+            selection = self.treeview.get_selection()
             model, paths = selection.get_selected_rows()
             # paths needs to be reversed, or else an IndexError throwed.
             for path in reversed(paths):
@@ -262,6 +262,8 @@ class PlayList(Gtk.Box):
         liststore.append(Widgets.song_dict_to_row(song))
 
     def add_songs_to_playlist(self, songs, list_name='Default'):
+        print('PlayList.add_songs_to_playlist()')
+        print('list name:', list_name)
         for song in songs:
             self.add_song_to_playlist(song, list_name=list_name)
 
@@ -307,10 +309,9 @@ class PlayList(Gtk.Box):
             return False
 
     def do_cache_song_pool(self):
-        def _on_downloaded(song_info, error):
-            print('song_info:', song_info, 'error:', error)
+        def _on_downloaded(widget, song_path, error=None):
             self.cache_job = None
-            GLib.idle_add(self.on_song_downloaded, song_info, 'Caching')
+            GLib.idle_add(self.on_song_downloaded, song_dict, 'Caching')
 
         list_name = 'Caching'
         liststore = self.tabs[list_name].liststore
@@ -328,8 +329,6 @@ class PlayList(Gtk.Box):
         # copy this song from current playing list to cached_list.
         if song_info:
             self.append_cached_song(song_info)
-        # TODO, FIXME:
-        print('PlayList.on_song_downloaded()', list_name)
         if list_name == 'Caching':
             path = 0
             liststore = self.tabs[list_name].liststore
