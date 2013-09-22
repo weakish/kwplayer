@@ -689,6 +689,9 @@ class AsyncSong(GObject.GObject):
         # remember to check song when `downloaded` signal received.
         if retried == MAXTIMES:
             print('song failed to download, please check link', song_link)
+            # If failed to download, partial mp3 file needs to be deleted
+            if os.path.exists(song_path):
+                os.remove(song_path)
             self.emit('can-play', None)
             self.emit('downloaded', None)
             return None
@@ -748,6 +751,8 @@ class AsyncMV(GObject.GObject):
                 print('AsyncMV.getmv()', e, 'with mv_link:', mv_link)
                 retried += 1
         if retried == MAXTIMES:
+            if os.path.exists(mv_path):
+                os.rm(mv_path)
             print('mv failed to download, please check link', mv_link)
             self.emit('can-play', None)
             self.emit('downloaded', None)
