@@ -53,10 +53,10 @@ class Artists(Gtk.Box):
         self.combo_pref.props.margin_top = 15
         box.pack_start(self.combo_pref, False, False, 0)
 
-        scrolled_artists = Gtk.ScrolledWindow()
-        scrolled_artists.get_vadjustment().connect('value-changed',
+        self.scrolled_artists = Gtk.ScrolledWindow()
+        self.scrolled_artists.get_vadjustment().connect('value-changed',
                 self.on_scrolled_artists_scrolled)
-        self.box_artists.pack_start(scrolled_artists, True, True, 0)
+        self.box_artists.pack_start(self.scrolled_artists, True, True, 0)
 
         # logo, name, nid, num of songs
         self.liststore_artists = Gtk.ListStore(GdkPixbuf.Pixbuf, str, int, 
@@ -64,11 +64,9 @@ class Artists(Gtk.Box):
         iconview_artists = Widgets.IconView(self.liststore_artists)
         iconview_artists.connect('item_activated', 
                 self.on_iconview_artists_item_activated)
-        scrolled_artists.add(iconview_artists)
+        self.scrolled_artists.add(iconview_artists)
 
         self.scrolled_songs = Gtk.ScrolledWindow()
-        self.scrolled_songs.get_vadjustment().connect('value-changed',
-                self.on_scrolled_songs_scrolled)
         self.pack_start(self.scrolled_songs, True, True, 0)
 
         treeview_songs = Widgets.TreeViewSongs(self.liststore_songs, app)
@@ -122,6 +120,7 @@ class Artists(Gtk.Box):
         if init:
             self.liststore_artists.clear()
             self.artists_page = 0
+            self.scrolled_artists.get_vadjustment().set_value(0)
         selection = self.treeview_cate.get_selection()
         result = selection.get_selected()
         if result is None or len(result) != 2:
@@ -161,6 +160,11 @@ class Artists(Gtk.Box):
                     song['ARTIST'], song['ALBUM'], 
                     int(song['MUSICRID'][6:]), int(song['ARTISTID']), 
                     int(song['ALBUMID']), ]) 
+            # automatically load more songs
+            self.songs_page += 1
+            if self.songs_page < self.songs_total - 1:
+                self.append_songs()
+
         if init:
             self.songs_page = 0
             self.box_artists.hide()
@@ -169,15 +173,6 @@ class Artists(Gtk.Box):
             self.liststore_songs.clear()
         Net.async_call(Net.get_artist_songs, _append_songs, 
                 self.curr_artist_name, self.songs_page)
-        #songs, self.songs_total = Net.get_artist_songs(
-        #        self.curr_artist_name, self.songs_page)
-        #if self.songs_total == 0:
-        #    return
-        #for song in songs:
-        #    self.liststore_songs.append([True, song['SONGNAME'], 
-        #        song['ARTIST'], song['ALBUM'], int(song['MUSICRID'][6:]), 
-        #        int(song['ARTISTID']), int(song['ALBUMID']), ]) 
-
 
     # Song window
     def on_button_home_clicked(self, btn):
@@ -187,14 +182,7 @@ class Artists(Gtk.Box):
 
     # scrolled windows
     def on_scrolled_artists_scrolled(self, adj):
-        print('on scrolled artists scrolled')
         if Widgets.reach_scrolled_bottom(adj) and \
                 self.artists_page < self.artists_total - 1:
             self.artists_page += 1
             self.append_artists()
-
-    def on_scrolled_songs_scrolled(self, adj):
-        if Widgets.reach_scrolled_bottom(adj) and \
-                self.songs_page < self.songs_total - 1:
-            self.songs_page += 1
-            self.append_songs()
