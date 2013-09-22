@@ -114,7 +114,9 @@ class Player(Gtk.Box):
 
         self.fullscreen_btn = Gtk.ToolButton()
         self.fullscreen_btn.set_label('Fullscreen')
+        self.fullscreen_btn.set_tooltip_text('Fullscreen (F11)')
         self.fullscreen_btn.set_icon_name('view-fullscreen-symbolic')
+        # Does not work when in fullscreen.
         key, mod = Gtk.accelerator_parse('F11')
         self.fullscreen_btn.add_accelerator('clicked', app.accel_group,
                 key, mod, Gtk.AccelFlags.VISIBLE)
@@ -441,6 +443,8 @@ class Player(Gtk.Box):
     def get_mv_link(self):
         def _update_mv_link(mv_link, error=None):
             self.show_mv_btn.set_sensitive(mv_link is not None)
+            if mv_link is None:
+                return
             self.curr_mv_link = mv_link
             if self.play_type == PlayType.MV:
                 parse_mv = Net.AsyncMV(self.app)
@@ -469,6 +473,8 @@ class Player(Gtk.Box):
 
     # Fullscreen
     def on_fullscreen_button_clicked(self, button):
+        print('on fullscreen button clicked')
+        print('fullscreen_sid:', self.fullscreen_sid)
         window = self.app.window
         if self.fullscreen_sid > 0:
             button.set_icon_name('view-fullscreen-symbolic')
@@ -478,6 +484,8 @@ class Player(Gtk.Box):
             self.fullscreen_sid = 0
         else:
             button.set_icon_name('view-restore-symbolic')
+            self.app.notebook.set_show_tabs(False)
+            self.hide()
             window.realize()
             window.fullscreen()
             self.fullscreen_sid = window.connect('motion-notify-event',

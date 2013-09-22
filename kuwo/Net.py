@@ -146,7 +146,8 @@ def get_album(albumid):
     except Exception as e:
         print('Error: Net.get_album()', e, 'with url:', url)
         return None
-    return songs_wrap
+    songs = songs_wrap['musiclist']
+    return songs
 
 def update_liststore_image(liststore, path, col, url):
     def _update_image(filepath, error=None):
@@ -285,10 +286,10 @@ def get_artist_songs(artist, page):
         SEARCH,
         'ft=music&itemset=newkw&newsearch=1&cluster=0&rn=',
         str(SONG_NUM),
-        '&primitive=0&rformat=json&encoding=UTF8&artist=',
-        parse.quote(artist, encoding='GBK'),
         '&pn=',
         str(page),
+        '&primitive=0&rformat=json&encoding=UTF8&artist=',
+        artist,
         ])
     print('Net.get_artist_songs()', url)
     req_content = urlopen(url)
@@ -302,6 +303,110 @@ def get_artist_songs(artist, page):
     songs = songs_wrap['abslist']
     pages = math.ceil(int(songs_wrap['TOTAL']) / SONG_NUM)
     return (songs, pages)
+
+def get_artist_songs_by_id(artistid, page):
+    '''
+    http://search.kuwo.cn/r.s?stype=artist2music&artistid=266&pn=0&rn=20
+    '''
+    url = ''.join([
+        SEARCH,
+        'stype=artist2music&artistid=',
+        str(artistid),
+        '&rn=',
+        str(SONG_NUM),
+        '&pn=',
+        str(page),
+        ])
+    print('Net.get_artist_songs_by_id()', url)
+    req_content = urlopen(url)
+    if req_content is None:
+        return (None, 0)
+    try:
+        songs_wrap = Utils.json_loads_single(req_content.decode())
+    except Error as e:
+        print('Error: Net.get-artist_songs_by_id:', e, 'with url:', url)
+        return (None, 0)
+    songs = songs_wrap['musiclist']
+    pages = math.ceil(int(songs_wrap['total']) / SONG_NUM)
+    return (songs, pages)
+
+def get_artist_albums(artistid, page):
+    '''http://search.kuwo.cn/r.s?stype=albumlist&artistid=336&sortby=1&rn=20&pn=0
+    '''
+    url = ''.join([
+        SEARCH,
+        'stype=albumlist&sortby=1&rn=',
+        str(ICON_NUM),
+        '&artistid=',
+        str(artistid),
+        '&pn=',
+        str(page),
+        ])
+    print('Net.get_artist_albums(), url:', url)
+    req_content = urlopen(url)
+    if req_content is None:
+        return (None, 0)
+    try:
+        albums_wrap = Utils.json_loads_single(req_content.decode())
+    except Error as e:
+        print('Error: Net.get_artist_albums:', e, 'with url:', url)
+        return (None, 0)
+    albums = albums_wrap['albumlist']
+    pages = math.ceil(int(albums_wrap['total']) / ICON_NUM)
+    return (albums, pages)
+
+def get_artist_mv(artistid, page):
+    '''
+    http://search.kuwo.cn/r.s?stype=mvlist&artistid=336&sortby=0&rn=20&pn=0
+    '''
+    url = ''.join([
+        SEARCH,
+        'stype=mvlist&sortby=0&rn=',
+        str(ICON_NUM),
+        '&artistid=',
+        str(artistid),
+        '&pn=',
+        str(page),
+        ])
+    print('Net.get_artist_mv(), url:', url)
+    req_content = urlopen(url)
+    if req_content is None:
+        return (None, 0)
+    try:
+        mvs_wrap = Utils.json_loads_single(req_content.decode())
+    except Error as e:
+        print('Error: Net.get_artist_mv:', e, 'with url:', url)
+        return (None, 0)
+    mvs = mvs_wrap['mvlist']
+    pages = math.ceil(int(mvs_wrap['total']) / ICON_NUM)
+    return (mvs, pages)
+
+def get_artist_similar(artistid, page):
+    '''
+    http://search.kuwo.cn/r.s?stype=similarartist&artistid=336&sortby=0&rn=20&pn=0
+    Only has 10 items
+    '''
+    url = ''.join([
+        SEARCH,
+        'stype=similarartist&sortby=0&rn=',
+        str(ICON_NUM),
+        '&pn=',
+        str(page),
+        '&artistid=',
+        str(artistid),
+        ])
+    print('Net.get_artist_similar(), url:', url)
+    req_content = urlopen(url)
+    if req_content is None:
+        return (None, 0)
+    try:
+       artists_wrap = Utils.json_loads_single(req_content.decode())
+    except Exception as e:
+        print('Error: Net.get_artist_similar:', e, 'with url:', url)
+        return (None, 0)
+    artists = artists_wrap['artistlist']
+    pages = math.ceil(int(artists_wrap['total']) / ICON_NUM)
+    return (artists, pages)
 
 def get_lrc(_rid):
     def _parse_lrc():
@@ -595,6 +700,7 @@ def get_song_link(rid, high_res=False, use_mv=False):
         '&rid=MUSIC_',
         str(rid),
         ])
+    print('Net.get_song_link(), url', url)
     req_content = urlopen(url)
     if req_content is None:
         return None

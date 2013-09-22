@@ -91,12 +91,12 @@ class Preferences(Gtk.Dialog):
         folder_box = NoteTab()
         notebook.append_page(folder_box, Gtk.Label('Folders'))
 
-        song_folder_label = NoteTab('<b>Place to store sogns</b>')
+        song_folder_label = BoldLabel('<b>Place to store sogns</b>')
         folder_box.pack_start(song_folder_label, False, False, 0)
 
         song_folder_button = ChooseFolder()
 
-        mv_folder_label = NoteTab('<b>Place to store MVs</b>')
+        mv_folder_label = BoldLabel('<b>Place to store MVs</b>')
         folder_box.pack_start(mv_folder_label, False, False, 0)
 
     def run(self):

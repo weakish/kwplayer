@@ -192,16 +192,15 @@ class TopCategories(Gtk.Box):
             if songs is None or self.songs_total == 0:
                 return
             if len(songs) == 0:
-                songs_wrap = Net.get_album(self.curr_list_id)
+                songs = Net.get_album(self.curr_list_id)
                 self.songs_total = 1
-                if songs_wrap is None:
+                if songs is None:
                     return
-                songs = songs_wrap['musiclist']
                 for song in songs:
                     self.liststore_songs.append([ True, song['name'], 
                         song['artist'], songs_wrap['name'], 
                         int(song['id']), int(song['artistid']), 
-                        int(songs_wrap['albumid']), ])
+                        int(self.curr_list_id), ])
                 return
             for song in songs:
                 self.liststore_songs.append([

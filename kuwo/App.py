@@ -56,6 +56,8 @@ class App:
         self.notebook = Gtk.Notebook()
         #self.notebook.props.tab_pos = Gtk.PositionType.LEFT
         self.notebook.props.tab_pos = Gtk.PositionType.BOTTOM
+        # Add 2 pix to left-margin to solve Fullscreen problem.
+        self.notebook.props.margin_left = 2
         box.pack_start(self.notebook, True, True, 0)
 
         self.builder = Gtk.Builder()
@@ -185,8 +187,9 @@ class App:
     # StatusIcon
     def on_main_window_deleted(self, window, event):
         print('main window deleted')
-        window.hide()
-        return True
+        # TEST: FIXME
+        #window.hide()
+        #return True
 
     def init_status_icon(self):
         # set status_icon as class property, to keep its life after function

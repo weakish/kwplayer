@@ -32,7 +32,7 @@ class MV(Gtk.Box):
 
         self.scrolled_songs = Gtk.ScrolledWindow()
         self.pack_start(self.scrolled_songs, True, True, 0)
-        # logo, name, artist, album, rid, artistid, albumid
+        # pic, name, artist, album, rid, artistid, albumid
         self.liststore_songs = Gtk.ListStore(GdkPixbuf.Pixbuf, str, str, 
                 str, int, int, int)
         iconview_songs = Widgets.IconView(self.liststore_songs, info_pos=2)
@@ -98,6 +98,7 @@ class MV(Gtk.Box):
     def on_iconview_songs_item_activated(self, iconview, path):
         model = iconview.get_model()
         song = Widgets.song_row_to_dict(model[path])
+        self.app.popup_page(self.app.lrc.app_page)
         self.app.player.load_mv(song)
 
     def on_button_home_clicked(self, btn):

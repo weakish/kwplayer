@@ -69,6 +69,8 @@ class Search(Gtk.Box):
         self.liststore_artists = Gtk.ListStore(GdkPixbuf.Pixbuf,
                 str, int, str)
         iconview_artists = Widgets.IconView(self.liststore_artists)
+        iconview_artists.connect('item_activated',
+                self.on_iconview_artists_item_activated)
         artists_tab.add(iconview_artists)
 
         albums_tab = Gtk.ScrolledWindow()
@@ -80,6 +82,8 @@ class Search(Gtk.Box):
         self.liststore_albums = Gtk.ListStore(GdkPixbuf.Pixbuf, str, int,
                 str, int, str)
         iconview_albums = Widgets.IconView(self.liststore_albums, tooltip=5)
+        iconview_albums.connect('item_activated',
+                self.on_iconview_albums_item_activated)
         albums_tab.add(iconview_albums)
 
     def after_init(self):
@@ -233,3 +237,19 @@ class Search(Gtk.Box):
                 self.albums_page < self.albums_total - 1:
             self.albums_page += 1
             self.show_albums()
+
+    def on_iconview_artists_item_activated(self, iconview, path):
+        model = iconview.get_model()
+        artist = model[path][1]
+        artistid = model[path][2]
+        self.app.popup_page(self.app.artists.app_page)
+        self.app.artists.show_artist(artist, artistid)
+
+    def on_iconview_albums_item_activated(self, iconview, path):
+        model = iconview.get_model()
+        album = model[path][1]
+        albumid = model[path][2]
+        artist = model[path][3]
+        artistid = model[path][4]
+        self.app.popup_page(self.app.artists.app_page)
+        self.app.artists.show_album(album, albumid, artist, artistid)
