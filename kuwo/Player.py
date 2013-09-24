@@ -367,6 +367,7 @@ class Player(Gtk.Box):
         elif self.play_type == PlayType.SONG:
             next_song = self.app.playlist.get_next_song(repeat=_repeat, 
                     shuffle=_shuffle)
+            print('next song:', next_song)
             if next_song is not None:
                 self.load(next_song)
 

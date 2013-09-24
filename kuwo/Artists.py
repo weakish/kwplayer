@@ -314,10 +314,10 @@ class Artists(Gtk.Box):
             self.artist_songs_button.set_active(True)
 
     def show_artist_songs(self):
+        self.artist_control_box.show_all()
         if self.artist_songs_inited:
             return
         self.artist_songs_inited = True
-        self.artist_control_box.show_all()
         self.append_artist_songs(init=True)
 
     def append_artist_songs(self, init=False):
