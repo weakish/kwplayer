@@ -248,4 +248,5 @@ class App:
         self.player.load_next()
 
     def on_status_icon_quit_activate(self, menuitem):
+        self.window.destroy()
         self.app.quit()
