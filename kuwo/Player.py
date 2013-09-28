@@ -192,7 +192,10 @@ class Player(Gtk.Box):
         self.init_adjustment()
         self.scale.set_sensitive(True)
         if self.play_type == PlayType.SONG:
-            self.app.playlist.on_song_downloaded(self.curr_song)
+            self.app.playlist.on_song_downloaded(play=True)
+            shuffle = self.shuffle_btn.get_active()
+            if not shuffle:
+                self.app.playlist.cache_next_song()
 
     def is_playing(self):
         state = self.playbin.get_state(5)
@@ -260,6 +263,7 @@ class Player(Gtk.Box):
     def start_player(self, load=False):
         self.play_button.set_icon_name('media-playback-pause-symbolic')
         self.playbin.set_state(Gst.State.PLAYING)
+        self.playbin.set_property('volume', self.app.conf['volume'])
         self.adj_timeout = GLib.timeout_add(250, self.sync_adjustment)
         if load:
             GLib.timeout_add(1500, self.init_adjustment)

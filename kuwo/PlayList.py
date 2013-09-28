@@ -133,6 +133,7 @@ class PlayList(Gtk.Box):
         GLib.timeout_add(1500, self.init_ui)
 
     def do_destroy(self):
+        print('Playlist.do_destroy()')
         self.conn.commit()
         self.conn.close()
         self.dump_playlists()
@@ -308,31 +309,45 @@ class PlayList(Gtk.Box):
             return False
 
     def do_cache_song_pool(self):
+        def _move_song():
+            self.append_cached_song(song)
+            liststore.remove(liststore[path].iter)
+            Gdk.Window.process_all_updates()
+
         def _on_downloaded(widget, song_path, error=None):
             self.cache_job = None
-            GLib.idle_add(self.on_song_downloaded, song_dict, 'Caching')
+            GLib.idle_add(_move_song)
 
         list_name = 'Caching'
         liststore = self.tabs[list_name].liststore
+        path = 0
         if len(liststore) == 0:
             print('Caching playlist is empty, please add some')
             return
-        song_dict = Widgets.song_row_to_dict(liststore[0], start=0)
-        print('song dict to download:', song_dict)
+        song = Widgets.song_row_to_dict(liststore[path], start=0)
+        print('song dict to download:', song)
         self.cache_job = Net.AsyncSong(self.app)
         self.cache_job.connect('downloaded', _on_downloaded)
-        self.cache_job.get_song(song_dict)
+        self.cache_job.get_song(song)
 
     # Others
-    def on_song_downloaded(self, song_info, list_name=None):
+    def on_song_downloaded(self, play=False):
         # copy this song from current playing list to cached_list.
-        if song_info:
-            self.append_cached_song(song_info)
-        if list_name == 'Caching':
-            path = 0
-            liststore = self.tabs[list_name].liststore
-            liststore.remove(liststore[path].iter)
+        list_name = self.curr_playing[0]
+        liststore = self.tabs[list_name].liststore
+        path = self.curr_playing[1]
+        song = Widgets.song_row_to_dict(liststore[path], start=0)
+        self.append_cached_song(song)
         Gdk.Window.process_all_updates()
+
+    def cache_next_song(self):
+        list_name = self.curr_playing[0]
+        liststore = self.tabs[list_name].liststore
+        path = self.curr_playing[1] + 1
+        song = Widgets.song_row_to_dict(liststore[path], start=0)
+        print('next song to cache:', song)
+        parse_song = Net.AsyncSong(self.app)
+        parse_song.get_song(song)
 
     def get_prev_song(self, repeat=False, shuffle=False):
         print('get prev song()')
