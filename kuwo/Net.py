@@ -725,12 +725,15 @@ class AsyncSong(GObject.GObject):
     '''
     __gsignals__ = {
             'can-play': (GObject.SIGNAL_RUN_LAST, 
-                GObject.TYPE_NONE, (object, )),
-            #'chunk-received': (GObject.SIGNAL_RUN_LAST,
-            #    GObject.TYPE_NONE, 
-            #    (object, int)),
+                # sogn_path
+                GObject.TYPE_NONE, (str, )),
+            'chunk-received': (GObject.SIGNAL_RUN_LAST,
+                GObject.TYPE_NONE, 
+                # percent
+                (int, )),
             'downloaded': (GObject.SIGNAL_RUN_LAST, 
-                GObject.TYPE_NONE, (object, ))
+                # song_path
+                GObject.TYPE_NONE, (str, ))
             }
     def __init__(self, app):
         super().__init__()
@@ -756,7 +759,8 @@ class AsyncSong(GObject.GObject):
                     chunk = req.read(CHUNK)
                     received_size += len(chunk)
                     percent = int(received_size/content_length * 100)
-                    #print('percent:', percent)
+                    self.emit('chunk-received', percent)
+                    print('percent:', percent)
                     # this signal only emit once.
                     if (received_size > CHUNK_TO_PLAY or percent > 40) \
                             and not can_play_emited:
