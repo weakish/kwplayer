@@ -154,21 +154,43 @@ class Preferences(Gtk.Dialog):
         lrc_box = NoteTab()
         notebook.append_page(lrc_box, Gtk.Label('Lyrics'))
 
-        lrc_back_box = Gtk.Box()
-        lrc_box.pack_start(lrc_back_box, False, False, 0)
+        lrc_word_back_color_box = Gtk.Box()
+        lrc_box.pack_start(lrc_word_back_color_box, False, False, 0)
 
-        lrc_back_label = Gtk.Label('<b>Background color</b>')
-        lrc_back_label.set_use_markup(True)
-        lrc_back_box.pack_start(lrc_back_label, False, False, 0)
+        lrc_word_back_color_label = BoldLabel(
+                '<b>Lyric Word Background color</b>')
+        lrc_word_back_color_box.pack_start(lrc_word_back_color_label, 
+                False, False, 0)
 
-        lrc_back_color = Gtk.ColorButton()
-        lrc_back_color.set_use_alpha(True)
-        lrc_back_rgba = Gdk.RGBA()
-        lrc_back_rgba.parse(app.conf['lrc-back-color'])
-        lrc_back_color.set_rgba(lrc_back_rgba)
-        lrc_back_color.connect('color-set', self.on_lrc_back_color_set)
-        lrc_back_color.set_title('Choose color for Lyrics background')
-        lrc_back_box.pack_start(lrc_back_color, False, False, 20)
+        lrc_word_back_color = Gtk.ColorButton()
+        lrc_word_back_color.set_use_alpha(True)
+        lrc_word_back_rgba = Gdk.RGBA()
+        lrc_word_back_rgba.parse(app.conf['lrc-word-back-color'])
+        lrc_word_back_color.set_rgba(lrc_word_back_rgba)
+        lrc_word_back_color.connect('color-set',
+                self.on_lrc_word_back_color_set)
+        lrc_word_back_color.set_title('Choose color for Lyrics background')
+        lrc_word_back_color_box.pack_start(lrc_word_back_color,
+                False, False, 20)
+        
+        lrc_img_back_color_box = Gtk.Box()
+        lrc_box.pack_start(lrc_img_back_color_box, False, False, 0)
+
+        lrc_img_back_color_label = BoldLabel(
+                '<b>Lyric Image Background color</b>')
+        lrc_img_back_color_box.pack_start(lrc_img_back_color_label,
+                False, False, 0)
+
+        lrc_img_back_color = Gtk.ColorButton()
+        lrc_img_back_color.set_use_alpha(True)
+        lrc_img_back_rgba = Gdk.RGBA()
+        lrc_img_back_rgba.parse(app.conf['lrc-img-back-color'])
+        lrc_img_back_color.set_rgba(lrc_img_back_rgba)
+        lrc_img_back_color.connect('color-set', 
+                self.on_lrc_img_back_color_set)
+        lrc_img_back_color.set_title('Choose color for Lyrics background')
+        lrc_img_back_color_box.pack_start(lrc_img_back_color,
+                False, False, 20)
         
         # folders tab
         folder_box = NoteTab()
@@ -202,11 +224,18 @@ class Preferences(Gtk.Dialog):
         # radio_group[0] is MKV
         self.app.conf['use-mkv'] = radiobtn.get_group()[0].get_active()
 
-    def on_lrc_back_color_set(self, colorbutton):
+    def on_lrc_word_back_color_set(self, colorbutton):
         back_rgba = colorbutton.get_rgba()
         # Fixed: if alpha == 1, to_string() will remove alpha value
         #        and we got a RGB instead of RGBA.
         if back_rgba.alpha == 1:
             back_rgba.alpha = 0.999
         back_rgba.to_string()
-        self.app.conf['lrc-back-color'] = back_rgba.to_string()
+        self.app.conf['lrc-word-back-color'] = back_rgba.to_string()
+
+    def on_lrc_img_back_color_set(self, colorbutton):
+        back_rgba = colorbutton.get_rgba()
+        if back_rgba.alpha == 1:
+            back_rgba.alpha = 0.999
+        back_rgba.to_string()
+        self.app.conf['lrc-img-back-color'] = back_rgba.to_string()
