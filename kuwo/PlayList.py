@@ -204,7 +204,6 @@ class PlayList(Gtk.Box):
             self.init_tab(list_name, songs)
 
     def init_tab(self, list_name, songs):
-        is_not_cached = (list_name != 'Cached')
         scrolled_win = NormalSongTab(self.app, list_name)
         for song in songs:
             scrolled_win.liststore.append(song)
@@ -333,6 +332,7 @@ class PlayList(Gtk.Box):
             path = 0
             liststore = self.tabs[list_name].liststore
             liststore.remove(liststore[path].iter)
+        Gdk.Window.process_all_updates()
 
     def get_prev_song(self, repeat=False, shuffle=False):
         print('get prev song()')
