@@ -122,14 +122,21 @@ class Lrc(Gtk.Box):
         tv_width = self.lrc_tv.get_allocated_width()
         tv_height = self.lrc_tv.get_allocated_height()
 
-        # TODO, use a better linear gradient
-        # TODO: use percentage
-        lg3 = cairo.LinearGradient(20.0, 260.0, 20.0, 360.0)
-        lg3.add_color_stop_rgba(0.9, 0.9, 0.9, 0.9, 10) 
-        lg3.add_color_stop_rgba(0.7, 0.7, 0.7, 0.7, 10) 
-
+#        lg3 = cairo.LinearGradient(0, 0, 0, tv_height/2)
+#        lg3.add_color_stop_rgba(0.9, 0.9, 0.9, 0.9, 0.9) 
+#        lg3.add_color_stop_rgba(0.7, 0.7, 0.7, 0.7, 0.7) 
+#        lg3.add_color_stop_rgba(0.5, 0.5, 0.5, 0.5, 0.5) 
+#        lg3.add_color_stop_rgba(0.3, 0.3, 0.3, 0.3, 0.3) 
+#
+#        cr.rectangle(0, 0, tv_width, tv_height)
+#        cr.set_source(lg3)
+#        cr.fill()
+        back_rgba = Gdk.RGBA()
+        back_rgba.parse(self.app.conf['lrc-img-back-color'])
+        cr.set_source_rgba(back_rgba.red, back_rgba.green, 
+                back_rgba.blue, back_rgba.alpha)
+        cr.set_line_width(14)
         cr.rectangle(0, 0, tv_width, tv_height)
-        cr.set_source(lg3)
         cr.fill()
 
         if self.lrc_background:
@@ -138,6 +145,7 @@ class Lrc(Gtk.Box):
         else:
             pix = GdkPixbuf.Pixbuf.new_from_file_at_size(
                     self.lrc_default_background, tv_width, tv_height)
+        Gdk.Window.process_all_updates()
         pix_width = pix.get_width()
         pix_height = pix.get_height()
         d_width = (tv_width - pix_width) / 2
@@ -146,7 +154,7 @@ class Lrc(Gtk.Box):
         cr.paint()
 
         back_rgba = Gdk.RGBA()
-        back_rgba.parse(self.app.conf['lrc-back-color'])
+        back_rgba.parse(self.app.conf['lrc-word-back-color'])
         cr.set_source_rgba(back_rgba.red, back_rgba.green, 
                 back_rgba.blue, back_rgba.alpha)
         cr.set_line_width(14)
