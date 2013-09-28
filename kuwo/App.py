@@ -185,10 +185,8 @@ class App:
 
     # StatusIcon
     def on_main_window_deleted(self, window, event):
-        print('main window deleted')
-        # TEST: FIXME
-        #window.hide()
-        #return True
+        window.hide()
+        return True
 
     def init_status_icon(self):
         # set status_icon as class property, to keep its life after function
@@ -216,6 +214,17 @@ class App:
         show_item = Gtk.MenuItem(label='Show App') 
         show_item.connect('activate', self.on_status_icon_show_app_activate)
         menu.append(show_item)
+
+        pause_item = Gtk.MenuItem(label='Pause/Resume')
+        pause_item.connect('activate', self.on_status_icon_pause_activate)
+        menu.append(pause_item)
+
+        next_item = Gtk.MenuItem(label='Next Song')
+        next_item.connect('activate', self.on_status_icon_next_activate)
+        menu.append(next_item)
+
+        sep_item = Gtk.SeparatorMenuItem()
+        menu.append(sep_item)
         
         quit_item = Gtk.MenuItem(label='Quit')
         quit_item.connect('activate', self.on_status_icon_quit_activate)
@@ -228,6 +237,15 @@ class App:
 
     def on_status_icon_show_app_activate(self, menuitem):
         self.window.present()
+
+    def on_status_icon_pause_activate(self, menuitem):
+        if self.player.is_playing():
+            self.player.pause_player()
+        else:
+            self.player.start_player()
+
+    def on_status_icon_next_activate(self, menuitem):
+        self.player.load_next()
 
     def on_status_icon_quit_activate(self, menuitem):
         self.app.quit()
