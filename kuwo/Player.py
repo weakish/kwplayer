@@ -136,7 +136,6 @@ class Player(Gtk.Box):
         self.adjustment = Gtk.Adjustment(0, 0, 100, 1, 10, 0)
         self.scale.set_adjustment(self.adjustment)
         self.scale.props.draw_value = False
-        self.scale.set_sensitive(False)
         self.scale.connect('change-value', self.on_scale_change_value)
         scale_box.pack_start(self.scale, True, True, 0)
 
@@ -156,6 +155,9 @@ class Player(Gtk.Box):
         self.playbin.set_state(Gst.State.NULL)
 
     def load(self, song):
+        def _on_chunk_received(widget, percent):
+            pass
+
         def _on_song_can_play(widget, song_path):
             if song_path:
                 GLib.idle_add(self._load_song, song_path)
@@ -170,11 +172,13 @@ class Player(Gtk.Box):
         self.curr_song = song
         self.pause_player(stop=True)
         parse_song = Net.AsyncSong(self.app)
+        parse_song.connect('chunk-received', _on_chunk_received)
         parse_song.connect('can-play', _on_song_can_play)
         parse_song.connect('downloaded', _on_song_downloaded)
         parse_song.get_song(song)
 
     def _load_song(self, song_path):
+        print('Player._load_song()', song_path)
         self.playbin.set_property('uri', 'file://' + song_path)
         self.start_player(load=True)
         self.app.lrc.show_music()
@@ -204,7 +208,7 @@ class Player(Gtk.Box):
             self.adjustment.set_upper(upper)
             return False
         return True
-    
+
     def sync_adjustment(self):
         status, curr = self.playbin.query_position(Gst.Format.TIME)
         if not status:
@@ -278,6 +282,9 @@ class Player(Gtk.Box):
             self.adj_timeout = 0
 
     def on_next_button_clicked(self, button):
+        self.load_next()
+
+    def load_next(self):
         # use EOS to load next song.
         self.on_eos(None, None)
 
