@@ -45,7 +45,8 @@ _default_conf = {
         'volume': 0.08,
         'use-ape': False,
         'use-mkv': False,
-        'lrc-back-color': 'rgba(0.82, 0.83, 0.84, 0.45)',
+        'lrc-img-back-color': 'rgba(0, 0, 0, 1)',
+        'lrc-word-back-color': 'rgba(0.82, 0.83, 0.84, 0.45)',
         }
 
 def check_first():
