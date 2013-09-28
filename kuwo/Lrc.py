@@ -159,7 +159,7 @@ class Lrc(Gtk.Box):
         self.mv_window.show_all()
         Gdk.Window.process_all_updates()
         self.mv_window.realize()
-        self.xid = self.app.lrc.mv_window.get_property('window').get_xid()
+        self.xid = self.mv_window.get_property('window').get_xid()
 
     def show_music(self):
         self.mv_window.hide()
