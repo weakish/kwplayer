@@ -2,7 +2,7 @@ Package: kwplayer
 Version: 1.1
 Architecture: all
 Maintainer: LiuLang<gsushzhsosgsu@gmail.com>
-Installed-Size: 780k
+Installed-Size: 936k 
 Depends: python3-gi, python3-leveldb, gstreamer1.0-libav
 Section: gnome
 Priority: optional

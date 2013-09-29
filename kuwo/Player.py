@@ -10,6 +10,7 @@ from gi.repository import Gtk
 import time
 
 from kuwo import Net
+from kuwo.Preferences import Preferences
 from kuwo import Widgets
 
 # Gdk.EventType.2BUTTON_PRESS is an invalid variable
@@ -243,7 +244,8 @@ class Player(Gtk.Box):
             self.app.playlist.locate_curr_song()
 
     def on_prev_button_clicked(self, button):
-        if self.play_type == PlayType.RADIO:
+        if self.play_type == PlayType.RADIO or \
+                self.play_type == PlayType.NONE:
             return
         _repeat = self.repeat_btn.get_active()
         _shuffle = self.shuffle_btn.get_active()
@@ -255,10 +257,17 @@ class Player(Gtk.Box):
             self.load(prev_song)
 
     def on_play_button_clicked(self, button):
+        if self.play_type == PlayType.NONE:
+            return
         if self.is_playing(): 
             self.pause_player()
         else:
             self.start_player()
+
+    def on_next_button_clicked(self, button):
+        if self.play_type == PlayType.NONE:
+            return
+        self.load_next()
 
     def start_player(self, load=False):
         self.play_button.set_icon_name('media-playback-pause-symbolic')
@@ -284,9 +293,6 @@ class Player(Gtk.Box):
         if self.adj_timeout > 0:
             GLib.source_remove(self.adj_timeout)
             self.adj_timeout = 0
-
-    def on_next_button_clicked(self, button):
-        self.load_next()
 
     def load_next(self):
         # use EOS to load next song.
@@ -481,7 +487,6 @@ class Player(Gtk.Box):
         if msg.get_structure().get_name() == 'prepare-window-handle':
             #print('prepare-window-handle')
             msg.src.set_window_handle(self.app.lrc.xid)
-
 
     # Fullscreen
     def on_fullscreen_button_clicked(self, button):
