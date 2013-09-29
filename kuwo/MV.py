@@ -3,8 +3,11 @@
 from gi.repository import GdkPixbuf
 from gi.repository import Gtk
 
+from kuwo import Config
 from kuwo import Net
 from kuwo import Widgets
+
+_ = Config._
 
 class MV(Gtk.Box):
     def __init__(self, app):
@@ -14,7 +17,7 @@ class MV(Gtk.Box):
 
         self.buttonbox = Gtk.Box()
         self.pack_start(self.buttonbox, False, False, 0)
-        button_home = Gtk.Button('MV')
+        button_home = Gtk.Button(_('MV'))
         button_home.connect('clicked', self.on_button_home_clicked)
         self.buttonbox.pack_start(button_home, False, False, 0)
         self.label = Gtk.Label('')

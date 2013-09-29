@@ -1,0 +1,45 @@
+# Chinese translations for PACKAGE package.
+# Copyright (C) 2013 THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# Allen <allen@mydebian>, 2013.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2013-09-29 18:20+0800\n"
+"PO-Revision-Date: 2013-09-29 18:20+0800\n"
+"Last-Translator: Allen <allen@mydebian>\n"
+"Language-Team: Chinese (traditional)\n"
+"Language: zh_TW\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=ASCII\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../kuwo/App.py:135
+msgid "Lyrics"
+msgstr ""
+
+#: ../kuwo/App.py:139
+msgid "Playlist"
+msgstr ""
+
+#: ../kuwo/App.py:143
+msgid "Search"
+msgstr ""
+
+#: ../kuwo/App.py:147
+msgid "Top List"
+msgstr ""
+
+#: menus.ui.h:1
+msgid "_Preferences"
+msgstr ""
+
+#: menus.ui.h:2
+msgid "_About"
+msgstr ""
+
+#: menus.ui.h:3
+msgid "_Quit"
+msgstr ""

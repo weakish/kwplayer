@@ -8,6 +8,7 @@ import shutil
 
 from kuwo import Config
 
+_ = Config._
 
 MARGIN_LEFT = 15
 MARGIN_TOP = 20
@@ -20,7 +21,7 @@ class NoteTab(Gtk.Box):
 
 class BoldLabel(Gtk.Label):
     def __init__(self, label):
-        super().__init__(label)
+        super().__init__('<b>{0}</b>'.format(label))
         self.set_use_markup(True)
         self.props.halign = Gtk.Align.START
         self.props.xalign = 0
@@ -66,7 +67,7 @@ class ChooseFolder(Gtk.Box):
             GLib.timeout_add(500, self.move_items, new_dir)
             return
 
-        dialog = Gtk.FileChooserDialog('Choose a Folder', self.parent,
+        dialog = Gtk.FileChooserDialog(_('Choose a Folder'), self.parent,
                 Gtk.FileChooserAction.SELECT_FOLDER,
                 (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
                     Gtk.STOCK_OK, Gtk.ResponseType.OK))
@@ -108,7 +109,7 @@ class ChooseFolder(Gtk.Box):
 
 class Preferences(Gtk.Dialog):
     def __init__(self, app):
-        super().__init__('Preferences', app.window, 0,
+        super().__init__(_('Preferences'), app.window, 0,
                 (Gtk.STOCK_CLOSE, Gtk.ResponseType.CLOSE,))
         self.app = app
         self.set_default_size(600, 320)
@@ -121,29 +122,29 @@ class Preferences(Gtk.Dialog):
 
         # format tab
         format_box = NoteTab()
-        notebook.append_page(format_box, Gtk.Label('Format'))
+        notebook.append_page(format_box, Gtk.Label(_('Format')))
 
-        audio_label = BoldLabel('<b>Prefered Audio Format</b>')
+        audio_label = BoldLabel(_('Prefered Audio Format'))
         format_box.pack_start(audio_label, False, False, 0)
-        radio_mp3 = Gtk.RadioButton('MP3 (faster)')
+        radio_mp3 = Gtk.RadioButton(_('MP3 (faster)'))
         radio_mp3.props.margin_left = MARGIN_LEFT
         radio_mp3.connect('toggled', self.on_audio_toggled)
         format_box.pack_start(radio_mp3, False, False, 0)
-        radio_ape = Gtk.RadioButton('APE (better)')
+        radio_ape = Gtk.RadioButton(_('APE (better)'))
         radio_ape.join_group(radio_mp3)
         radio_ape.props.margin_left = MARGIN_LEFT
         radio_ape.set_active(app.conf['use-ape'])
         radio_ape.connect('toggled', self.on_audio_toggled)
         format_box.pack_start(radio_ape, False, False, 0)
 
-        video_label = BoldLabel('<b>Prefered Video Format</b>')
+        video_label = BoldLabel(_('Prefered Video Format'))
         video_label.props.margin_top = MARGIN_TOP
         format_box.pack_start(video_label, False, False, 0)
-        radio_mp4 = Gtk.RadioButton('MP4 (faster)')
+        radio_mp4 = Gtk.RadioButton(_('MP4 (faster)'))
         radio_mp4.props.margin_left = MARGIN_LEFT
         radio_mp4.connect('toggled', self.on_video_toggled)
         format_box.pack_start(radio_mp4, False, False, 0)
-        radio_mkv = Gtk.RadioButton('MKV (better)')
+        radio_mkv = Gtk.RadioButton(_('MKV (better)'))
         radio_mkv.props.margin_left = MARGIN_LEFT
         radio_mkv.join_group(radio_mp4)
         radio_mkv.set_active(app.conf['use-mkv'])
@@ -152,13 +153,13 @@ class Preferences(Gtk.Dialog):
 
         # lyrics tab
         lrc_box = NoteTab()
-        notebook.append_page(lrc_box, Gtk.Label('Lyrics'))
+        notebook.append_page(lrc_box, Gtk.Label(_('Lyrics')))
 
         lrc_word_back_color_box = Gtk.Box()
         lrc_box.pack_start(lrc_word_back_color_box, False, False, 0)
 
         lrc_word_back_color_label = BoldLabel(
-                '<b>Lyric Word Background color</b>')
+                _('Lyric Word Background color'))
         lrc_word_back_color_box.pack_start(lrc_word_back_color_label, 
                 False, False, 0)
 
@@ -169,7 +170,8 @@ class Preferences(Gtk.Dialog):
         lrc_word_back_color.set_rgba(lrc_word_back_rgba)
         lrc_word_back_color.connect('color-set',
                 self.on_lrc_word_back_color_set)
-        lrc_word_back_color.set_title('Choose color for Lyrics background')
+        lrc_word_back_color.set_title(
+                _('Choose color for Lyrics background'))
         lrc_word_back_color_box.pack_start(lrc_word_back_color,
                 False, False, 20)
         
@@ -177,7 +179,7 @@ class Preferences(Gtk.Dialog):
         lrc_box.pack_start(lrc_img_back_color_box, False, False, 0)
 
         lrc_img_back_color_label = BoldLabel(
-                '<b>Lyric Image Background color</b>')
+                _('Lyric Image Background color'))
         lrc_img_back_color_box.pack_start(lrc_img_back_color_label,
                 False, False, 0)
 
@@ -188,25 +190,26 @@ class Preferences(Gtk.Dialog):
         lrc_img_back_color.set_rgba(lrc_img_back_rgba)
         lrc_img_back_color.connect('color-set', 
                 self.on_lrc_img_back_color_set)
-        lrc_img_back_color.set_title('Choose color for Lyrics background')
+        lrc_img_back_color.set_title(
+                _('Choose color for Lyrics background'))
         lrc_img_back_color_box.pack_start(lrc_img_back_color,
                 False, False, 20)
         
         # folders tab
         folder_box = NoteTab()
-        notebook.append_page(folder_box, Gtk.Label('Folders'))
+        notebook.append_page(folder_box, Gtk.Label(_('Folders')))
 
-        song_folder_label = BoldLabel('<b>Place to store sogns</b>')
+        song_folder_label = BoldLabel(_('Place to store sogns'))
         folder_box.pack_start(song_folder_label, False, False, 0)
         song_folder = ChooseFolder(self, 'song-dir', 
-                'Moving cached songs to new folder')
+                _('Moving cached songs to new folder'))
         folder_box.pack_start(song_folder, False, False, 0)
 
-        mv_folder_label = BoldLabel('<b>Place to store MVs</b>')
+        mv_folder_label = BoldLabel(_('Place to store MVs'))
         mv_folder_label.props.margin_top = MARGIN_TOP
         folder_box.pack_start(mv_folder_label, False, False, 0)
         mv_folder = ChooseFolder(self, 'mv-dir',
-                'Moving cached MVs to new folder')
+                _('Moving cached MVs to new folder'))
         folder_box.pack_start(mv_folder, False, False, 0)
 
     def run(self):

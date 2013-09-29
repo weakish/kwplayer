@@ -9,6 +9,9 @@ import os
 import re
 import time
 
+from kuwo import Config
+
+_ = Config._
 
 def list_to_time(time_tags):
     mm, ss, ml = time_tags
@@ -52,7 +55,8 @@ class Lrc(Gtk.Box):
         self.pack_start(self.lrc_window, True, True, 0)
 
         self.lrc_buf = Gtk.TextBuffer()
-        self.lrc_buf.set_text('Lrc loading...')
+        #self.lrc_buf.set_text(_('Lrc loading...'))
+        self.lrc_buf.set_text('')
         self.tag_centered = self.lrc_buf.create_tag('blue_fg', 
                 foreground='blue')
         self.lrc_tv = Gtk.TextView(buffer=self.lrc_buf)
@@ -79,7 +83,7 @@ class Lrc(Gtk.Box):
         self.old_line_iter = None
         if lrc_txt is None:
             print('failed to get lrc')
-            self.lrc_buf.set_text('No lrc available')
+            self.lrc_buf.set_text(_('No lrc available'))
             self.lrc_obj = None
             return
         self.lrc_obj = lrc_parser(lrc_txt)

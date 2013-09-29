@@ -9,17 +9,17 @@ from gi.repository import GstVideo
 from gi.repository import Gtk
 import time
 
+from kuwo import Config
 from kuwo import Net
 from kuwo.Preferences import Preferences
 from kuwo import Widgets
 
+_ = Config._
 # Gdk.EventType.2BUTTON_PRESS is an invalid variable
 GDK_2BUTTON_PRESS = 5
 
-#GObject.threads_init()
 # init Gst so that play works ok.
 Gst.init(None)
-
 
 class PlayType:
     NONE = -1
@@ -75,19 +75,19 @@ class Player(Gtk.Box):
         control_box.pack_start(toolbar, False, False, 0)
 
         prev_button = Gtk.ToolButton()
-        prev_button.set_label('Previous')
+        prev_button.set_label(_('Previous'))
         prev_button.set_icon_name('media-skip-backward-symbolic')
         prev_button.connect('clicked', self.on_prev_button_clicked)
         toolbar.insert(prev_button, 0)
 
         self.play_button = Gtk.ToolButton()
-        self.play_button.set_label('Play')
+        self.play_button.set_label(_('Play'))
         self.play_button.set_icon_name('media-playback-start-symbolic')
         self.play_button.connect('clicked', self.on_play_button_clicked)
         toolbar.insert(self.play_button, 1)
 
         next_button = Gtk.ToolButton()
-        next_button.set_label('Next')
+        next_button.set_label(_('Next'))
         next_button.set_icon_name('media-skip-forward-symbolic')
         next_button.connect('clicked', self.on_next_button_clicked)
         toolbar.insert(next_button, 2)
@@ -96,17 +96,17 @@ class Player(Gtk.Box):
         toolbar.insert(sep, 3)
 
         self.shuffle_btn = Gtk.ToggleToolButton()
-        self.shuffle_btn.set_label('Shuffle')
+        self.shuffle_btn.set_label(_('Shuffle'))
         self.shuffle_btn.set_icon_name('media-playlist-shuffle-symbolic')
         toolbar.insert(self.shuffle_btn, 4)
 
         self.repeat_btn = Gtk.ToggleToolButton()
-        self.repeat_btn.set_label('Repeat')
+        self.repeat_btn.set_label(_('Repeat'))
         self.repeat_btn.set_icon_name('media-playlist-repeat-symbolic')
         toolbar.insert(self.repeat_btn, 5)
 
         self.show_mv_btn = Gtk.ToggleToolButton()
-        self.show_mv_btn.set_label('Show MV')
+        self.show_mv_btn.set_label(_('Show MV'))
         self.show_mv_btn.set_icon_name('video-x-generic-symbolic')
         self.show_mv_btn.set_sensitive(False)
         self.show_mv_sid = self.show_mv_btn.connect('toggled', 
@@ -114,8 +114,8 @@ class Player(Gtk.Box):
         toolbar.insert(self.show_mv_btn, 6)
 
         self.fullscreen_btn = Gtk.ToolButton()
-        self.fullscreen_btn.set_label('Fullscreen')
-        self.fullscreen_btn.set_tooltip_text('Fullscreen (F11)')
+        self.fullscreen_btn.set_label(_('Fullscreen'))
+        self.fullscreen_btn.set_tooltip_text(_('Fullscreen (F11)'))
         self.fullscreen_btn.set_icon_name('view-fullscreen-symbolic')
         # Does not work when in fullscreen.
         key, mod = Gtk.accelerator_parse('F11')
@@ -125,7 +125,8 @@ class Player(Gtk.Box):
                 self.on_fullscreen_button_clicked)
         toolbar.insert(self.fullscreen_btn, 7)
 
-        self.label = Gtk.Label('<b>Unknown</b> <i>by unknown</i>')
+        self.label = Gtk.Label('<b>{0}</b> <i>by {0}</i>'.format(
+            _('Unknown')))
         self.label.props.use_markup = True
         self.label.props.xalign = 0
         control_box.pack_start(self.label, False, False, 0)
@@ -339,11 +340,11 @@ class Player(Gtk.Box):
         if len(song['artist']) > 0:
             artist = Widgets.short_tooltip(song['artist'], 20)
         else:
-            artist = 'Unknown'
+            artist = _('Unknown')
         if len(song['album']) > 0:
             album = Widgets.short_tooltip(song['album'], 30)
         else:
-            album = 'Unknown'
+            album = _('Unknown')
         label = '<b>{0}</b> <i><small>by {1} from {2}</small></i>'.format(
                 name, artist, album)
         self.label.set_label(label)
@@ -490,8 +491,6 @@ class Player(Gtk.Box):
 
     # Fullscreen
     def on_fullscreen_button_clicked(self, button):
-        print('on fullscreen button clicked')
-        print('fullscreen_sid:', self.fullscreen_sid)
         window = self.app.window
         if self.fullscreen_sid > 0:
             button.set_icon_name('view-fullscreen-symbolic')

@@ -602,21 +602,21 @@ def get_themes_main():
                 })
 
     nodes = []
-    # 语言 10(+)
+    # Languages 10(+)
     append_to_nodes(10)
-    # 人群 11
+    # People 11
     append_to_nodes(11, False)
-    # 节日 12
+    # Festivals 12
     append_to_nodes(12, False)
-    # 心情 13(+)
+    # Feelings 13(+)
     append_to_nodes(13)
-    # 场景 14
+    # Thmes 14
     append_to_nodes(14, False)
-    # 曲风流派 15(+)
+    # Tyles 15(+)
     append_to_nodes(15)
-    # 时间 72325
+    # Time 72325
     append_to_nodes(72325, False)
-    # 环境 72326
+    # Environment 72326
     append_to_nodes(72326, False)
     if len(nodes) > 0:
         return nodes

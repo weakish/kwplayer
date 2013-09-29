@@ -3,9 +3,11 @@
 from gi.repository import GdkPixbuf
 from gi.repository import Gtk
 
+from kuwo import Config
 from kuwo import Net
 from kuwo import Widgets
 
+_ = Config._
 
 class TopCategories(Gtk.Box):
     def __init__(self, app):
@@ -16,7 +18,7 @@ class TopCategories(Gtk.Box):
         self.buttonbox = Gtk.Box()
         self.pack_start(self.buttonbox, False, False, 0)
 
-        self.button_main = Gtk.Button('热门分类')
+        self.button_main = Gtk.Button(_('Top Categories'))
         self.button_main.connect('clicked', self.on_button_main_clicked)
         self.buttonbox.pack_start(self.button_main, False, False, 0)
 

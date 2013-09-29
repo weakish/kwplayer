@@ -10,6 +10,8 @@ from kuwo import Config
 from kuwo import Net
 from kuwo import Widgets
 
+_ = Config._
+
 class RadioItem(Gtk.EventBox):
     def __init__(self, radio_info, app):
         super().__init__()
@@ -41,7 +43,7 @@ class RadioItem(Gtk.EventBox):
         radio_name = Gtk.Label(Widgets.short_str(radio_info['name'], 8))
         box_right.pack_start(radio_name, True, True, 0)
 
-        self.label = Gtk.Label('song name')
+        self.label = Gtk.Label(_('song name'))
         self.label.get_style_context().add_class('info-label')
         box_right.pack_start(self.label, False, False, 0)
 
@@ -52,25 +54,25 @@ class RadioItem(Gtk.EventBox):
         box_right.pack_start(self.toolbar, False, False, 0)
 
         button_play = Gtk.ToolButton()
-        button_play.set_label('Play')
+        button_play.set_label(_('Play'))
         button_play.set_icon_name('media-playback-start-symbolic')
         button_play.connect('clicked', self.on_button_play_clicked)
         self.toolbar.insert(button_play, 0)
 
         button_next = Gtk.ToolButton()
-        button_next.set_label('Next')
+        button_next.set_label(_('Next'))
         button_next.set_icon_name('media-skip-forward-symbolic')
         button_next.connect('clicked', self.on_button_next_clicked)
         self.toolbar.insert(button_next, 1)
 
         button_favorite = Gtk.ToolButton()
-        button_favorite.set_label('Favorite')
+        button_favorite.set_label(_('Favorite'))
         button_favorite.set_icon_name('emblem-favorite-symbolic')
         button_favorite.connect('clicked', self.on_button_favorite_clicked)
         self.toolbar.insert(button_favorite, 2)
 
         button_delete = Gtk.ToolButton()
-        button_delete.set_label('Delete')
+        button_delete.set_label(_('Delete'))
         #button_delete.set_icon_name('edit-delete-symbolic')
         button_delete.set_icon_name('user-trash-symbolic')
         button_delete.connect('clicked', self.on_button_delete_clicked)

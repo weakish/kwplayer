@@ -3,8 +3,11 @@ from gi.repository import GdkPixbuf
 from gi.repository import Gtk
 import time
 
+from kuwo import Config
 from kuwo import Net
 from kuwo import Widgets
+
+_ = Config._
 
 class ArtistButton(Gtk.RadioButton):
     def __init__(self, parent, label, group, tab_index):
@@ -41,7 +44,7 @@ class Artists(Gtk.Box):
         self.buttonbox = Gtk.Box()
         self.pack_start(self.buttonbox, False, False, 0)
 
-        home_button = Gtk.Button('Artists')
+        home_button = Gtk.Button(_('Artists'))
         home_button.connect('clicked', self.on_home_button_clicked)
         self.buttonbox.pack_start(home_button, False, False, 0)
         self.artist_button = Gtk.Button('')
@@ -74,7 +77,7 @@ class Artists(Gtk.Box):
 
         # Artists tab (tab 0)
         self.artists_tab = Gtk.Box()
-        self.notebook.append_page(self.artists_tab, Gtk.Label('Artists'))
+        self.notebook.append_page(self.artists_tab, Gtk.Label(_('Artists')))
         #self.pack_start(self.box_artists, True, True, 0)
 
         # left panel of artists tab
@@ -115,20 +118,20 @@ class Artists(Gtk.Box):
 
         # Artist tab (tab 1)
         self.artist_tab = Gtk.Box()
-        self.notebook.append_page(self.artist_tab, Gtk.Label('Artist'))
+        self.notebook.append_page(self.artist_tab, Gtk.Label(_('Artist')))
 
         # left panel of artist
         self.artist_buttons = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.artist_tab.pack_start(self.artist_buttons, False, False, 0)
 
-        self.artist_songs_button = ArtistButton(self, 'Songs', None, 0)
-        self.artist_albums_button = ArtistButton(self, 'Albums',
+        self.artist_songs_button = ArtistButton(self, _('Songs'), None, 0)
+        self.artist_albums_button = ArtistButton(self, _('Albums'),
                 self.artist_songs_button, 1)
-        self.artist_mv_button = ArtistButton(self, 'MV',
+        self.artist_mv_button = ArtistButton(self, _('MV'),
                 self.artist_songs_button, 2)
-        self.artist_similar_button = ArtistButton(self, 'Similar',
+        self.artist_similar_button = ArtistButton(self, _('Similar'),
                 self.artist_songs_button, 3)
-        self.artist_info_button = ArtistButton(self, 'Info',
+        self.artist_info_button = ArtistButton(self, _('Info'),
                 self.artist_songs_button, 4)
 
         # main window of artist tab
@@ -139,7 +142,7 @@ class Artists(Gtk.Box):
         # songs tab for artist (tab 0)
         self.artist_songs_tab = Gtk.ScrolledWindow()
         self.artist_notebook.append_page(self.artist_songs_tab, 
-                Gtk.Label('Songs'))
+                Gtk.Label(_('Songs')))
         artist_songs_treeview = Widgets.TreeViewSongs(
                 self.artist_songs_liststore, app)
         self.artist_songs_tab.add(artist_songs_treeview)
@@ -148,7 +151,7 @@ class Artists(Gtk.Box):
         # albums tab for artist (tab 1)
         self.artist_albums_tab = Gtk.ScrolledWindow()
         self.artist_notebook.append_page(self.artist_albums_tab,
-                Gtk.Label('Albums'))
+                Gtk.Label(_('Albums')))
         # pic, album, albumid, artist, artistid, info
         self.artist_albums_liststore = Gtk.ListStore(GdkPixbuf.Pixbuf, 
                 str, int, str, int, str)
@@ -161,7 +164,7 @@ class Artists(Gtk.Box):
         # MVs tab for artist (tab 2)
         self.artist_mv_tab = Gtk.ScrolledWindow()
         self.artist_notebook.append_page(self.artist_mv_tab, 
-                Gtk.Label('MV'))
+                Gtk.Label(_('MV')))
         # pic, name, artist, album, rid, artistid, albumid
         self.artist_mv_liststore = Gtk.ListStore(GdkPixbuf.Pixbuf, str, 
                 str, str, int, int, int)
@@ -174,7 +177,7 @@ class Artists(Gtk.Box):
         # Similar tab for artist (tab 3)
         self.artist_similar_tab = Gtk.ScrolledWindow()
         self.artist_notebook.append_page(self.artist_similar_tab, 
-                Gtk.Label('Similar'))
+                Gtk.Label(_('Similar')))
         # pic, artist name, artist id, num of songs
         self.artist_similar_liststore = Gtk.ListStore(GdkPixbuf.Pixbuf,
                 str, int, str)
@@ -187,7 +190,7 @@ class Artists(Gtk.Box):
         # Info tab for artist (tab 4)
         artist_info_tab = Gtk.ScrolledWindow()
         self.artist_notebook.append_page(artist_info_tab,
-                Gtk.Label('Info'))
+                Gtk.Label(_('Info')))
         self.artist_info_textbuffer = Gtk.TextBuffer()
         artist_info_textview = Gtk.TextView()
         artist_info_textview.props.editable = False
@@ -197,7 +200,7 @@ class Artists(Gtk.Box):
 
         # Album tab (tab 2)
         album_songs_tab = Gtk.ScrolledWindow()
-        self.notebook.append_page(album_songs_tab, Gtk.Label('Album'))
+        self.notebook.append_page(album_songs_tab, Gtk.Label(_('Album')))
         album_songs_treeview = Widgets.TreeViewSongs(
                 self.album_songs_liststore, app)
         album_songs_tab.add(album_songs_treeview)
@@ -209,8 +212,8 @@ class Artists(Gtk.Box):
         if self.first_show:
             return
         self.first_show = True
-        prefs = (
-                ('All', ''), ('A', 'a'), ('B', 'b'), ('C', 'c'), ('D', 'd'),
+        prefs = ((_('All'), ''),
+                ('A', 'a'), ('B', 'b'), ('C', 'c'), ('D', 'd'),
                 ('E', 'e'), ('F', 'f'), ('G', 'g'), ('H', 'h'), ('I', 'i'),
                 ('J', 'j'), ('K', 'k'), ('L', 'l'), ('M', 'm'), ('N', 'n'),
                 ('O', 'o'), ('P', 'p'), ('Q', 'q'), ('R', 'r'), ('S', 's'),
@@ -223,17 +226,17 @@ class Artists(Gtk.Box):
         self.pref_combo.connect('changed', self.on_cate_changed)
 
         cates = (
-                ('热门歌手', 0),
-                ('华语男', 1),
-                ('华语女', 2),
-                ('华语组合', 3),
-                ('日韩男', 4),
-                ('日韩女', 5),
-                ('日韩组合', 6),
-                ('欧美男', 7),
-                ('欧美女', 8),
-                ('欧美组合', 9),
-                ('其他', 10),
+                (_('Hot Artists'), 0),
+                (_('Chinese Male'), 1),
+                (_('Chinese Female'), 2),
+                (_('Chinese Band'), 3),
+                (_('Japanese Male'), 4),
+                (_('Japanese Female'), 5),
+                (_('Japanese Band'), 6),
+                (_('European Male'), 7),
+                (_('European Female'), 8),
+                (_('European Band'), 9),
+                (_('Others'), 10),
                 )
         for cate in cates:
             self.cate_liststore.append(cate)
@@ -268,7 +271,7 @@ class Artists(Gtk.Box):
         for artist in artists:
             self.artists_liststore.append([self.app.theme['anonymous'],
                 artist['name'], int(artist['id']), 
-                artist['music_num']+'首歌曲', ])
+                artist['music_num'] + _(' songs'), ])
             Net.update_artist_logo(self.artists_liststore, i, 0, 
                     artist['pic'])
             i += 1
@@ -425,7 +428,7 @@ class Artists(Gtk.Box):
             for artist in artists:
                 self.artist_similar_liststore.append([
                     self.app.theme['anonymous'], artist['name'],
-                    int(artist['id']), artist['songnum'] + '首歌曲', ])
+                    int(artist['id']), artist['songnum'] + _(' songs'), ])
                 Net.update_artist_logo(self.artist_similar_liststore, i,
                         0, artist['pic'])
                 i += 1

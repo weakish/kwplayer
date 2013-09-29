@@ -48,7 +48,6 @@ def encode_lrc_url(rid):
     '''
     rid is like '928003'
     like this: 
-    &requester=localhost&req=1&songname=童年&artist=罗大佑&rid=MUSIC_237873&lrcx=1
     will get:
     DBYAHlRcXUlcUVRYXUI0MDYlKjBYV1dLXUdbQhIQEgNbX19LSwAUDEMlDigQHwAMSAsAFBkMHBocF1gABgwPFQ0KHx1JHBwUWF1PHAEXAgsNBApTtMqhhk8OHA0MFhhUrbDNlra/Tx0HHVgoOTomLSZXVltRWF1fCRcPEVJf
     '''

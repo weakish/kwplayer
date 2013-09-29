@@ -1,0 +1,328 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2013-09-29 20:08+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../kuwo/App.py:139 ../kuwo/Preferences.py:156
+msgid "Lyrics"
+msgstr ""
+
+#: ../kuwo/App.py:143
+msgid "Playlist"
+msgstr ""
+
+#: ../kuwo/App.py:147
+msgid "Search"
+msgstr ""
+
+#: ../kuwo/App.py:151
+msgid "Top List"
+msgstr ""
+
+#: ../kuwo/App.py:155
+msgid "Radio"
+msgstr ""
+
+#: ../kuwo/App.py:159 ../kuwo/Artists.py:130 ../kuwo/Artists.py:167
+#: ../kuwo/MV.py:20
+msgid "MV"
+msgstr ""
+
+#: ../kuwo/App.py:163 ../kuwo/Artists.py:47 ../kuwo/Artists.py:80
+#: ../kuwo/Search.py:37 ../kuwo/Search.py:69 ../kuwo/Search.py:156
+#: ../kuwo/Search.py:158 ../kuwo/Search.py:203
+msgid "Artists"
+msgstr ""
+
+#: ../kuwo/App.py:167
+msgid "Categories"
+msgstr ""
+
+#: ../kuwo/App.py:171 ../kuwo/Themes.py:20
+msgid "Themes"
+msgstr ""
+
+#: ../kuwo/App.py:220
+msgid "Show App"
+msgstr ""
+
+#: ../kuwo/App.py:224
+msgid "Pause/Resume"
+msgstr ""
+
+#: ../kuwo/App.py:228
+msgid "Next Song"
+msgstr ""
+
+#: ../kuwo/App.py:235 menus.ui.h:3
+msgid "Quit"
+msgstr ""
+
+#: ../kuwo/Artists.py:121
+msgid "Artist"
+msgstr ""
+
+#: ../kuwo/Artists.py:127 ../kuwo/Artists.py:145 ../kuwo/Search.py:33
+#: ../kuwo/Search.py:62 ../kuwo/Search.py:138 ../kuwo/Search.py:202
+msgid "Songs"
+msgstr ""
+
+#: ../kuwo/Artists.py:128 ../kuwo/Artists.py:154 ../kuwo/Search.py:42
+#: ../kuwo/Search.py:82 ../kuwo/Search.py:178 ../kuwo/Search.py:180
+#: ../kuwo/Search.py:204
+msgid "Albums"
+msgstr ""
+
+#: ../kuwo/Artists.py:132 ../kuwo/Artists.py:180
+msgid "Similar"
+msgstr ""
+
+#: ../kuwo/Artists.py:134 ../kuwo/Artists.py:193
+msgid "Info"
+msgstr ""
+
+#: ../kuwo/Artists.py:203
+msgid "Album"
+msgstr ""
+
+#: ../kuwo/Artists.py:215
+msgid "All"
+msgstr ""
+
+#: ../kuwo/Artists.py:229
+msgid "Hot Artists"
+msgstr ""
+
+#: ../kuwo/Artists.py:230
+msgid "Chinese Male"
+msgstr ""
+
+#: ../kuwo/Artists.py:231
+msgid "Chinese Female"
+msgstr ""
+
+#: ../kuwo/Artists.py:232
+msgid "Chinese Band"
+msgstr ""
+
+#: ../kuwo/Artists.py:233
+msgid "Japanese Male"
+msgstr ""
+
+#: ../kuwo/Artists.py:234
+msgid "Japanese Female"
+msgstr ""
+
+#: ../kuwo/Artists.py:235
+msgid "Japanese Band"
+msgstr ""
+
+#: ../kuwo/Artists.py:236
+msgid "European Male"
+msgstr ""
+
+#: ../kuwo/Artists.py:237
+msgid "European Female"
+msgstr ""
+
+#: ../kuwo/Artists.py:238
+msgid "European Band"
+msgstr ""
+
+#: ../kuwo/Artists.py:239
+msgid "Others"
+msgstr ""
+
+#: ../kuwo/Artists.py:274 ../kuwo/Artists.py:431
+msgid " songs"
+msgstr ""
+
+#: ../kuwo/Config.py:21
+msgid "KW Player"
+msgstr ""
+
+#: ../kuwo/Lrc.py:58
+msgid "Lrc loading..."
+msgstr ""
+
+#: ../kuwo/Lrc.py:85
+msgid "No lrc available"
+msgstr ""
+
+#: ../kuwo/PlayList.py:185
+msgid "Cached"
+msgstr ""
+
+#: ../kuwo/PlayList.py:186 ../kuwo/PlayList.py:221
+msgid "Caching"
+msgstr ""
+
+#: ../kuwo/PlayList.py:187
+msgid "Default"
+msgstr ""
+
+#: ../kuwo/PlayList.py:188 ../kuwo/Radio.py:69
+msgid "Favorite"
+msgstr ""
+
+#: ../kuwo/PlayList.py:217 ../kuwo/PlayList.py:302
+msgid "Start Caching"
+msgstr ""
+
+#: ../kuwo/PlayList.py:295
+msgid "Stop Caching"
+msgstr ""
+
+#: ../kuwo/Player.py:78
+msgid "Previous"
+msgstr ""
+
+#: ../kuwo/Player.py:84 ../kuwo/Radio.py:57 ../kuwo/Widgets.py:83
+msgid "Play"
+msgstr ""
+
+#: ../kuwo/Player.py:90 ../kuwo/Radio.py:63
+msgid "Next"
+msgstr ""
+
+#: ../kuwo/Player.py:99
+msgid "Shuffle"
+msgstr ""
+
+#: ../kuwo/Player.py:104
+msgid "Repeat"
+msgstr ""
+
+#: ../kuwo/Player.py:109
+msgid "Show MV"
+msgstr ""
+
+#: ../kuwo/Player.py:117
+msgid "Fullscreen"
+msgstr ""
+
+#: ../kuwo/Player.py:118
+msgid "Fullscreen (F11)"
+msgstr ""
+
+#: ../kuwo/Player.py:129 ../kuwo/Player.py:343 ../kuwo/Player.py:347
+msgid "Unknown"
+msgstr ""
+
+#: ../kuwo/Preferences.py:70
+msgid "Choose a Folder"
+msgstr ""
+
+#: ../kuwo/Preferences.py:112 menus.ui.h:1
+msgid "Preferences"
+msgstr ""
+
+#: ../kuwo/Preferences.py:125
+msgid "Format"
+msgstr ""
+
+#: ../kuwo/Preferences.py:127
+msgid "Prefered Audio Format"
+msgstr ""
+
+#: ../kuwo/Preferences.py:129
+msgid "MP3 (faster)"
+msgstr ""
+
+#: ../kuwo/Preferences.py:133
+msgid "APE (better)"
+msgstr ""
+
+#: ../kuwo/Preferences.py:140
+msgid "Prefered Video Format"
+msgstr ""
+
+#: ../kuwo/Preferences.py:143
+msgid "MP4 (faster)"
+msgstr ""
+
+#: ../kuwo/Preferences.py:147
+msgid "MKV (better)"
+msgstr ""
+
+#: ../kuwo/Preferences.py:162
+msgid "Lyric Word Background color"
+msgstr ""
+
+#: ../kuwo/Preferences.py:174 ../kuwo/Preferences.py:194
+msgid "Choose color for Lyrics background"
+msgstr ""
+
+#: ../kuwo/Preferences.py:182
+msgid "Lyric Image Background color"
+msgstr ""
+
+#: ../kuwo/Preferences.py:200
+msgid "Folders"
+msgstr ""
+
+#: ../kuwo/Preferences.py:202
+msgid "Place to store sogns"
+msgstr ""
+
+#: ../kuwo/Preferences.py:205
+msgid "Moving cached songs to new folder"
+msgstr ""
+
+#: ../kuwo/Preferences.py:208
+msgid "Place to store MVs"
+msgstr ""
+
+#: ../kuwo/Preferences.py:212
+msgid "Moving cached MVs to new folder"
+msgstr ""
+
+#: ../kuwo/Radio.py:46
+msgid "song name"
+msgstr ""
+
+#: ../kuwo/Radio.py:75
+msgid "Delete"
+msgstr ""
+
+#: ../kuwo/Search.py:28
+msgid "Search Songs, Artists.."
+msgstr ""
+
+#: ../kuwo/TopCategories.py:21
+msgid "Top Categories"
+msgstr ""
+
+#: ../kuwo/TopList.py:20
+msgid "TopList"
+msgstr ""
+
+#: ../kuwo/Widgets.py:77
+msgid "Select All"
+msgstr ""
+
+#: ../kuwo/Widgets.py:87
+msgid "Add to Playlist"
+msgstr ""
+
+#: ../kuwo/Widgets.py:91
+msgid "Cache"
+msgstr ""
+
+#: menus.ui.h:2
+msgid "About"
+msgstr ""

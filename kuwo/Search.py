@@ -5,8 +5,11 @@ from gi.repository import GdkPixbuf
 from gi.repository import Gtk
 import html
 
+from kuwo import Config
 from kuwo import Widgets
 from kuwo import Net
+
+_ = Config._
 
 class Search(Gtk.Box):
     def __init__(self, app):
@@ -22,21 +25,21 @@ class Search(Gtk.Box):
         self.pack_start(box_top, False, False, 0)
 
         self.search_entry = Gtk.SearchEntry()
-        self.search_entry.set_placeholder_text('Search Songs, Artists..')
+        self.search_entry.set_placeholder_text(_('Search Songs, Artists..'))
         self.search_entry.props.width_chars = 30
         self.search_entry.connect('activate', self.on_search_entry_activate)
         box_top.pack_start(self.search_entry, False, False, 20)
 
-        self.songs_button = Widgets.ListRadioButton('Songs')
+        self.songs_button = Widgets.ListRadioButton(_('Songs'))
         self.songs_button.connect('toggled', self.switch_notebook_page, 0)
         box_top.pack_start(self.songs_button, False, False, 0)
 
-        self.artists_button = Widgets.ListRadioButton('Artists', 
+        self.artists_button = Widgets.ListRadioButton(_('Artists'), 
                 self.songs_button)
         self.artists_button.connect('toggled', self.switch_notebook_page, 1)
         box_top.pack_start(self.artists_button, False, False, 0)
 
-        self.albums_button = Widgets.ListRadioButton('Albums', 
+        self.albums_button = Widgets.ListRadioButton(_('Albums'), 
                 self.songs_button)
         self.albums_button.connect('toggled', self.switch_notebook_page, 2)
         box_top.pack_start(self.albums_button, False, False, 0)
@@ -56,14 +59,14 @@ class Search(Gtk.Box):
         songs_tab = Gtk.ScrolledWindow()
         songs_tab.get_vadjustment().connect('value-changed',
                 self.on_songs_tab_scrolled)
-        self.notebook.append_page(songs_tab, Gtk.Label('Songs'))
+        self.notebook.append_page(songs_tab, Gtk.Label(_('Songs')))
         treeview_songs = Widgets.TreeViewSongs(self.liststore_songs, app)
         songs_tab.add(treeview_songs)
 
         artists_tab = Gtk.ScrolledWindow()
         artists_tab.get_vadjustment().connect('value-changed',
                 self.on_artists_tab_scrolled)
-        self.notebook.append_page(artists_tab, Gtk.Label('Artists'))
+        self.notebook.append_page(artists_tab, Gtk.Label(_('Artists')))
 
         # pic, artist, artistid, country
         self.liststore_artists = Gtk.ListStore(GdkPixbuf.Pixbuf,
@@ -76,7 +79,7 @@ class Search(Gtk.Box):
         albums_tab = Gtk.ScrolledWindow()
         albums_tab.get_vadjustment().connect('value-changed',
                 self.on_albums_tab_scrolled)
-        self.notebook.append_page(albums_tab, Gtk.Label('Albums'))
+        self.notebook.append_page(albums_tab, Gtk.Label(_('Albums')))
 
         # logo, album, albumid, artist, artistid, info
         self.liststore_albums = Gtk.ListStore(GdkPixbuf.Pixbuf, str, int,
@@ -132,7 +135,7 @@ class Search(Gtk.Box):
         songs, hit, self.songs_total = Net.search_songs(keyword, 
                 self.songs_page)
         if not songs or hit == 0:
-            self.songs_button.set_label('Songs (0)')
+            self.songs_button.set_label('{0} (0)'.format(_('Songs')))
             return
         self.songs_button.set_label('Songs ({0})'.format(hit))
         for song in songs:
@@ -150,9 +153,9 @@ class Search(Gtk.Box):
         artists, hit, self.artists_total = Net.search_artists(keyword,
             self.artists_page)
         if hit == 0:
-            self.artists_button.set_label('Artists (0)')
+            self.artists_button.set_label('{0} (0)'.format(_('Artists')))
             return
-        self.artists_button.set_label('Artists ({0})'.format(hit))
+        self.artists_button.set_label('{0} ({1})'.format(_('Artists'), hit))
         i = len(self.liststore_artists)
         for artist in artists:
             self.liststore_artists.append([self.app.theme['anonymous'],
@@ -172,9 +175,9 @@ class Search(Gtk.Box):
         albums, hit, self.albums_total = Net.search_albums(keyword,
                 self.albums_page)
         if hit == 0:
-            self.albums_button.set_label('Albums (0)')
+            self.albums_button.set_label('{0} (0)'.format(_('Albums')))
             return
-        self.albums_button.set_label('Albums ({0})'.format(hit))
+        self.albums_button.set_label('{0} ({1})'.format(_('Albums'), hit))
         i = len(self.liststore_albums)
         for album in albums:
             if len(album['info']) == 0:
@@ -196,9 +199,9 @@ class Search(Gtk.Box):
         self.artists_tab_inited = False
         self.albums_tab_inited = False
 
-        self.songs_button.set_label('Songs')
-        self.artists_button.set_label('Artists')
-        self.albums_button.set_label('Albums')
+        self.songs_button.set_label(_('Songs'))
+        self.artists_button.set_label(_('Artists'))
+        self.albums_button.set_label(_('Albums'))
 
         self.liststore_songs.clear()
         self.liststore_artists.clear()

@@ -14,6 +14,8 @@ from kuwo import Config
 from kuwo import Net
 from kuwo import Widgets
 
+_ = Config._
+
 
 class NormalSongTab(Gtk.ScrolledWindow):
     def __init__(self, app, list_name):
@@ -180,10 +182,10 @@ class PlayList(Gtk.Box):
         filepath = Config.PLS_JSON
         _default = {
                 '_names_': [
-                    ['Cached', 'Cached', False],
-                    ['Caching', 'Caching', False],
-                    ['Default', 'Default', False],
-                    ['Favorite', 'Favorite', False],
+                    [_('Cached'), 'Cached', False],
+                    [_('Caching'), 'Caching', False],
+                    [_('Default'), 'Default', False],
+                    [_('Favorite'), 'Favorite', False],
                     ],
                 'Caching': [],
                 'Default': [],
@@ -212,11 +214,11 @@ class PlayList(Gtk.Box):
             box_caching = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
             buttonbox = Gtk.Box()
             box_caching.pack_start(buttonbox, False, False, 0)
-            button_start = Gtk.Button('Start Caching')
+            button_start = Gtk.Button(_('Start Caching'))
             button_start.connect('clicked', self.switch_caching_daemon)
             buttonbox.pack_start(button_start, False, False, 0)
             box_caching.pack_start(scrolled_win, True, True, 0)
-            self.notebook.append_page(box_caching, Gtk.Label('Caching'))
+            self.notebook.append_page(box_caching, Gtk.Label(_('Caching')))
             box_caching.show_all()
         else:
             self.notebook.append_page(scrolled_win, Gtk.Label(list_name))
@@ -263,7 +265,6 @@ class PlayList(Gtk.Box):
 
     def add_songs_to_playlist(self, songs, list_name='Default'):
         print('PlayList.add_songs_to_playlist()')
-        print('list name:', list_name)
         for song in songs:
             self.add_song_to_playlist(song, list_name=list_name)
 
@@ -291,14 +292,14 @@ class PlayList(Gtk.Box):
         print('switch caching daemon')
         if not self.cache_enabled:
             self.cache_enabled = True
-            btn.set_label('Stop Caching')
+            btn.set_label(_('Stop Caching'))
             self.cache_timeout = GLib.timeout_add(5000, 
                     self.start_cache_daemon)
         else:
             self.cache_enabled = False
             if self.cache_timeout > 0:
                 GLib.source_remove(self.cache_timeout)
-            btn.set_label('Start Caching')
+            btn.set_label(_('Start Caching'))
 
     def start_cache_daemon(self):
         if self.cache_enabled:

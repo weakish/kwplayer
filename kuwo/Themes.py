@@ -2,9 +2,11 @@
 from gi.repository import GdkPixbuf
 from gi.repository import Gtk
 
+from kuwo import Config
 from kuwo import Net
 from kuwo import Widgets
 
+_ = Config._
 
 class Themes(Gtk.Box):
     def __init__(self, app):
@@ -15,7 +17,7 @@ class Themes(Gtk.Box):
         self.buttonbox = Gtk.Box()
         self.pack_start(self.buttonbox, False, False, 0)
 
-        self.button_main = Gtk.Button('心情主题')
+        self.button_main = Gtk.Button(_('Themes'))
         self.button_main.connect('clicked', self.on_button_main_clicked)
         self.buttonbox.pack_start(self.button_main, False, False, 0)
 

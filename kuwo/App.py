@@ -21,6 +21,8 @@ from kuwo.TopCategories import TopCategories
 from kuwo.TopList import TopList
 
 
+_ = Config._
+
 GObject.threads_init()
 
 class App:
@@ -95,6 +97,10 @@ class App:
     def run(self, argv):
         self.app.run(argv)
 
+    def quit(self):
+        self.window.destroy()
+        self.app.quit()
+
     def on_app_shutdown(self, app):
         Config.dump_conf(self.conf)
 
@@ -120,7 +126,7 @@ class App:
         dialog.destroy()
 
     def on_action_quit_activate(self, action, param):
-        self.app.quit()
+        self.quit()
 
     def add_simple_action(self, name, callback):
         action = Gio.SimpleAction.new(name, None)
@@ -130,39 +136,39 @@ class App:
     def init_notebook(self):
         self.lrc = Lrc(self)
         self.lrc.app_page = self.notebook.append_page(
-                self.lrc, Gtk.Label('Lyrics'))
+                self.lrc, Gtk.Label(_('Lyrics')))
 
         self.playlist = PlayList(self)
         self.playlist.app_page = self.notebook.append_page(
-                self.playlist, Gtk.Label('Playlist'))
+                self.playlist, Gtk.Label(_('Playlist')))
 
         self.search = Search(self)
         self.search.app_page = self.notebook.append_page(
-                self.search, Gtk.Label('Search'))
+                self.search, Gtk.Label(_('Search')))
 
         self.toplist = TopList(self)
         self.toplist.app_page = self.notebook.append_page(
-                self.toplist, Gtk.Label('Top List'))
+                self.toplist, Gtk.Label(_('Top List')))
 
         self.radio = Radio(self)
         self.radio.app_page = self.notebook.append_page(
-                self.radio, Gtk.Label('Radio'))
+                self.radio, Gtk.Label(_('Radio')))
 
         self.mv = MV(self)
         self.mv.app_page = self.notebook.append_page(
-                self.mv, Gtk.Label('MV'))
+                self.mv, Gtk.Label(_('MV')))
 
         self.artists = Artists(self)
         self.artists.app_page = self.notebook.append_page(
-                self.artists, Gtk.Label('Artists'))
+                self.artists, Gtk.Label(_('Artists')))
 
         self.topcategories = TopCategories(self)
         self.topcategories.app_page = self.notebook.append_page(
-                self.topcategories, Gtk.Label('Categories'))
+                self.topcategories, Gtk.Label(_('Categories')))
 
         self.themes = Themes(self)
         self.themes.app_page = self.notebook.append_page(
-                self.themes, Gtk.Label('Themes'))
+                self.themes, Gtk.Label(_('Themes')))
 
     def on_notebook_switch_page(self, notebook, page, page_num):
         page.first()
@@ -199,7 +205,7 @@ class App:
         self.status_icon.connect('popup_menu', 
                 self.on_status_icon_popup_menu)
         #self.status_icon.set_screen(self.window.get_screen())
-        self.status_icon.set_tooltip_text('tray icon')
+        #self.status_icon.set_tooltip_text('tray icon')
 
     def on_status_icon_activate(self, status_icon):
         is_visible = self.window.is_visible()
@@ -211,22 +217,22 @@ class App:
     def on_status_icon_popup_menu(self, status_icon, event_button, 
             event_time):
         menu = Gtk.Menu()
-        show_item = Gtk.MenuItem(label='Show App') 
+        show_item = Gtk.MenuItem(label=_('Show App') )
         show_item.connect('activate', self.on_status_icon_show_app_activate)
         menu.append(show_item)
 
-        pause_item = Gtk.MenuItem(label='Pause/Resume')
+        pause_item = Gtk.MenuItem(label=_('Pause/Resume'))
         pause_item.connect('activate', self.on_status_icon_pause_activate)
         menu.append(pause_item)
 
-        next_item = Gtk.MenuItem(label='Next Song')
+        next_item = Gtk.MenuItem(label=_('Next Song'))
         next_item.connect('activate', self.on_status_icon_next_activate)
         menu.append(next_item)
 
         sep_item = Gtk.SeparatorMenuItem()
         menu.append(sep_item)
         
-        quit_item = Gtk.MenuItem(label='Quit')
+        quit_item = Gtk.MenuItem(label=_('Quit'))
         quit_item.connect('activate', self.on_status_icon_quit_activate)
         menu.append(quit_item)
 
@@ -248,5 +254,4 @@ class App:
         self.player.load_next()
 
     def on_status_icon_quit_activate(self, menuitem):
-        self.window.destroy()
-        self.app.quit()
+        self.quit()

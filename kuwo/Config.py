@@ -1,22 +1,30 @@
 
+import gettext
 import json
+import locale
 import os
 
 from gi.repository import GdkPixbuf
 
-
 if __file__.startswith('/usr/'):
-    PREF = '/usr/share/kuwo'
+    PREF = '/usr/share'
 else:
-    PREF = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'share', 'kuwo')
+    PREF = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'share')
 
-APPNAME = 'KW Player'
+LOCALEDIR = os.path.join(PREF, 'locale')
+gettext.bindtextdomain('kuwo', LOCALEDIR)
+gettext.textdomain('kuwo')
+locale.bindtextdomain('kuwo', LOCALEDIR)
+locale.textdomain('kuwo')
+_ = gettext.gettext
+
+APPNAME = _('KW Player')
 VERSION = '1.1'
 HOMEPAGE = 'https://github.com'
 AUTHORS = ['LiuLang <gsushzhsosgsu@gmail.com>',]
 
 _UI_FILES = ('menus.ui', )
-UI_FILES = [os.path.join(PREF, 'ui', ui) for ui in _UI_FILES]
+UI_FILES = [os.path.join(PREF, 'kuwo', 'ui', ui) for ui in _UI_FILES]
 
 HOME_DIR = os.path.expanduser('~')
 CACHE_DIR = os.path.join(HOME_DIR, '.cache', 'kuwo')
@@ -41,12 +49,12 @@ _default_conf = {
         'window-size': (840, 580),
         'song-dir': os.path.join(CACHE_DIR, 'song'),
         'mv-dir': os.path.join(CACHE_DIR, 'mv'),
-        'theme': os.path.join(PREF, 'themes', 'default'),
+        'theme': os.path.join(PREF, 'kuwo', 'themes', 'default'),
         'volume': 0.08,
         'use-ape': False,
         'use-mkv': False,
         'lrc-img-back-color': 'rgba(0, 0, 0, 1)',
-        'lrc-word-back-color': 'rgba(0.82, 0.83, 0.84, 0.45)',
+        'lrc-word-back-color': 'rgba(237, 221, 221, 0.28)',
         }
 
 def check_first():

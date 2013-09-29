@@ -2,8 +2,11 @@
 from gi.repository import Gdk
 from gi.repository import GdkPixbuf
 from gi.repository import Gtk
-
 import html
+
+from kuwo import Config
+
+_ = Config._
 
 def short_str(_str, length=10):
     if len(_str) > length:
@@ -71,21 +74,21 @@ class ControlBox(Gtk.Box):
         self.liststore = liststore
         self.app = app
 
-        button_selectall = Gtk.ToggleButton('Select All')
+        button_selectall = Gtk.ToggleButton(_('Select All'))
         button_selectall.set_active(True)
         button_selectall.connect('toggled', 
                 self.on_button_selectall_toggled)
         self.pack_start(button_selectall, False, False, 0)
 
-        button_play = Gtk.Button('Play')
+        button_play = Gtk.Button(_('Play'))
         button_play.connect('clicked', self.on_button_play_clicked)
         self.pack_start(button_play, False, False, 0)
 
-        button_add = Gtk.Button('Add to Playlist')
+        button_add = Gtk.Button(_('Add to Playlist'))
         button_add.connect('clicked', self.on_button_add_clicked)
         self.pack_start(button_add, False, False, 0)
 
-        button_cache = Gtk.Button('Cache')
+        button_cache = Gtk.Button(_('Cache'))
         button_cache.connect('clicked', self.on_button_cache_clicked)
         self.pack_start(button_cache, False, False, 0)
 

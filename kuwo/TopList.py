@@ -2,9 +2,11 @@
 from gi.repository import GdkPixbuf
 from gi.repository import Gtk
 
+from kuwo import Config
 from kuwo import Net
 from kuwo import Widgets
 
+_ = Config._
 
 class TopList(Gtk.Box):
     def __init__(self, app):
@@ -15,7 +17,7 @@ class TopList(Gtk.Box):
 
         self.buttonbox = Gtk.Box(spacing=0)
         self.pack_start(self.buttonbox, False, False, 0)
-        button_home = Gtk.Button('TopList')
+        button_home = Gtk.Button(_('TopList'))
         button_home.connect('clicked', self.on_button_home_clicked)
         self.buttonbox.pack_start(button_home, False, False, 0)
         self.label = Gtk.Label('')
