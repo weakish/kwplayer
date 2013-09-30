@@ -3,6 +3,7 @@ from gi.repository import Gdk
 from gi.repository import GdkPixbuf
 from gi.repository import Gtk
 import html
+import os
 
 from kuwo import Config
 
@@ -48,6 +49,54 @@ class ListRadioButton(Gtk.RadioButton):
             self.join_group(last_button)
         # it might need a class name.
 
+class BoldLabel(Gtk.Label):
+    def __init__(self, label):
+        super().__init__('<b>{0}</b>'.format(label))
+        self.set_use_markup(True)
+        self.props.halign = Gtk.Align.START
+        self.props.xalign = 0
+        self.props.margin_bottom = 10
+
+class FolderChooser(Gtk.Box):
+    def __init__(self, parent):
+        super().__init__(spacing=5)
+        self.parent = parent
+        self.filepath = os.environ['HOME']
+
+        self.entry = Gtk.Entry()
+        self.entry.set_text(self.filepath)
+        self.entry.props.editable = False
+        self.entry.props.width_chars = 30
+        self.pack_start(self.entry, True, True, 0)
+
+        choose_button = Gtk.Button('...')
+        choose_button.connect('clicked', self.on_choose_button_clicked)
+        self.pack_start(choose_button, False, False, 0)
+
+    def set_filename(self, filepath):
+        self.filepath = filepath
+        self.entry.set_text(filepath)
+
+    def get_filename(self):
+        return self.filepath
+    
+    def on_choose_button_clicked(self, button):
+        def on_dialog_file_activated(dialog):
+            self.filepath = dialog.get_filename()
+            self.entry.set_text(self.filepath)
+            dialog.destroy()
+
+        dialog = Gtk.FileChooserDialog(_('Choose a Folder'), self.parent,
+                Gtk.FileChooserAction.SELECT_FOLDER,
+                (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                    Gtk.STOCK_OK, Gtk.ResponseType.OK))
+
+        dialog.connect('file-activated', on_dialog_file_activated)
+        response = dialog.run()
+        if response == Gtk.ResponseType.OK:
+            on_dialog_file_activated(dialog)
+            return
+        dialog.destroy()
 
 class TreeViewColumnText(Gtk.TreeViewColumn):
     def __init__(self, *args, **keys):

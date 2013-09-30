@@ -8,6 +8,7 @@ from gi.repository import Gtk
 import json
 import os
 import random
+import shutil
 import sqlite3
 import threading
 import time
@@ -134,6 +135,8 @@ class PlayList(Gtk.Box):
         export_btn = Gtk.ToolButton()
         export_btn.set_name('Export')
         export_btn.set_icon_name('media-eject-symbolic')
+        export_btn.connect('clicked', 
+                self.on_export_playlist_button_clicked)
         toolbar.insert(export_btn, 2)
         box_left.pack_start(toolbar, False, False, 0)
 
@@ -356,7 +359,10 @@ class PlayList(Gtk.Box):
     def cache_next_song(self):
         list_name = self.curr_playing[0]
         liststore = self.tabs[list_name].liststore
-        path = self.curr_playing[1] + 1
+        path = self.curr_playing[1]
+        if path == len(liststore) - 1:
+            return
+        path += 1
         song = Widgets.song_row_to_dict(liststore[path], start=0)
         print('next song to cache:', song)
         parse_song = Net.AsyncSong(self.app)
@@ -478,7 +484,6 @@ class PlayList(Gtk.Box):
 
     def on_remove_playlist_button_clicked(self, button):
         selection = self.treeview_left.get_selection()
-        print('selction:', selection)
         model, _iter = selection.get_selected()
         if not _iter:
             return
@@ -490,6 +495,79 @@ class PlayList(Gtk.Box):
         self.notebook.remove_page(index)
         model.remove(_iter)
         self.remove_menu_item_from_playlist_menu(disname)
+
+    def on_export_playlist_button_clicked(self, button):
+        def do_export(button):
+            num_songs = len(liststore)
+            i = 0
+            for item in liststore:
+                name = item[0]
+                artist = item[1]
+                album = item[2]
+                rid = item[3]
+                song_link = Net.get_song_link(rid)
+                song_name = os.path.split(song_link)[1]
+                song_path = os.path.join(self.app.conf['song-dir'], 
+                        song_name)
+                if not os.path.exists(song_path):
+                    continue
+                if conv_tag.get_active():
+                    # do mp3 id tag convert
+                    # just convert song name, artist and album
+                    pass
+                export_song_name = '{0}_{1}{2}'.format(name, artist, 
+                        os.path.splitext(song_name)[1]).replace('/', '+')
+                export_song_path = os.path.join(
+                        folder_chooser.get_filename(), export_song_name)
+                i += 1
+                shutil.copy(song_path, export_song_path)
+                export_prog.set_fraction(i / num_songs)
+                Gdk.Window.process_all_updates()
+            dialog.destroy()
+
+        selection = self.treeview_left.get_selection()
+        model, _iter = selection.get_selected()
+        if not _iter:
+            return
+        path = model.get_path(_iter)
+        index = path.get_indices()[0]
+        disname, list_name, editable = model[path]
+        liststore = self.tabs[list_name].liststore
+
+        dialog = Gtk.Dialog(_('Export Songs'), self.app.window,
+                Gtk.DialogFlags.MODAL,
+                (Gtk.STOCK_CLOSE, Gtk.ResponseType.OK,))
+        box = dialog.get_content_area()
+        box.set_size_request(600, 320)
+        box.set_border_width(5)
+
+        folder_label = Widgets.BoldLabel(_('Choose export folder'))
+        box.pack_start(folder_label, False, True, 0)
+
+        folder_chooser = Widgets.FolderChooser(self.app.window)
+        box.pack_start(folder_chooser, False, True, 0)
+
+        conv_tag = Gtk.CheckButton(_('Convert MP3 tag to UTF-8'))
+        conv_tag.props.margin_top = 10
+        conv_tag.set_tooltip_text(
+                _('This can solve arbled characters problem'))
+        conv_tag.set_active(False)
+        box.pack_start(conv_tag, False, False, 0)
+
+        export_box = Gtk.Box(spacing=5)
+        export_box.props.margin_top = 10
+        box.pack_start(export_box, False, True, 0)
+
+        export_prog = Gtk.ProgressBar()
+        export_box.pack_start(export_prog, True, True, 0)
+
+        export_btn = Gtk.Button(_('Export'))
+        export_btn.connect('clicked', do_export)
+        export_box.pack_start(export_btn, False, False, 0)
+
+        box.show_all()
+        dialog.run()
+        dialog.destroy()
 
     # other button can activate this function
     def append_menu_item_to_playlist_menu(self, disname, list_name):
@@ -527,9 +605,5 @@ class PlayList(Gtk.Box):
         menu = self.playlist_menu
         menu.songs = songs
         menu.show_all()
-        #menu.popup(None, None,
-        #        lambda menu, data: (event.get_root_coords()[0],
-        #            event.get_root_coords()[1], True),
-        #        None, 1, event.time)
         menu.popup(None, None, None, None, 1, 
                 Gtk.get_current_event_time())

@@ -1,8 +1,12 @@
 
 import base64
 import json
+import os
 from urllib import parse
 import zlib
+
+from mutagenx.easyid3 import EasyID3
+from mutagenx.apev2 import APEv2File
 
 
 def decode_lrc_content(lrc, is_lrcx=False):
@@ -89,3 +93,29 @@ def parse_radio_songs(txt):
             'albumid': 0,
             })
     return songs
+
+def iconvtag(song_path, song):
+    print('Net.iconvtag()', song_path, song)
+    def use_id3():
+        audio = EasyID3(song_path)
+        audio.clear()
+        audio['title'] = song['name']
+        audio['artist'] = song['artist']
+        audio['album'] = song['album']
+        audio.save()
+
+    def use_ape():
+        audio = APEv2File(song_path)
+        if audio.tags is None:
+            audio.add_tags()
+        audio.tags.clear()
+        audio.tags['title'] = song['name']
+        audio.tags['artist'] = song['artist']
+        audio.tags['album'] = song['album']
+        audio.save()
+
+    ext = os.path.splitext(song_path)[1].lower()
+    if ext == '.mp3':
+        use_id3()
+    elif ext == '.ape':
+        use_ape()

@@ -7,6 +7,7 @@ import os
 import shutil
 
 from kuwo import Config
+from kuwo import Widgets
 
 _ = Config._
 
@@ -17,15 +18,6 @@ class NoteTab(Gtk.Box):
     def __init__(self):
         super().__init__(orientation=Gtk.Orientation.VERTICAL)
         self.set_border_width(10)
-
-
-class BoldLabel(Gtk.Label):
-    def __init__(self, label):
-        super().__init__('<b>{0}</b>'.format(label))
-        self.set_use_markup(True)
-        self.props.halign = Gtk.Align.START
-        self.props.xalign = 0
-        self.props.margin_bottom = 10
 
 class ChooseFolder(Gtk.Box):
     def __init__(self, parent, conf_name, toggle_label):
@@ -124,7 +116,7 @@ class Preferences(Gtk.Dialog):
         format_box = NoteTab()
         notebook.append_page(format_box, Gtk.Label(_('Format')))
 
-        audio_label = BoldLabel(_('Prefered Audio Format'))
+        audio_label = Widgets.BoldLabel(_('Prefered Audio Format'))
         format_box.pack_start(audio_label, False, False, 0)
         radio_mp3 = Gtk.RadioButton(_('MP3 (faster)'))
         radio_mp3.props.margin_left = MARGIN_LEFT
@@ -137,7 +129,7 @@ class Preferences(Gtk.Dialog):
         radio_ape.connect('toggled', self.on_audio_toggled)
         format_box.pack_start(radio_ape, False, False, 0)
 
-        video_label = BoldLabel(_('Prefered Video Format'))
+        video_label = Widgets.BoldLabel(_('Prefered Video Format'))
         video_label.props.margin_top = MARGIN_TOP
         format_box.pack_start(video_label, False, False, 0)
         radio_mp4 = Gtk.RadioButton(_('MP4 (faster)'))
@@ -158,7 +150,7 @@ class Preferences(Gtk.Dialog):
         lrc_word_back_color_box = Gtk.Box()
         lrc_box.pack_start(lrc_word_back_color_box, False, False, 0)
 
-        lrc_word_back_color_label = BoldLabel(
+        lrc_word_back_color_label = Widgets.BoldLabel(
                 _('Lyric Word Background color'))
         lrc_word_back_color_box.pack_start(lrc_word_back_color_label, 
                 False, False, 0)
@@ -178,7 +170,7 @@ class Preferences(Gtk.Dialog):
         lrc_img_back_color_box = Gtk.Box()
         lrc_box.pack_start(lrc_img_back_color_box, False, False, 0)
 
-        lrc_img_back_color_label = BoldLabel(
+        lrc_img_back_color_label = Widgets.BoldLabel(
                 _('Lyric Image Background color'))
         lrc_img_back_color_box.pack_start(lrc_img_back_color_label,
                 False, False, 0)
@@ -199,13 +191,13 @@ class Preferences(Gtk.Dialog):
         folder_box = NoteTab()
         notebook.append_page(folder_box, Gtk.Label(_('Folders')))
 
-        song_folder_label = BoldLabel(_('Place to store sogns'))
+        song_folder_label = Widgets.BoldLabel(_('Place to store sogns'))
         folder_box.pack_start(song_folder_label, False, False, 0)
         song_folder = ChooseFolder(self, 'song-dir', 
                 _('Moving cached songs to new folder'))
         folder_box.pack_start(song_folder, False, False, 0)
 
-        mv_folder_label = BoldLabel(_('Place to store MVs'))
+        mv_folder_label = Widgets.BoldLabel(_('Place to store MVs'))
         mv_folder_label.props.margin_top = MARGIN_TOP
         folder_box.pack_start(mv_folder_label, False, False, 0)
         mv_folder = ChooseFolder(self, 'mv-dir',

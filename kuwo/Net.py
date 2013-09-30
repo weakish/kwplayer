@@ -24,6 +24,7 @@ SONG = 'http://antiserver.kuwo.cn/anti.s?'
 
 CHUNK = 2 ** 14
 CHUNK_TO_PLAY = 2 ** 21     # 2M
+CHUNK_APE_TO_PLAY = 2 ** 23  # 8M
 CHUNK_MV_TO_PLAY = 2 ** 23  # 8M
 MAXTIMES = 3
 TIMEOUT = 30
@@ -772,6 +773,7 @@ class AsyncSong(GObject.GObject):
                     fh.write(chunk)
                 print('song downloaded')
                 self.emit('downloaded', song_path)
+                Utils.iconvtag(song_path, song)
 
         song_link = get_song_link(song['rid'], self.app.conf['use-ape'])
         if song_link is None:
