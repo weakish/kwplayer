@@ -511,10 +511,6 @@ class PlayList(Gtk.Box):
                         song_name)
                 if not os.path.exists(song_path):
                     continue
-                if conv_tag.get_active():
-                    # do mp3 id tag convert
-                    # just convert song name, artist and album
-                    pass
                 export_song_name = '{0}_{1}{2}'.format(name, artist, 
                         os.path.splitext(song_name)[1]).replace('/', '+')
                 export_song_path = os.path.join(
@@ -547,15 +543,8 @@ class PlayList(Gtk.Box):
         folder_chooser = Widgets.FolderChooser(self.app.window)
         box.pack_start(folder_chooser, False, True, 0)
 
-        conv_tag = Gtk.CheckButton(_('Convert MP3 tag to UTF-8'))
-        conv_tag.props.margin_top = 10
-        conv_tag.set_tooltip_text(
-                _('This can solve arbled characters problem'))
-        conv_tag.set_active(False)
-        box.pack_start(conv_tag, False, False, 0)
-
         export_box = Gtk.Box(spacing=5)
-        export_box.props.margin_top = 10
+        export_box.props.margin_top = 20
         box.pack_start(export_box, False, True, 0)
 
         export_prog = Gtk.ProgressBar()
