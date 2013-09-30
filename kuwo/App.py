@@ -107,6 +107,11 @@ class App:
     def on_main_window_resized(self, window, event=None):
         self.conf['window-size'] = window.get_size()
 
+    def on_main_window_deleted(self, window, event):
+        return False
+        #window.hide()
+        #return True
+
     def on_action_preferences_activate(self, action, param):
         dialog = Preferences(self)
         dialog.run()
@@ -188,11 +193,6 @@ class App:
                 style_provider,
                 Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
                 )
-
-    # StatusIcon
-    def on_main_window_deleted(self, window, event):
-        window.hide()
-        return True
 
     def init_status_icon(self):
         # set status_icon as class property, to keep its life after function

@@ -1,6 +1,7 @@
 
 from gi.repository import Gdk
 from gi.repository import GdkPixbuf
+from gi.repository import Gio
 from gi.repository import GLib
 from gi.repository import GObject
 from gi.repository import Gtk
@@ -9,6 +10,7 @@ import os
 import random
 import sqlite3
 import threading
+import time
 
 from kuwo import Config
 from kuwo import Net
@@ -90,36 +92,44 @@ class PlayList(Gtk.Box):
         self.cache_job = None
         self.cache_timeout = 0
 
+        #self.playlist_menu_model = Gio.Menu()
+        self.playlist_menu = Gtk.Menu()
+
         self.conn = sqlite3.connect(Config.SONG_DB)
         self.cursor = self.conn.cursor()
 
         box_left = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.pack_start(box_left, False, False, 0)
 
-        # disname, name, deletable
+        # disname, name/uuid, deletable/editable
         self.liststore_left = Gtk.ListStore(str, str, bool)
         self.treeview_left = Gtk.TreeView(model=self.liststore_left)
         self.treeview_left.set_headers_visible(False)
-        list_name = Gtk.CellRendererText()
-        col_name = Gtk.TreeViewColumn('List Name', list_name, text=0)
+        list_disname = Gtk.CellRendererText()
+        list_disname.connect('edited', self.on_list_disname_edited)
+        col_name = Gtk.TreeViewColumn('List Name', list_disname, 
+                text=0, editable=2)
         self.treeview_left.append_column(col_name)
         tree_sel = self.treeview_left.get_selection()
         tree_sel.connect('changed', self.on_tree_selection_left_changed)
         box_left.pack_start(self.treeview_left, True, True, 0)
 
         toolbar = Gtk.Toolbar()
-        # TODO, connect signals
-        toolbar.get_style_context().add_class(Gtk.STYLE_CLASS_INLINE_TOOLBAR)
+        toolbar.get_style_context().add_class(
+                Gtk.STYLE_CLASS_INLINE_TOOLBAR)
         toolbar.props.show_arrow = False
         toolbar.props.toolbar_style = Gtk.ToolbarStyle.ICONS
         toolbar.props.icon_size = 1
         add_btn = Gtk.ToolButton()
         add_btn.set_name('Add')
         add_btn.set_icon_name('list-add-symbolic')
+        add_btn.connect('clicked', self.on_add_playlist_button_clicked)
         toolbar.insert(add_btn, 0)
         remove_btn = Gtk.ToolButton()
         remove_btn.set_name('Remove')
         remove_btn.set_icon_name('list-remove-symbolic')
+        remove_btn.connect('clicked', 
+                self.on_remove_playlist_button_clicked)
         toolbar.insert(remove_btn, 1)
         export_btn = Gtk.ToolButton()
         export_btn.set_name('Export')
@@ -199,11 +209,13 @@ class PlayList(Gtk.Box):
 
         for playlist in playlists['_names_']:
             self.liststore_left.append(playlist)
-            list_name = playlist[1]
+            disname, list_name, editable = playlist
             if list_name == 'Cached':
                 songs = self.get_all_cached_songs_from_db()
             else:
                 songs = playlists[list_name]
+            if list_name not in ('Cached', 'Caching'):
+                self.append_menu_item_to_playlist_menu(disname, list_name)
             self.init_tab(list_name, songs)
 
     def init_tab(self, list_name, songs):
@@ -444,3 +456,80 @@ class PlayList(Gtk.Box):
                 return i
             i += 1
         return None
+
+
+    # left panel
+    def on_list_disname_edited(self, cell, path, new_name):
+        if len(new_name) == 0:
+            return
+        old_name = self.liststore_left[path][0]
+        self.liststore_left[path][0] = new_name
+        self.update_item_name_in_playlist_menu(old_name, new_name)
+
+    def on_add_playlist_button_clicked(self, button):
+        list_name = str(time.time())
+        disname = _('Playlist')
+        editable = True
+        _iter = self.liststore_left.append([disname, list_name, editable])
+        selection = self.treeview_left.get_selection()
+        selection.select_iter(_iter)
+        self.init_tab(list_name, [])
+        self.append_menu_item_to_playlist_menu(disname, list_name)
+
+    def on_remove_playlist_button_clicked(self, button):
+        selection = self.treeview_left.get_selection()
+        print('selction:', selection)
+        model, _iter = selection.get_selected()
+        if not _iter:
+            return
+        path = model.get_path(_iter)
+        index = path.get_indices()[0]
+        disname, list_name, editable = model[path]
+        if not editable:
+            return
+        self.notebook.remove_page(index)
+        model.remove(_iter)
+        self.remove_menu_item_from_playlist_menu(disname)
+
+    # other button can activate this function
+    def append_menu_item_to_playlist_menu(self, disname, list_name):
+        menu_item = Gtk.MenuItem(disname)
+        menu_item.connect('activate', self.on_menu_item_active)
+        menu_item.list_name = list_name
+        self.playlist_menu.append(menu_item)
+
+    def remove_menu_item_from_playlist_menu(self, disname):
+        item = self.get_item_from_playlist_menu(disname)
+        self.playlist_menu.remove(item)
+
+    def update_item_name_in_playlist_menu(self, old_name, new_name):
+        item = self.get_item_from_playlist_menu(old_name)
+        item.set_label(new_name)
+
+    def get_item_from_playlist_menu(self, disname):
+        menu = self.playlist_menu
+        items = menu.get_children()
+        for item in items:
+            if item.get_label() == disname:
+                return item
+
+    def on_menu_item_active(self, menu_item):
+        list_name = menu_item.list_name
+        songs = self.playlist_menu.songs
+        self.add_songs_to_playlist(songs, list_name)
+
+    def popup_playlist_menu(self, button, songs):
+        def set_pos(menu, user_data=None):
+            event = Gtk.get_current_event().button
+            alloc = button.get_allocation()
+            return (event.x, event.y + alloc.height, True)
+
+        menu = self.playlist_menu
+        menu.songs = songs
+        menu.show_all()
+        #menu.popup(None, None,
+        #        lambda menu, data: (event.get_root_coords()[0],
+        #            event.get_root_coords()[1], True),
+        #        None, 1, event.time)
+        menu.popup(None, None, None, None, 1, 
+                Gtk.get_current_event_time())

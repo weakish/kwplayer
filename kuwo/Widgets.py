@@ -84,6 +84,8 @@ class ControlBox(Gtk.Box):
         button_play.connect('clicked', self.on_button_play_clicked)
         self.pack_start(button_play, False, False, 0)
 
+        #button_add = Gtk.MenuButton(_('Add to Playlist'))
+        #button_add.set_menu_model(self.app.playlist.playlist_menu_model)
         button_add = Gtk.Button(_('Add to Playlist'))
         button_add.connect('clicked', self.on_button_add_clicked)
         self.pack_start(button_add, False, False, 0)
@@ -103,7 +105,7 @@ class ControlBox(Gtk.Box):
 
     def on_button_add_clicked(self, btn):
         songs = [song_row_to_dict(s) for s in self.liststore if s[0]]
-        self.app.playlist.add_songs_to_playlist(songs)
+        self.app.playlist.popup_playlist_menu(btn, songs)
 
     def on_button_cache_clicked(self, btn):
         songs = [song_row_to_dict(s) for s in self.liststore if s[0]]
