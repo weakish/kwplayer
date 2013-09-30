@@ -282,6 +282,7 @@ class Player(Gtk.Box):
     def start_player(self, load=False):
         self.play_button.set_icon_name('media-playback-pause-symbolic')
         self.playbin.set_state(Gst.State.PLAYING)
+        print('volume:', self.app.conf['volume'], self.volume.get_value())
         self.playbin.set_property('volume', self.app.conf['volume'])
         self.adj_timeout = GLib.timeout_add(250, self.sync_adjustment)
         if load:
@@ -329,9 +330,10 @@ class Player(Gtk.Box):
         return False
 
     def on_volume_value_changed(self, volume, value):
-        self.app.conf['volume'] = value
-        self.playbin.set_property('volume', value)
-
+        # reduce volume value because in 0~0.2 it is too sensitive
+        mod_value = value ** 3
+        self.app.conf['volume'] = mod_value
+        self.playbin.set_property('volume', mod_value)
 
     def update_player_info(self):
         def _update_pic(info, error=None):
