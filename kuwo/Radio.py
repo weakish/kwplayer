@@ -1,5 +1,6 @@
 
 
+from gi.repository import Gdk
 from gi.repository import GdkPixbuf
 from gi.repository import Gtk
 from gi.repository import Pango
@@ -138,6 +139,9 @@ class RadioItem(Gtk.EventBox):
             return
         song = radio['songs'][radio['curr_song']]
         self.label.set_label(Widgets.short_str(song['name'], length=12))
+        print('update label(), will call process_all_update()')
+        Gdk.Window.process_all_updates()
+        self.label.realize()
 
     def get_index(self):
         i = 0
@@ -195,11 +199,14 @@ class RadioItem(Gtk.EventBox):
         self.play_song()
 
     def on_button_next_clicked(self, btn):
+        print('on_button_next_clicked()')
         index = self.get_index()
         radio = self.playlists[index]
         self.playlists[index]['curr_song'] += 1
         if radio['curr_song'] >= len(radio['songs'])-1:
             self.load_more_songs(self.update_label)
+        self.update_label()
+        #Gdk.Window.process_all_updates()
 
     def on_button_favorite_clicked(self, btn):
         index = self.get_index()

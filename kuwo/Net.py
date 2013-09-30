@@ -2,6 +2,7 @@
 import copy
 from gi.repository import GdkPixbuf
 from gi.repository import GObject
+from gi.repository import Gtk
 import hashlib
 import json
 import leveldb
@@ -739,6 +740,10 @@ class AsyncSong(GObject.GObject):
     def __init__(self, app):
         super().__init__()
         self.app = app
+        self.force_quit = False
+
+    def destroy(self):
+        self.force_quit = True
 
     def get_song(self, song):
         '''
@@ -755,25 +760,32 @@ class AsyncSong(GObject.GObject):
             can_play_emited = False
             content_length = int(req.headers.get('Content-Length'))
             print('size of file: ', round(content_length / 2**20, 2), 'M')
-            with open(song_path, 'wb') as fh:
-                while True:
-                    chunk = req.read(CHUNK)
-                    received_size += len(chunk)
-                    percent = int(received_size/content_length * 100)
-                    self.emit('chunk-received', percent)
-                    print('percent:', percent)
-                    # this signal only emit once.
-                    if (received_size > CHUNK_TO_PLAY or percent > 40) \
-                            and not can_play_emited:
-                        print('song can be played now')
-                        can_play_emited = True
-                        self.emit('can-play', song_path)
-                    if not chunk:
-                        break
-                    fh.write(chunk)
-                print('song downloaded')
-                self.emit('downloaded', song_path)
-                Utils.iconvtag(song_path, song)
+            fh = open(song_path, 'wb')
+
+            while True:
+                if self.force_quit:
+                    del req
+                    fh.close()
+                    os.remove(song_path)
+                    return
+                chunk = req.read(CHUNK)
+                received_size += len(chunk)
+                percent = int(received_size/content_length * 100)
+                self.emit('chunk-received', percent)
+                print('percent:', percent)
+                # this signal only emit once.
+                if (received_size > CHUNK_TO_PLAY or percent > 40) \
+                        and not can_play_emited:
+                    print('song can be played now')
+                    can_play_emited = True
+                    self.emit('can-play', song_path)
+                if not chunk:
+                    break
+                fh.write(chunk)
+            fh.close()
+            print('song downloaded')
+            self.emit('downloaded', song_path)
+            Utils.iconvtag(song_path, song)
 
         song_link = get_song_link(song['rid'], self.app.conf['use-ape'])
         if song_link is None:
@@ -783,6 +795,7 @@ class AsyncSong(GObject.GObject):
 
         song_path = os.path.join(self.app.conf['song-dir'], 
                 os.path.split(song_link)[1])
+        print('Net.AsyncSong, song_path:', song_path)
         if os.path.exists(song_path): 
             print('local song exists, signals will be emited')
             self.emit('can-play', song_path)
@@ -820,6 +833,10 @@ class AsyncMV(GObject.GObject):
     def __init__(self, app):
         super().__init__()
         self.app = app
+        self.force_quit = False
+
+    def destroy(self):
+        self.force_quit = True
 
     def get_mv(self, mv_link):
         mv_path = os.path.join(self.app.conf['mv-dir'],
@@ -837,26 +854,34 @@ class AsyncMV(GObject.GObject):
             can_play_emited = False
             content_length = int(req.headers.get('Content-Length'))
             print('size of file: ', round(content_length / 2**20, 2), 'M')
-            with open(mv_path, 'wb') as fh:
-                while True:
-                    chunk = req.read(CHUNK)
-                    received_size += len(chunk)
-                    percent = int(received_size/content_length * 100)
-                    #print('percent:', percent)
-                    if (received_size > CHUNK_MV_TO_PLAY or percent > 20) \
-                            and not can_play_emited:
-                        can_play_emited = True
-                        print('mv can play now')
-                        self.emit('can-play', mv_path)
-                    if not chunk:
-                        break
-                    fh.write(chunk)
-                print('mv downloaded')
-                self.emit('downloaded', mv_path)
+            fh = open(mv_path, 'wb')
+            while True:
+                if self.force_quit:
+                    del req
+                    fh.close()
+                    os.remove(mv_path)
+                    return
+                chunk = req.read(CHUNK)
+                received_size += len(chunk)
+                percent = int(received_size/content_length * 100)
+                print('percent:', percent)
+                if (received_size > CHUNK_MV_TO_PLAY or percent > 20) \
+                        and not can_play_emited:
+                    can_play_emited = True
+                    print('mv can play now')
+                    self.emit('can-play', mv_path)
+                if not chunk:
+                    break
+                fh.write(chunk)
+            fh.close()
+            print('mv downloaded')
+            self.emit('downloaded', mv_path)
+
         retried = 0
         while retried < MAXTIMES:
             try:
                 req = request.urlopen(mv_link)
+                self.req = req
                 _wrap(req)
                 return mv_path
             except Exception as e:

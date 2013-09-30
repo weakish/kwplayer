@@ -93,6 +93,8 @@ class PlayList(Gtk.Box):
         self.cache_job = None
         self.cache_timeout = 0
 
+        self.cache_next_async_song = None
+
         #self.playlist_menu_model = Gio.Menu()
         self.playlist_menu = Gtk.Menu()
 
@@ -152,6 +154,10 @@ class PlayList(Gtk.Box):
         self.conn.commit()
         self.conn.close()
         self.dump_playlists()
+        if self.cache_job:
+            self.cache_job.destroy()
+        if self.cache_next_async_song:
+            self.cache_next_async_song.destroy()
 
     def after_init(self):
         pass
@@ -365,8 +371,8 @@ class PlayList(Gtk.Box):
         path += 1
         song = Widgets.song_row_to_dict(liststore[path], start=0)
         print('next song to cache:', song)
-        parse_song = Net.AsyncSong(self.app)
-        parse_song.get_song(song)
+        self.cache_next_async_song = Net.AsyncSong(self.app)
+        self.cache_next_async_song.get_song(song)
 
     def get_prev_song(self, repeat=False, shuffle=False):
         print('get prev song()')

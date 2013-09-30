@@ -49,6 +49,10 @@ class Player(Gtk.Box):
         self.curr_song = None
         self.curr_mv_link = None
 
+        # use this to keep Net.AsyncSong and Net.AsyncMV object
+        self.async_song = None
+        self.async_mv = None
+
         self.playbin = Gst.ElementFactory.make('playbin', None)
         self.bus = self.playbin.get_bus()
         self.bus.add_signal_watch()
@@ -153,8 +157,13 @@ class Player(Gtk.Box):
     def after_init(self):
         pass
 
-    def on_destroy(self):
+    def do_destroy(self):
+        print('Song.do_destroy()')
         self.playbin.set_state(Gst.State.NULL)
+        if self.async_song:
+            self.async_song.destroy()
+        if self.async_mv:
+            self.async_mv.destroy()
 
     def load(self, song):
         def _on_chunk_received(widget, percent):
@@ -173,11 +182,11 @@ class Player(Gtk.Box):
         self.play_type = PlayType.SONG
         self.curr_song = song
         self.pause_player(stop=True)
-        parse_song = Net.AsyncSong(self.app)
-        parse_song.connect('chunk-received', _on_chunk_received)
-        parse_song.connect('can-play', _on_song_can_play)
-        parse_song.connect('downloaded', _on_song_downloaded)
-        parse_song.get_song(song)
+        self.async_song = Net.AsyncSong(self.app)
+        self.async_song.connect('chunk-received', _on_chunk_received)
+        self.async_song.connect('can-play', _on_song_can_play)
+        self.async_song.connect('downloaded', _on_song_downloaded)
+        self.async_song.get_song(song)
 
     def _load_song(self, song_path):
         print('Player._load_song()', song_path)
@@ -410,10 +419,10 @@ class Player(Gtk.Box):
         self.curr_radio_item = radio_item
         self.curr_song = song
         self.scale.set_sensitive(False)
-        parse_song = Net.AsyncSong(self.app)
-        parse_song.connect('can-play', _on_radio_can_play)
-        parse_song.connect('downloaded', _on_radio_downloaded)
-        parse_song.get_song(song)
+        self.async_song = Net.AsyncSong(self.app)
+        self.async_song.connect('can-play', _on_radio_can_play)
+        self.async_song.connect('downloaded', _on_radio_downloaded)
+        self.async_song.get_song(song)
 
 
     # MV part
@@ -466,10 +475,10 @@ class Player(Gtk.Box):
                 return
             self.curr_mv_link = mv_link
             if self.play_type == PlayType.MV:
-                parse_mv = Net.AsyncMV(self.app)
-                parse_mv.connect('can-play', self.on_mv_can_play)
-                parse_mv.connect('downloaded', self.on_mv_downloaded)
-                parse_mv.get_mv(mv_link)
+                self.async_mv = Net.AsyncMV(self.app)
+                self.async_mv.connect('can-play', self.on_mv_can_play)
+                self.async_mv.connect('downloaded', self.on_mv_downloaded)
+                self.async_mv.get_mv(mv_link)
 
         Net.async_call(Net.get_song_link, _update_mv_link,
                 # rid, use-mkv, use-mv
