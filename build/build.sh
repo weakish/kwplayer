@@ -14,6 +14,8 @@ mkdir -vp fakeroot/usr/bin fakeroot/DEBIAN $PYLIB
 
 cp -v ../kuwo.py fakeroot/usr/bin/kwplayer
 cp -rvf ../kuwo $PYLIB/
-rm -rvf $PYLIB/$APP/__pycache__
+rm -rvf $PYLIB/kuwo/__pycache__
+cp -rvf ../mutagenx $PYLIB/
+rm -rvf $PYLIB/mutagenx/__pycache__
 cp -rvf ../share fakeroot/usr/share
 cp -vf control fakeroot/DEBIAN/

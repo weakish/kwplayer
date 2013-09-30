@@ -554,6 +554,13 @@ class PlayList(Gtk.Box):
         export_btn.connect('clicked', do_export)
         export_box.pack_start(export_btn, False, False, 0)
 
+        infobar = Gtk.InfoBar()
+        infobar.props.margin_top = 20
+        box.pack_start(infobar, False, True, 0)
+        info_content = infobar.get_content_area()
+        info_label = Gtk.Label(_('Only cached songs will be exported'))
+        info_content.pack_start(info_label, False, False, 0)
+
         box.show_all()
         dialog.run()
         dialog.destroy()

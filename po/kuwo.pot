@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-09-29 20:08+0800\n"
+"POT-Creation-Date: 2013-09-30 19:17+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,42 +17,46 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ../kuwo/App.py:139 ../kuwo/Preferences.py:156
+#: ../kuwo/App.py:125
+msgid "A simple music player for Linux Desktop"
+msgstr ""
+
+#: ../kuwo/App.py:144 ../kuwo/Preferences.py:148
 msgid "Lyrics"
 msgstr ""
 
-#: ../kuwo/App.py:143
+#: ../kuwo/App.py:148 ../kuwo/PlayList.py:477
 msgid "Playlist"
 msgstr ""
 
-#: ../kuwo/App.py:147
+#: ../kuwo/App.py:152
 msgid "Search"
 msgstr ""
 
-#: ../kuwo/App.py:151
+#: ../kuwo/App.py:156
 msgid "Top List"
 msgstr ""
 
-#: ../kuwo/App.py:155
+#: ../kuwo/App.py:160
 msgid "Radio"
 msgstr ""
 
-#: ../kuwo/App.py:159 ../kuwo/Artists.py:130 ../kuwo/Artists.py:167
+#: ../kuwo/App.py:164 ../kuwo/Artists.py:130 ../kuwo/Artists.py:167
 #: ../kuwo/MV.py:20
 msgid "MV"
 msgstr ""
 
-#: ../kuwo/App.py:163 ../kuwo/Artists.py:47 ../kuwo/Artists.py:80
+#: ../kuwo/App.py:168 ../kuwo/Artists.py:47 ../kuwo/Artists.py:80
 #: ../kuwo/Search.py:37 ../kuwo/Search.py:69 ../kuwo/Search.py:156
 #: ../kuwo/Search.py:158 ../kuwo/Search.py:203
 msgid "Artists"
 msgstr ""
 
-#: ../kuwo/App.py:167
+#: ../kuwo/App.py:172
 msgid "Categories"
 msgstr ""
 
-#: ../kuwo/App.py:171 ../kuwo/Themes.py:20
+#: ../kuwo/App.py:176 ../kuwo/Themes.py:20
 msgid "Themes"
 msgstr ""
 
@@ -155,43 +159,55 @@ msgstr ""
 msgid "KW Player"
 msgstr ""
 
-#: ../kuwo/Lrc.py:58
-msgid "Lrc loading..."
-msgstr ""
-
-#: ../kuwo/Lrc.py:85
+#: ../kuwo/Lrc.py:86
 msgid "No lrc available"
 msgstr ""
 
-#: ../kuwo/PlayList.py:185
+#: ../kuwo/PlayList.py:198
 msgid "Cached"
 msgstr ""
 
-#: ../kuwo/PlayList.py:186 ../kuwo/PlayList.py:221
+#: ../kuwo/PlayList.py:199 ../kuwo/PlayList.py:236
 msgid "Caching"
 msgstr ""
 
-#: ../kuwo/PlayList.py:187
+#: ../kuwo/PlayList.py:200
 msgid "Default"
 msgstr ""
 
-#: ../kuwo/PlayList.py:188 ../kuwo/Radio.py:69
+#: ../kuwo/PlayList.py:201 ../kuwo/Radio.py:69
 msgid "Favorite"
 msgstr ""
 
-#: ../kuwo/PlayList.py:217 ../kuwo/PlayList.py:302
+#: ../kuwo/PlayList.py:232 ../kuwo/PlayList.py:317
 msgid "Start Caching"
 msgstr ""
 
-#: ../kuwo/PlayList.py:295
+#: ../kuwo/PlayList.py:310
 msgid "Stop Caching"
+msgstr ""
+
+#: ../kuwo/PlayList.py:533
+msgid "Export Songs"
+msgstr ""
+
+#: ../kuwo/PlayList.py:540
+msgid "Choose export folder"
+msgstr ""
+
+#: ../kuwo/PlayList.py:553
+msgid "Export"
+msgstr ""
+
+#: ../kuwo/PlayList.py:561
+msgid "Only cached songs will be exported"
 msgstr ""
 
 #: ../kuwo/Player.py:78
 msgid "Previous"
 msgstr ""
 
-#: ../kuwo/Player.py:84 ../kuwo/Radio.py:57 ../kuwo/Widgets.py:83
+#: ../kuwo/Player.py:84 ../kuwo/Radio.py:57 ../kuwo/Widgets.py:132
 msgid "Play"
 msgstr ""
 
@@ -223,71 +239,71 @@ msgstr ""
 msgid "Unknown"
 msgstr ""
 
-#: ../kuwo/Preferences.py:70
+#: ../kuwo/Preferences.py:62 ../kuwo/Widgets.py:89
 msgid "Choose a Folder"
 msgstr ""
 
-#: ../kuwo/Preferences.py:112 menus.ui.h:1
+#: ../kuwo/Preferences.py:104 menus.ui.h:1
 msgid "Preferences"
 msgstr ""
 
-#: ../kuwo/Preferences.py:125
+#: ../kuwo/Preferences.py:117
 msgid "Format"
 msgstr ""
 
-#: ../kuwo/Preferences.py:127
+#: ../kuwo/Preferences.py:119
 msgid "Prefered Audio Format"
 msgstr ""
 
-#: ../kuwo/Preferences.py:129
+#: ../kuwo/Preferences.py:121
 msgid "MP3 (faster)"
 msgstr ""
 
-#: ../kuwo/Preferences.py:133
+#: ../kuwo/Preferences.py:125
 msgid "APE (better)"
 msgstr ""
 
-#: ../kuwo/Preferences.py:140
+#: ../kuwo/Preferences.py:132
 msgid "Prefered Video Format"
 msgstr ""
 
-#: ../kuwo/Preferences.py:143
+#: ../kuwo/Preferences.py:135
 msgid "MP4 (faster)"
 msgstr ""
 
-#: ../kuwo/Preferences.py:147
+#: ../kuwo/Preferences.py:139
 msgid "MKV (better)"
 msgstr ""
 
-#: ../kuwo/Preferences.py:162
+#: ../kuwo/Preferences.py:154
 msgid "Lyric Word Background color"
 msgstr ""
 
-#: ../kuwo/Preferences.py:174 ../kuwo/Preferences.py:194
+#: ../kuwo/Preferences.py:166 ../kuwo/Preferences.py:186
 msgid "Choose color for Lyrics background"
 msgstr ""
 
-#: ../kuwo/Preferences.py:182
+#: ../kuwo/Preferences.py:174
 msgid "Lyric Image Background color"
 msgstr ""
 
-#: ../kuwo/Preferences.py:200
+#: ../kuwo/Preferences.py:192
 msgid "Folders"
 msgstr ""
 
-#: ../kuwo/Preferences.py:202
+#: ../kuwo/Preferences.py:194
 msgid "Place to store sogns"
 msgstr ""
 
-#: ../kuwo/Preferences.py:205
+#: ../kuwo/Preferences.py:197
 msgid "Moving cached songs to new folder"
 msgstr ""
 
-#: ../kuwo/Preferences.py:208
+#: ../kuwo/Preferences.py:200
 msgid "Place to store MVs"
 msgstr ""
 
-#: ../kuwo/Preferences.py:212
+#: ../kuwo/Preferences.py:204
 msgid "Moving cached MVs to new folder"
 msgstr ""
 
@@ -311,15 +327,15 @@ msgstr ""
 msgid "TopList"
 msgstr ""
 
-#: ../kuwo/Widgets.py:77
+#: ../kuwo/Widgets.py:126
 msgid "Select All"
 msgstr ""
 
-#: ../kuwo/Widgets.py:87
+#: ../kuwo/Widgets.py:138
 msgid "Add to Playlist"
 msgstr ""
 
-#: ../kuwo/Widgets.py:91
+#: ../kuwo/Widgets.py:142
 msgid "Cache"
 msgstr ""
 

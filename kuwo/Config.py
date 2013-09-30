@@ -19,8 +19,8 @@ locale.textdomain('kuwo')
 _ = gettext.gettext
 
 APPNAME = _('KW Player')
-VERSION = '1.1'
-HOMEPAGE = 'https://github.com'
+VERSION = '1.2'
+HOMEPAGE = 'https://github.com/LiuLang/kwplayer'
 AUTHORS = ['LiuLang <gsushzhsosgsu@gmail.com>',]
 
 _UI_FILES = ('menus.ui', )
