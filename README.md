@@ -6,9 +6,9 @@ kwplayer是linux桌面下的网络音乐播放工具, 它使用了kuwo.cn的音�
 安装
 ====
 可以直接运行kuwo.py, 而不需要安装. 但是仍然需要手动安装一些软件包, 它们是:
-python3-gi  -  gkt3的python3绑定;
-python3-leveldb  -  leveldb的python3绑定;
-gstreamer1.0-libav  -  gstreamer的编码/解码库.
+* python3-gi  -  gkt3的python3绑定;
+* python3-leveldb  -  leveldb的python3绑定;
+* gstreamer1.0-libav  -  gstreamer的编码/解码库.
 
 
 对于debian系列的发行版, 也可以直接运行build/下面的脚本, 生成deb包.
@@ -22,10 +22,10 @@ Q&A
 
 TODO
 ====
-优化歌词的显示效果
- 自动修复mp3的tag编码
-支持打开本地的多媒体资源(已放弃)
-国际化(i18n)
+* 优化歌词的显示效果
+* 自动修复mp3的tag编码 (已完成)
+* 支持打开本地的多媒体资源(已放弃)
+* 国际化(i18n) (已完成)
 
 
 截图
