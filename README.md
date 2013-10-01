@@ -10,8 +10,8 @@ kwplayer是linux桌面下的网络音乐播放工具, 它使用了kuwo.cn的音�
 * python3-gi  -  gkt3的python3绑定;
 * python3-cairo -  cairo的python3绑定(用于实现显示特效);
 * python3-gi-cairo - 在GObject中用到的cairo的python3绑定;
-* python3-leveldb  -  leveldb的python3绑定(用于缓存数据);
 * gstreamer1.0-libav  -  gstreamer的编码/解码库.
+* python3-leveldb  -  leveldb的python3绑定(用于缓存数据, 可选);
 
 对于debian系列的发行版, 也可以直接运行build/下面的脚本, 生成deb包, 其中:
 
