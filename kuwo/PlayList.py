@@ -159,9 +159,6 @@ class PlayList(Gtk.Box):
         if self.cache_next_async_song:
             self.cache_next_async_song.destroy()
 
-    def after_init(self):
-        pass
-
     def first(self):
         pass
 

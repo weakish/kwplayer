@@ -41,6 +41,7 @@ def lrc_parser(lrc_txt):
             lrc_obj.append((tag, content))
     return sorted(lrc_obj)
 
+
 class Lrc(Gtk.Box):
     def __init__(self, app):
         super().__init__(orientation=Gtk.Orientation.VERTICAL)
@@ -55,11 +56,11 @@ class Lrc(Gtk.Box):
         self.pack_start(self.lrc_window, True, True, 0)
 
         self.lrc_buf = Gtk.TextBuffer()
-        #self.lrc_buf.set_text(_('Lrc loading...'))
         self.lrc_buf.set_text('')
         self.tag_centered = self.lrc_buf.create_tag('blue_fg', 
                 foreground='blue')
         self.lrc_tv = Gtk.TextView(buffer=self.lrc_buf)
+        self.lrc_tv.get_style_context().add_class('lrc_tv')
         self.lrc_tv.props.editable = False
         self.lrc_tv.props.cursor_visible = False
         self.lrc_tv.props.justification = Gtk.Justification.CENTER
@@ -89,13 +90,14 @@ class Lrc(Gtk.Box):
         self.lrc_obj = lrc_parser(lrc_txt)
         self.lrc_window.get_vadjustment().set_value(0)
         self.lrc_content = [l[1] for l in self.lrc_obj]
-        self.lrc_buf.set_text('\n'.join(self.lrc_content))
-        self.lrc_buf.remove_all_tags(self.lrc_buf.get_start_iter(),
+
+        self.lrc_buf.remove_all_tags(
+                self.lrc_buf.get_start_iter(),
                 self.lrc_buf.get_end_iter())
+        self.lrc_buf.set_text('\n'.join(self.lrc_content))
         self.sync_lrc(0)
 
     def sync_lrc(self, timestamp):
-        # FIXME: TODO:
         if self.lrc_obj is None:
             return
         line_num = self.old_line + 1
@@ -123,6 +125,8 @@ class Lrc(Gtk.Box):
             self.lrc_background = None
 
     def on_lrc_tv_draw(self, textview, cr):
+        return
+        # TODO, remove image rerenderer to speed up sync
         tv_width = self.lrc_tv.get_allocated_width()
         tv_height = self.lrc_tv.get_allocated_height()
 

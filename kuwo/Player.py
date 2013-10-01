@@ -157,7 +157,7 @@ class Player(Gtk.Box):
         pass
 
     def do_destroy(self):
-        print('Song.do_destroy()')
+        print('Player.do_destroy()')
         self.playbin.set_state(Gst.State.NULL)
         if self.async_song:
             self.async_song.destroy()

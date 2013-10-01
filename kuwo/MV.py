@@ -15,6 +15,11 @@ class MV(Gtk.Box):
         self.app = app
         self.first_show = False
 
+    def first(self):
+        if self.first_show:
+            return
+        self.first_show = True
+        app = self.app
         self.buttonbox = Gtk.Box()
         self.pack_start(self.buttonbox, False, False, 0)
         button_home = Gtk.Button(_('MV'))
@@ -43,14 +48,10 @@ class MV(Gtk.Box):
                 self.on_iconview_songs_item_activated)
         self.scrolled_songs.add(iconview_songs)
 
-    def after_init(self):
+        self.show_all()
         self.buttonbox.hide()
         self.scrolled_songs.hide()
 
-    def first(self):
-        if self.first_show:
-            return
-        self.first_show = True
         nid = 3
         nodes_wrap = Net.get_index_nodes(nid)
         if not nodes_wrap:

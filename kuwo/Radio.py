@@ -226,6 +226,12 @@ class Radio(Gtk.Box):
         self.first_show = False
         self.load_playlists()
 
+    def first(self):
+        if self.first_show:
+            return
+        self.first_show = True
+        app = self.app
+
         # left side panel
         scrolled_myradio = Gtk.ScrolledWindow()
         scrolled_myradio.props.hscrollbar_policy = Gtk.PolicyType.NEVER
@@ -247,13 +253,8 @@ class Radio(Gtk.Box):
                 self.on_iconview_radios_item_activated)
         self.scrolled_radios.add(iconview_radios)
 
-    def after_init(self):
-        pass
+        self.show_all()
 
-    def first(self):
-        if self.first_show:
-            return
-        self.first_show = True
         nid = 8
         page = 0
         radios, total_page = Net.get_nodes(nid, page)

@@ -15,6 +15,12 @@ class TopCategories(Gtk.Box):
         self.app = app
         self.first_show = False
 
+    def first(self):
+        if self.first_show:
+            return
+        self.first_show = True
+        app = self.app
+
         self.buttonbox = Gtk.Box()
         self.pack_start(self.buttonbox, False, False, 0)
 
@@ -71,16 +77,11 @@ class TopCategories(Gtk.Box):
         treeview_songs = Widgets.TreeViewSongs(self.liststore_songs, app)
         self.scrolled_songs.add(treeview_songs)
 
-    def after_init(self):
+        self.show_all()
         self.buttonbox.hide()
         self.scrolled_sub1.hide()
         self.scrolled_sub2.hide()
         self.scrolled_songs.hide()
-
-    def first(self):
-        if self.first_show:
-            return
-        self.first_show = True
 
         nid = 5
         page = 0

@@ -9,6 +9,22 @@ from kuwo import Widgets
 
 _ = Config._
 
+
+class InfoLabel(Gtk.Label):
+    def __init__(self, grid, pref, left, top):
+        super().__init__()
+        self.props.xalign = 0
+        self.props.use_markup = True
+        grid.attach(self, left, top, 1, 1)
+        self.pref = pref
+
+    def set(self, info, key):
+        if info and key in info:
+            self.set_label('<b>{0} :</b> {1}'.format(self.pref, info[key]))
+        else:
+            self.set_label('<b>{0} :</b>'.format(self.pref))
+
+
 class ArtistButton(Gtk.RadioButton):
     def __init__(self, parent, label, group, tab_index):
         super().__init__(label=label)
@@ -41,6 +57,11 @@ class Artists(Gtk.Box):
         self.app = app
         self.first_show = False
 
+    def first(self):
+        if self.first_show:
+            return
+        self.first_show = True
+        app = self.app
         self.buttonbox = Gtk.Box()
         self.pack_start(self.buttonbox, False, False, 0)
 
@@ -189,14 +210,57 @@ class Artists(Gtk.Box):
 
         # Info tab for artist (tab 4)
         artist_info_tab = Gtk.ScrolledWindow()
+        artist_info_tab.props.margin_left = 20
+        artist_info_tab.props.margin_top = 5
         self.artist_notebook.append_page(artist_info_tab,
                 Gtk.Label(_('Info')))
-        self.artist_info_textbuffer = Gtk.TextBuffer()
-        artist_info_textview = Gtk.TextView()
-        artist_info_textview.props.editable = False
-        artist_info_textview.set_buffer(self.artist_info_textbuffer)
-        artist_info_tab.add(artist_info_textview)
+        artist_info_box = Gtk.Box(spacing=10, 
+                orientation=Gtk.Orientation.VERTICAL)
+        artist_info_box.props.margin_right = 10
+        artist_info_box.props.margin_bottom = 10
+        artist_info_tab.add(artist_info_box)
 
+        artist_info_hbox = Gtk.Box(spacing=20)
+        artist_info_box.pack_start(artist_info_hbox, False, False, 0)
+
+        self.artist_info_pic = Gtk.Image()
+        self.artist_info_pic.set_from_pixbuf(app.theme['anonymous'])
+        self.artist_info_pic.props.xalign = 0
+        self.artist_info_pic.props.yalign = 0
+        artist_info_hbox.pack_start(self.artist_info_pic, False, False, 0)
+        artist_info_grid = Gtk.Grid()
+        artist_info_grid.props.row_spacing = 10
+        artist_info_grid.props.column_spacing = 30
+        self.artist_info_name = InfoLabel(artist_info_grid,
+                _('Name'), 0, 0)
+        self.artist_info_birthday = InfoLabel(artist_info_grid, 
+                _('Birthday'), 0, 1)
+        self.artist_info_birthplace = InfoLabel(artist_info_grid,
+                _('Birthplace'), 1, 1)
+        self.artist_info_height = InfoLabel(artist_info_grid,
+                _('Height'), 0, 2)
+        self.artist_info_weight = InfoLabel(artist_info_grid,
+                _('Weight'), 1, 2)
+        self.artist_info_country = InfoLabel(artist_info_grid,
+                _('Country'), 0, 3)
+        self.artist_info_language = InfoLabel(artist_info_grid,
+                _('Language'), 1, 3)
+        self.artist_info_gender = InfoLabel(artist_info_grid,
+                _('Gender'), 0, 4)
+        self.artist_info_constellation = InfoLabel(artist_info_grid,
+                _('Constellation'), 1, 4)
+        artist_info_hbox.pack_start(artist_info_grid, False, False, 0)
+
+        artist_info_textview = Gtk.TextView()
+        self.artist_info_textbuffer = Gtk.TextBuffer()
+        artist_info_textview.props.editable = False
+        artist_info_textview.props.cursor_visible = False
+        artist_info_textview.props.wrap_mode = Gtk.WrapMode.CHAR
+        artist_info_textview.set_buffer(self.artist_info_textbuffer)
+        artist_info_box.pack_start(artist_info_textview, True, True, 0)
+
+        self.show_all()
+        self.buttonbox.hide()
 
         # Album tab (tab 2)
         album_songs_tab = Gtk.ScrolledWindow()
@@ -205,13 +269,6 @@ class Artists(Gtk.Box):
                 self.album_songs_liststore, app)
         album_songs_tab.add(album_songs_treeview)
 
-    def after_init(self):
-        self.buttonbox.hide()
-
-    def first(self):
-        if self.first_show:
-            return
-        self.first_show = True
         prefs = ((_('All'), ''),
                 ('A', 'a'), ('B', 'b'), ('C', 'c'), ('D', 'd'),
                 ('E', 'e'), ('F', 'f'), ('G', 'g'), ('H', 'h'), ('I', 'i'),
@@ -451,10 +508,23 @@ class Artists(Gtk.Box):
 
     def append_artist_info(self):
         def _append_artist_info(info, error=None):
-            if info is None:
-                return
-            # TODO, FIXME
-            self.artist_info_textbuffer.set_text(info['info'])
+            print('info:', info)
+            if info and info['pic'] and len(info['pic']) > 0:
+                self.artist_info_pic.set_from_file(info['pic'])
+            self.artist_info_name.set(info, 'name')
+            self.artist_info_birthday.set(info, 'birthday')
+            self.artist_info_birthplace.set(info, 'birthplace')
+            self.artist_info_height.set(info, 'tall')
+            self.artist_info_weight.set(info, 'weight',)
+            self.artist_info_country.set(info, 'country')
+            self.artist_info_language.set(info, 'language')
+            self.artist_info_gender.set(info, 'gender',)
+            self.artist_info_constellation.set(info, 'constellation')
+            if info and 'info' in info:
+                self.artist_info_textbuffer.set_text(
+                        Widgets.tooltip(info['info']))
+            else:
+                self.artist_info_textbuffer.set_text('')
 
         Net.async_call(Net.get_artist_info, _append_artist_info,
                 self.curr_artist_id)

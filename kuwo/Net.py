@@ -237,16 +237,18 @@ def get_artists(catid, page, prefix):
 def update_toplist_node_logo(liststore, path, col, url):
     update_liststore_image(liststore, path, col, url)
 
-def update_artist_logo(liststore, path, col, logo_id):
-    if len(logo_id) < 5:
+def get_artist_pic_url(pic_path):
+    if len(pic_path) < 5:
+        return None
+    if pic_path[:2] in ('55', '90',):
+        pic_path = '100/' + pic_path[2:]
+    url = ''.join([IMG_CDN, 'star/starheads/', pic_path, ])
+    return url
+
+def update_artist_logo(liststore, path, col, pic_path):
+    url = get_artist_pic_url(pic_path)
+    if url is None:
         return
-    if logo_id[:2] in ('55', '90',):
-        logo_id = '100/' + logo_id[2:]
-    url = ''.join([
-        IMG_CDN,
-        'star/starheads/',
-        logo_id,
-        ])
     update_liststore_image(liststore, path, col, url)
 
 def get_artist_info(artistid, artist=None):
@@ -266,6 +268,7 @@ def get_artist_info(artistid, artist=None):
             'stype=artistinfo&artistid=', 
             str(artistid),
             ])
+    print('Net.get_artist_info, url:', url)
     req_content = urlopen(url)
     if req_content is None:
         return None
@@ -276,10 +279,11 @@ def get_artist_info(artistid, artist=None):
         return None
     # set logo size to 100x100
     pic_path = info['pic']
-    if pic_path[:2] in ('55', '90',):
-        pic_path = '100/' + pic_path[2:]
-    url = ''.join([IMG_CDN, 'star/starheads/', pic_path, ])
-    info['pic'] = get_image(url)
+    url = get_artist_pic_url(pic_path)
+    if url:
+        info['pic'] = get_image(url)
+    else:
+        info['pic'] = None
     return info
 
 def get_artist_songs(artist, page):

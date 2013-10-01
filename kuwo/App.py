@@ -84,15 +84,8 @@ class App:
         self.init_status_icon()
 
         # make some changes after main window is shown.
-        self.artists.after_init()
         self.lrc.after_init()
-        self.mv.after_init()
         self.player.after_init()
-        self.radio.after_init()
-        self.search.after_init()
-        self.themes.after_init()
-        self.topcategories.after_init()
-        self.toplist.after_init()
 
     def run(self, argv):
         self.app.run(argv)
