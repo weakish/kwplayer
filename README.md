@@ -11,7 +11,12 @@ kwplayer是linux桌面下的网络音乐播放工具, 它使用了kuwo.cn的音�
 * gstreamer1.0-libav  -  gstreamer的编码/解码库.
 
 
-对于debian系列的发行版, 也可以直接运行build/下面的脚本, 生成deb包.
+对于debian系列的发行版, 也可以直接运行build/下面的脚本, 生成deb包, 其中:
+
+* build.sh 用于创建fakeroot目录, 需要普通用户权限;
+* generate_deb.sh 用于创建deb包, 由于使用了dpkg命令来打包, 这个脚本需要root权限
+
+最后, 生成的deb包可以用dpkg命令来安装: `# dpkg -i kwplayer.deb`
 
 Q&A
 ===
@@ -28,15 +33,20 @@ Q&A
 TODO
 ====
 * 优化歌词的显示效果
+* 将播放列表中的音乐导出到其它目录, 也可以导出到手机中(已完成)
 * 自动修复mp3的tag编码 (已完成)
-* 支持打开本地的多媒体资源(已放弃)
-* 国际化(i18n) (已完成)
+* 支持打开/管理本地的多媒体资源(已放弃)
+* 使用gettext国际化(i18n) (已完成)
+* 加入简体中文(zh_CN.po) (已完成)
+* 加入繁体中文(zh_TW.po)
+* 全屏播放(正在修复其中的一个bug)
+* 实时的简体与繁体的转换, 对于使用繁体中文显示的朋友来说会非常方便, 因为显面中的简体中文会自动转为繁体来显示, 并且也可以使用繁体来搜索(正在设计)
 
 
 截图
 ====
 播放列表:
-<img src="screenshot/playlist.jpg?raw=true" title="播放列表" />
+<img src="screenshot/playlist.png?raw=true" title="播放列表" />
 
 电台:
 <img src="screenshot/radio.png?raw=true" title="电台" />
@@ -46,6 +56,9 @@ MV:
 
 搜索:
 <img src="screenshot/search.png?raw=true" title="搜索" />
+
+选择音乐格式:
+<img src="screenshot/format.png?raw=true" title="选择音乐格式" />
 
 其它的:
 <img src="screenshot/others.png?raw=true" title="其他的" />
