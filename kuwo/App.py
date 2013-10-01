@@ -108,9 +108,8 @@ class App:
         self.conf['window-size'] = window.get_size()
 
     def on_main_window_deleted(self, window, event):
-        return False
-        #window.hide()
-        #return True
+        window.hide()
+        return True
 
     def on_action_preferences_activate(self, action, param):
         dialog = Preferences(self)

@@ -289,6 +289,10 @@ class PlayList(Gtk.Box):
         for song in songs:
             self.add_song_to_playlist(song, list_name=list_name)
 
+    def add_song_to_favorite(self, song):
+        _list_name = 'Favorite'
+        self.add_song_to_playlist(song, list_name=_list_name)
+
     def cache_song(self, song):
         rid = song['rid']
         # first, check if this song exists in cached_db

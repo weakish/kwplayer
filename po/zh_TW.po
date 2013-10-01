@@ -1,45 +1,343 @@
 # Chinese translations for PACKAGE package.
-# Copyright (C) 2013 THE PACKAGE'S COPYRIGHT HOLDER
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# Allen <allen@mydebian>, 2013.
+# LiuLang<gsushzhsosgsu@gmail.com>, 2013.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-09-29 18:20+0800\n"
-"PO-Revision-Date: 2013-09-29 18:20+0800\n"
-"Last-Translator: Allen <allen@mydebian>\n"
+"POT-Creation-Date: 2013-09-30 19:17+0800\n"
+"PO-Revision-Date: 2013-10-01 11:41+0800\n"
+"Last-Translator: LiuLang <gsushzhsosgsu@gmail.com>\n"
 "Language-Team: Chinese (traditional)\n"
 "Language: zh_TW\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=ASCII\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ../kuwo/App.py:135
+#: ../kuwo/App.py:125
+msgid "A simple music player for Linux Desktop"
+msgstr "Linux 桌面下的一款簡潔的音樂播放器"
+
+#: ../kuwo/App.py:144 ../kuwo/Preferences.py:148
 msgid "Lyrics"
-msgstr ""
+msgstr "歌詞"
 
-#: ../kuwo/App.py:139
+#: ../kuwo/App.py:148 ../kuwo/PlayList.py:477
 msgid "Playlist"
-msgstr ""
+msgstr "播放列表"
 
-#: ../kuwo/App.py:143
+#: ../kuwo/App.py:152
 msgid "Search"
-msgstr ""
+msgstr "搜索"
 
-#: ../kuwo/App.py:147
+#: ../kuwo/App.py:156
 msgid "Top List"
-msgstr ""
+msgstr "熱播榜"
 
-#: menus.ui.h:1
-msgid "_Preferences"
-msgstr ""
+#: ../kuwo/App.py:160
+msgid "Radio"
+msgstr "电台"
+
+#: ../kuwo/App.py:164 ../kuwo/Artists.py:130 ../kuwo/Artists.py:167
+#: ../kuwo/MV.py:20
+msgid "MV"
+msgstr "MV"
+
+#: ../kuwo/App.py:168 ../kuwo/Artists.py:47 ../kuwo/Artists.py:80
+#: ../kuwo/Search.py:37 ../kuwo/Search.py:69 ../kuwo/Search.py:156
+#: ../kuwo/Search.py:158 ../kuwo/Search.py:203
+msgid "Artists"
+msgstr "歌手"
+
+#: ../kuwo/App.py:172
+msgid "Categories"
+msgstr "熱門分類"
+
+#: ../kuwo/App.py:176 ../kuwo/Themes.py:20
+msgid "Themes"
+msgstr "心情主題"
+
+#: ../kuwo/App.py:220
+msgid "Show App"
+msgstr "打開播放器"
+
+#: ../kuwo/App.py:224
+msgid "Pause/Resume"
+msgstr "暫停/播放"
+
+#: ../kuwo/App.py:228
+msgid "Next Song"
+msgstr "下一首歌"
+
+#: ../kuwo/App.py:235 menus.ui.h:3
+msgid "Quit"
+msgstr "退出"
+
+#: ../kuwo/Artists.py:121
+msgid "Artist"
+msgstr "歌手"
+
+#: ../kuwo/Artists.py:127 ../kuwo/Artists.py:145 ../kuwo/Search.py:33
+#: ../kuwo/Search.py:62 ../kuwo/Search.py:138 ../kuwo/Search.py:202
+msgid "Songs"
+msgstr "歌曲"
+
+#: ../kuwo/Artists.py:128 ../kuwo/Artists.py:154 ../kuwo/Search.py:42
+#: ../kuwo/Search.py:82 ../kuwo/Search.py:178 ../kuwo/Search.py:180
+#: ../kuwo/Search.py:204
+msgid "Albums"
+msgstr "專輯"
+
+#: ../kuwo/Artists.py:132 ../kuwo/Artists.py:180
+msgid "Similar"
+msgstr "相似歌手"
+
+#: ../kuwo/Artists.py:134 ../kuwo/Artists.py:193
+msgid "Info"
+msgstr "歌手訊息"
+
+#: ../kuwo/Artists.py:203
+msgid "Album"
+msgstr "專輯"
+
+#: ../kuwo/Artists.py:215
+msgid "All"
+msgstr "全部"
+
+#: ../kuwo/Artists.py:229
+msgid "Hot Artists"
+msgstr "熱門歌手"
+
+#: ../kuwo/Artists.py:230
+msgid "Chinese Male"
+msgstr "華語男"
+
+#: ../kuwo/Artists.py:231
+msgid "Chinese Female"
+msgstr "華語女"
+
+#: ../kuwo/Artists.py:232
+msgid "Chinese Band"
+msgstr "華語組合"
+
+#: ../kuwo/Artists.py:233
+msgid "Japanese Male"
+msgstr "日韓男"
+
+#: ../kuwo/Artists.py:234
+msgid "Japanese Female"
+msgstr "日韓女"
+
+#: ../kuwo/Artists.py:235
+msgid "Japanese Band"
+msgstr "日韓組合"
+
+#: ../kuwo/Artists.py:236
+msgid "European Male"
+msgstr "歐美男"
+
+#: ../kuwo/Artists.py:237
+msgid "European Female"
+msgstr "歐美女"
+
+#: ../kuwo/Artists.py:238
+msgid "European Band"
+msgstr "歐美組合"
+
+#: ../kuwo/Artists.py:239
+msgid "Others"
+msgstr "其他"
+
+#: ../kuwo/Artists.py:274 ../kuwo/Artists.py:431
+msgid " songs"
+msgstr "歌曲"
+
+#: ../kuwo/Config.py:21
+msgid "KW Player"
+msgstr "KW Player"
+
+#: ../kuwo/Lrc.py:86
+msgid "No lrc available"
+msgstr "沒有可用的歌詞"
+
+#: ../kuwo/PlayList.py:198
+msgid "Cached"
+msgstr "已緩存"
+
+#: ../kuwo/PlayList.py:199 ../kuwo/PlayList.py:236
+msgid "Caching"
+msgstr "正在緩存"
+
+#: ../kuwo/PlayList.py:200
+msgid "Default"
+msgstr "默認"
+
+#: ../kuwo/PlayList.py:201 ../kuwo/Radio.py:69
+msgid "Favorite"
+msgstr "喜愛"
+
+#: ../kuwo/PlayList.py:232 ../kuwo/PlayList.py:317
+msgid "Start Caching"
+msgstr "開始緩存"
+
+#: ../kuwo/PlayList.py:310
+msgid "Stop Caching"
+msgstr "停止緩存"
+
+#: ../kuwo/PlayList.py:533
+msgid "Export Songs"
+msgstr "導出歌曲"
+
+#: ../kuwo/PlayList.py:540
+msgid "Choose export folder"
+msgstr "選擇一個文件夾"
+
+#: ../kuwo/PlayList.py:553
+msgid "Export"
+msgstr "導出"
+
+#: ../kuwo/PlayList.py:561
+msgid "Only cached songs will be exported"
+msgstr "只導出已緩存好的歌曲"
+
+#: ../kuwo/Player.py:78
+msgid "Previous"
+msgstr "前一首"
+
+#: ../kuwo/Player.py:84 ../kuwo/Radio.py:57 ../kuwo/Widgets.py:132
+msgid "Play"
+msgstr "播放"
+
+#: ../kuwo/Player.py:90 ../kuwo/Radio.py:63
+msgid "Next"
+msgstr "下一首"
+
+#: ../kuwo/Player.py:99
+msgid "Shuffle"
+msgstr "隨機播放"
+
+#: ../kuwo/Player.py:104
+msgid "Repeat"
+msgstr "重複播放"
+
+#: ../kuwo/Player.py:109
+msgid "Show MV"
+msgstr "播放 MV"
+
+#: ../kuwo/Player.py:117
+msgid "Fullscreen"
+msgstr "全屏"
+
+#: ../kuwo/Player.py:118
+msgid "Fullscreen (F11)"
+msgstr "全屏 (F11)"
+
+#: ../kuwo/Player.py:129 ../kuwo/Player.py:343 ../kuwo/Player.py:347
+msgid "Unknown"
+msgstr "未知"
+
+#: ../kuwo/Preferences.py:62 ../kuwo/Widgets.py:89
+msgid "Choose a Folder"
+msgstr "選擇一個文件夾"
+
+#: ../kuwo/Preferences.py:104 menus.ui.h:1
+msgid "Preferences"
+msgstr "首選項"
+
+#: ../kuwo/Preferences.py:117
+msgid "Format"
+msgstr "格式"
+
+#: ../kuwo/Preferences.py:119
+msgid "Prefered Audio Format"
+msgstr "音樂格式"
+
+#: ../kuwo/Preferences.py:121
+msgid "MP3 (faster)"
+msgstr "MP# (下載更快)"
+
+#: ../kuwo/Preferences.py:125
+msgid "APE (better)"
+msgstr "APE (音質更好)"
+
+#: ../kuwo/Preferences.py:132
+msgid "Prefered Video Format"
+msgstr "MV 格式"
+
+#: ../kuwo/Preferences.py:135
+msgid "MP4 (faster)"
+msgstr "MP4 (下載更快)"
+
+#: ../kuwo/Preferences.py:139
+msgid "MKV (better)"
+msgstr "MKV (畫質更好)"
+
+#: ../kuwo/Preferences.py:154
+msgid "Lyric Word Background color"
+msgstr "歌詞的文字背景色"
+
+#: ../kuwo/Preferences.py:166 ../kuwo/Preferences.py:186
+msgid "Choose color for Lyrics background"
+msgstr "選擇歌詞背景"
+
+#: ../kuwo/Preferences.py:174
+msgid "Lyric Image Background color"
+msgstr "歌詞的圖片背景色"
+
+#: ../kuwo/Preferences.py:192
+msgid "Folders"
+msgstr "緩存目錄"
+
+#: ../kuwo/Preferences.py:194
+msgid "Place to store sogns"
+msgstr "歌曲目錄"
+
+#: ../kuwo/Preferences.py:197
+msgid "Moving cached songs to new folder"
+msgstr "同時移動已緩存好的歌曲到新目錄"
+
+#: ../kuwo/Preferences.py:200
+msgid "Place to store MVs"
+msgstr "MV 目錄"
+
+#: ../kuwo/Preferences.py:204
+msgid "Moving cached MVs to new folder"
+msgstr "同時移動已緩存好的MV到新目錄"
+
+#: ../kuwo/Radio.py:46
+msgid "song name"
+msgstr "歌名"
+
+#: ../kuwo/Radio.py:75
+msgid "Delete"
+msgstr "刪除"
+
+#: ../kuwo/Search.py:28
+msgid "Search Songs, Artists.."
+msgstr "搜索歌曲, 歌手或專輯"
+
+#: ../kuwo/TopCategories.py:21
+msgid "Top Categories"
+msgstr "熱門分類"
+
+#: ../kuwo/TopList.py:20
+msgid "TopList"
+msgstr "熱播榜"
+
+#: ../kuwo/Widgets.py:126
+msgid "Select All"
+msgstr "全選"
+
+#: ../kuwo/Widgets.py:138
+msgid "Add to Playlist"
+msgstr "加入到播放列表"
+
+#: ../kuwo/Widgets.py:142
+msgid "Cache"
+msgstr "級存"
 
 #: menus.ui.h:2
-msgid "_About"
-msgstr ""
-
-#: menus.ui.h:3
-msgid "_Quit"
-msgstr ""
+msgid "About"
+msgstr "關於"

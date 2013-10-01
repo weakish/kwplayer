@@ -212,7 +212,7 @@ class RadioItem(Gtk.EventBox):
         index = self.get_index()
         radio = self.playlists[index]
         song = radio['songs'][radio['curr_song']]
-        #self.app.playlist.favorite_song(song)
+        self.app.playlist.add_song_to_favorite(song)
 
     def on_button_delete_clicked(self, btn):
         self.playlists.pop(self.get_index())

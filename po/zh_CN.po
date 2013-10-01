@@ -1,11 +1,11 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# LiuLang<gsushzhsosgsu@gmail.com>, 2013.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: kuwo 1.2\n"
+"Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2013-09-30 19:17+0800\n"
 "PO-Revision-Date: 2013-09-29 20:06+0800\n"
@@ -65,7 +65,7 @@ msgstr "打开播放器"
 
 #: ../kuwo/App.py:224
 msgid "Pause/Resume"
-msgstr "暂停/恢复"
+msgstr "暂停/播放"
 
 #: ../kuwo/App.py:228
 msgid "Next Song"
