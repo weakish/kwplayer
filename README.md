@@ -5,6 +5,9 @@ kwplayer是linux桌面下的网络音乐播放工具, 它使用了kuwo.cn的音�
 
 安装
 ====
+
+kwplayer需要python 3.3或以上的版本。
+
 可以直接运行kuwo.py, 而不需要安装. 但是仍然需要手动安装一些软件包, 它们是:
 
 * python3-gi  -  gkt3的python3绑定;
