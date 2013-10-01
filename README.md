@@ -16,8 +16,13 @@ kwplayer是linux桌面下的网络音乐播放工具, 它使用了kuwo.cn的音�
 Q&A
 ===
 问: 为什么只使用mp3(192K)和ape两种格式的音乐?
+
 答: 其它格式都不太适用, 比如wma的音质不好; 而192K的mp3对于一般用户已经足够好了; 而对于音乐发烧友来说, 320K的mp3格式的质量仍然是很差劲的, 只有ape才能满足他(她)们的要求. 举例来说, 192K的mp3大小是4.7M, 320K的mp3是7.2M, 而对应的ape格式的是31.5M左右, 这就是差距.
 总之, 这两种格式足够了.
+
+问: 为什么不能用它来打开/管理本地的音乐?
+
+答: 没有必要. 因为Linux桌面已经有不少强大的音乐管理软件了, 像rhythmbox, audacity, amarok等, 干嘛要加入一些重复的功能?
 
 
 TODO
@@ -30,4 +35,17 @@ TODO
 
 截图
 ====
-<img src="screenshot.jpg" title="kuwo" />
+播放列表:
+<img src="screenshot/playlist.jpg?raw=true" title="播放列表" />
+
+电台:
+<img src="screenshot/radio.png?raw=true" title="电台" />
+
+MV:
+<img src="screenshot/MV.png?raw=true" title="MV" />
+
+搜索:
+<img src="screenshot/search.png?raw=true" title="搜索" />
+
+其它的:
+<img src="screenshot/others.png?raw=true" title="其他的" />
