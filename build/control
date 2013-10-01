@@ -8,5 +8,5 @@ Section: gnome
 Priority: optional
 Homepage: https://github.com/LiuLang/kwplayer
 Description: KW music player
- KW music player is used toget music resources from Internet. It can also
+ KW music player is used to get music resources from Internet. It can also
  play MV, show lyrics and show photo albums of artists.

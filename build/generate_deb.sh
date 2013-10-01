@@ -11,7 +11,7 @@ usage() {
 
 
 DIR="fakeroot/"
-DEB="kwmplayer.deb"
+DEB="kwplayer.deb"
 if [ ! -d $DIR ]; then
 	echo 'Error: no such directory!!!'
 	usage
