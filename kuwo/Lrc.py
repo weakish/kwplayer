@@ -125,8 +125,7 @@ class Lrc(Gtk.Box):
             self.lrc_background = None
 
     def on_lrc_tv_draw(self, textview, cr):
-        return
-        # TODO, remove image rerenderer to speed up sync
+        # TODO: use Gtk.Image to display background image
         tv_width = self.lrc_tv.get_allocated_width()
         tv_height = self.lrc_tv.get_allocated_height()
 

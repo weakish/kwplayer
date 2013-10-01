@@ -55,8 +55,8 @@ class App:
         box.pack_start(self.player, False, False, 0)
 
         self.notebook = Gtk.Notebook()
-        #self.notebook.props.tab_pos = Gtk.PositionType.LEFT
         self.notebook.props.tab_pos = Gtk.PositionType.BOTTOM
+        self.notebook.get_style_context().add_class('main_tab')
         # Add 2 pix to left-margin to solve Fullscreen problem.
         self.notebook.props.margin_left = 2
         box.pack_start(self.notebook, True, True, 0)
