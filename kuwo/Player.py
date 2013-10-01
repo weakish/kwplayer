@@ -11,7 +11,6 @@ import time
 
 from kuwo import Config
 from kuwo import Net
-from kuwo.Preferences import Preferences
 from kuwo import Widgets
 
 _ = Config._

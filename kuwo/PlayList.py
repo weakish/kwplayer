@@ -187,6 +187,10 @@ class PlayList(Gtk.Box):
     def dump_playlists(self):
         filepath = Config.PLS_JSON
         names = [list(p) for p in self.liststore_left]
+        # There must be at least 4 playlists.
+        if len(names) < 4:
+            print('Error: no enough playlists were found!')
+            return
         playlists = {'_names_': names}
         for name in names:
             list_name = name[1]

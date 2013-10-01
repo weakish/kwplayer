@@ -3,10 +3,10 @@ Version: 1.2
 Architecture: all
 Maintainer: LiuLang<gsushzhsosgsu@gmail.com>
 Installed-Size: 892k 
-Depends: python3-gi, python3-leveldb, gstreamer1.0-libav
+Depends: python3-gi, python3-leveldb, gstreamer1.0-libav, python3-cairo, python3-gi-cairo
 Section: gnome
 Priority: optional
-Homepage: https://github.com/
+Homepage: https://github.com/LiuLang/kwplayer
 Description: KW music player
  KW music player is used toget music resources from Internet. It can also
  play MV, show lyrics and show photo albums of artists.

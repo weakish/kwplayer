@@ -1,5 +1,4 @@
 
-import copy
 from gi.repository import GdkPixbuf
 from gi.repository import GObject
 from gi.repository import Gtk
